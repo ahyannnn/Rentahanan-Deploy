@@ -31,13 +31,18 @@ app = Flask(__name__)
 
 # ✅ Update CORS for production - allow both localhost and your deployed frontend
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+# ✅ Update CORS for production - allow all origins temporarily
 CORS(app, resources={
     r"/api/*": {
-        "origins": [frontend_url, "https://rentahanan.vercel.app"],
+        "origins": ["https://rentahanan.vercel.app", "http://localhost:5173", "http://localhost:3000"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
     }
 })
+
+# ✅ Or use this simpler approach:
+# Replace your current CORS line with this:
+CORS(app, origins=["https://rentahanan.vercel.app", "http://localhost:5173", "http://localhost:3000"])
 
 # ✅ Config
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))

@@ -34,7 +34,7 @@ function LandingPage() {
 
   // Function to get image URL - handles both local and Cloudinary URLs
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return "/images/default-house.jpg";
+    if (!imagePath) return "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=No+Image+Available";
     
     // If it's already a full URL (Cloudinary), use it directly
     if (imagePath.startsWith('http')) {
@@ -54,6 +54,9 @@ function LandingPage() {
             src="/logo.png"
             alt="RenTahanan Logo"
             className="logo-Layout"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/50x50/4A5568/FFFFFF?text=R";
+            }}
           />
           <div className="nav-brand-text-Layout">RenTahanan</div>
         </div>
@@ -100,7 +103,7 @@ function LandingPage() {
                 alt={house.name}
                 className="house-image-Layout"
                 onError={(e) => {
-                  e.target.src = "/images/default-house.jpg";
+                  e.target.src = "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=No+Image+Available";
                 }}
               />
               <div className="house-info-Layout">
@@ -129,7 +132,7 @@ function LandingPage() {
                 alt={selectedHouse.name}
                 className="modal-image-Layout"
                 onError={(e) => {
-                  e.target.src = "/images/default-house.jpg";
+                  e.target.src = "https://via.placeholder.com/500x300/4A5568/FFFFFF?text=No+Image+Available";
                 }}
               />
               <h2 className="modal-title-Layout">{selectedHouse.name}</h2>
@@ -221,7 +224,7 @@ function LandingPage() {
                 alt="RenTahanan Location - Abangan Sur Marilao, Bulacan"
                 className="map-image-Layout"
                 onError={(e) => {
-                  e.target.src = "/images/default-map.jpg";
+                  e.target.src = "https://via.placeholder.com/600x400/2D3748/FFFFFF?text=Location+Map";
                 }}
               />
             </div>
