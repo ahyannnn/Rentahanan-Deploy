@@ -1,13 +1,34 @@
 from flask import Blueprint, request, jsonify
-from werkzeug.utils import secure_filename
 import os
 from extensions import db
 from models.units_model import House
+import requests
 
 houses_bp = Blueprint("houses_bp", __name__)
 
-UPLOAD_FOLDER = os.path.join(os.getcwd(), "backend/uploads/houseimages")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+def upload_to_cloudinary(file, folder_name):
+    """Upload file to Cloudinary and return the URL"""
+    if not file:
+        return None
+        
+    try:
+        # Make request to our own upload endpoint
+        upload_response = requests.post(
+            f"{request.url_root}api/upload",
+            files={'file': file},
+            data={'folder': folder_name}
+        )
+        
+        if upload_response.status_code == 200:
+            data = upload_response.json()
+            return data['url']  # Return Cloudinary URL
+        else:
+            print(f"Upload failed: {upload_response.json()}")
+            return None
+            
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None
 
 @houses_bp.route("/add-houses", methods=["POST"])
 def add_house():
@@ -20,12 +41,11 @@ def add_house():
     if not name or not price or not image:
         return jsonify({"error": "Missing required fields"}), 400
 
-    filename = secure_filename(image.filename)
-    image_path = os.path.join(UPLOAD_FOLDER, filename)
-
     try:
-        # Save image first
-        image.save(image_path)
+        # Upload image to Cloudinary
+        image_url = upload_to_cloudinary(image, "house_images")
+        if not image_url:
+            return jsonify({"error": "Failed to upload house image"}), 500
 
         # Create house record
         new_house = House(
@@ -33,28 +53,28 @@ def add_house():
             description=description,
             price=price,
             status=status,
-            imagepath=filename,
+            imagepath=image_url,  # Store Cloudinary URL
         )
 
         db.session.add(new_house)
         db.session.commit()
 
-        return jsonify({"message": "Unit added successfully!"}), 201
+        return jsonify({
+            "message": "Unit added successfully!",
+            "house": {
+                "unitid": new_house.unitid,
+                "name": new_house.name,
+                "description": new_house.description,
+                "price": new_house.price,
+                "status": new_house.status,
+                "imagepath": new_house.imagepath
+            }
+        }), 201
 
     except Exception as e:
-        # Roll back database if something fails
         db.session.rollback()
-
-        # Delete uploaded image to avoid leftover files
-        if os.path.exists(image_path):
-            os.remove(image_path)
-
         print("Error adding house:", e)
         return jsonify({"error": "Failed to add unit", "details": str(e)}), 500
-
-    finally:
-        # Always close session to free up resources
-        db.session.close()
 
 @houses_bp.route("/houses/<int:house_id>", methods=["PUT"])
 def update_house(house_id):
@@ -75,24 +95,15 @@ def update_house(house_id):
         if not name or not price:
             return jsonify({"error": "Name and price are required fields"}), 400
 
-        old_image_path = None
-        new_filename = None
-
         # Handle image upload if a new image is provided
         if image:
-            # Generate secure filename
-            new_filename = secure_filename(image.filename)
-            new_image_path = os.path.join(UPLOAD_FOLDER, new_filename)
+            # Upload new image to Cloudinary
+            image_url = upload_to_cloudinary(image, "house_images")
+            if not image_url:
+                return jsonify({"error": "Failed to upload house image"}), 500
             
-            # Save the old image path for deletion later
-            if house.imagepath:
-                old_image_path = os.path.join(UPLOAD_FOLDER, house.imagepath)
-            
-            # Save new image
-            image.save(new_image_path)
-            
-            # Update image path in database
-            house.imagepath = new_filename
+            # Update image path in database (Cloudinary URL)
+            house.imagepath = image_url
 
         # Update house record
         house.name = name
@@ -102,13 +113,6 @@ def update_house(house_id):
 
         db.session.commit()
 
-        # Delete old image after successful update (if a new image was uploaded)
-        if image and old_image_path and os.path.exists(old_image_path):
-            try:
-                os.remove(old_image_path)
-            except Exception as e:
-                print(f"Warning: Could not delete old image {old_image_path}: {e}")
-
         return jsonify({
             "message": "Unit updated successfully!",
             "house": {
@@ -117,7 +121,7 @@ def update_house(house_id):
                 "description": house.description,
                 "price": house.price,
                 "status": house.status,
-                "imagepath": house.imagepath
+                "imagepath": house.imagepath  # Cloudinary URL
             }
         }), 200
 
@@ -126,10 +130,6 @@ def update_house(house_id):
         print("Error updating house:", e)
         return jsonify({"error": "Failed to update unit", "details": str(e)}), 500
 
-    finally:
-        db.session.close()
-
-# Optional: Add a GET route to fetch single house details if needed
 @houses_bp.route("/houses/<int:house_id>", methods=["GET"])
 def get_house(house_id):
     try:
@@ -143,9 +143,141 @@ def get_house(house_id):
             "description": house.description,
             "price": house.price,
             "status": house.status,
-            "imagepath": house.imagepath
+            "imagepath": house.imagepath  # Cloudinary URL
         }), 200
 
     except Exception as e:
         print("Error fetching house:", e)
         return jsonify({"error": "Failed to fetch house details"}), 500
+
+@houses_bp.route("/houses", methods=["GET"])
+def get_all_houses():
+    try:
+        houses = House.query.all()
+        
+        result = []
+        for house in houses:
+            result.append({
+                "unitid": house.unitid,
+                "name": house.name,
+                "description": house.description,
+                "price": float(house.price) if house.price else 0,
+                "status": house.status,
+                "imagepath": house.imagepath  # Cloudinary URL
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print("Error fetching houses:", e)
+        return jsonify({"error": "Failed to fetch houses"}), 500
+
+@houses_bp.route("/houses/<int:house_id>", methods=["DELETE"])
+def delete_house(house_id):
+    try:
+        house = House.query.get(house_id)
+        if not house:
+            return jsonify({"error": "House not found"}), 404
+
+        # With Cloudinary, we don't need to manually delete the image file
+        # The image remains in Cloudinary for reference
+        
+        db.session.delete(house)
+        db.session.commit()
+
+        return jsonify({"message": "Unit deleted successfully!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error deleting house:", e)
+        return jsonify({"error": "Failed to delete unit", "details": str(e)}), 500
+
+@houses_bp.route("/houses/status/<int:house_id>", methods=["PUT"])
+def update_house_status(house_id):
+    try:
+        data = request.get_json()
+        new_status = data.get("status")
+        
+        if not new_status:
+            return jsonify({"error": "Status is required"}), 400
+
+        house = House.query.get(house_id)
+        if not house:
+            return jsonify({"error": "House not found"}), 404
+
+        house.status = new_status
+        db.session.commit()
+
+        return jsonify({
+            "message": "Unit status updated successfully!",
+            "house": {
+                "unitid": house.unitid,
+                "name": house.name,
+                "status": house.status
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error updating house status:", e)
+        return jsonify({"error": "Failed to update unit status"}), 500
+
+@houses_bp.route("/houses/available", methods=["GET"])
+def get_available_houses():
+    try:
+        houses = House.query.filter(House.status == "Available").all()
+        
+        result = []
+        for house in houses:
+            result.append({
+                "unitid": house.unitid,
+                "name": house.name,
+                "description": house.description,
+                "price": float(house.price) if house.price else 0,
+                "status": house.status,
+                "imagepath": house.imagepath  # Cloudinary URL
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print("Error fetching available houses:", e)
+        return jsonify({"error": "Failed to fetch available houses"}), 500
+
+@houses_bp.route("/houses/search", methods=["GET"])
+def search_houses():
+    try:
+        name = request.args.get('name', '')
+        min_price = request.args.get('min_price', type=float)
+        max_price = request.args.get('max_price', type=float)
+        status = request.args.get('status', '')
+
+        query = House.query
+
+        if name:
+            query = query.filter(House.name.ilike(f'%{name}%'))
+        if min_price is not None:
+            query = query.filter(House.price >= min_price)
+        if max_price is not None:
+            query = query.filter(House.price <= max_price)
+        if status:
+            query = query.filter(House.status == status)
+
+        houses = query.all()
+
+        result = []
+        for house in houses:
+            result.append({
+                "unitid": house.unitid,
+                "name": house.name,
+                "description": house.description,
+                "price": float(house.price) if house.price else 0,
+                "status": house.status,
+                "imagepath": house.imagepath  # Cloudinary URL
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print("Error searching houses:", e)
+        return jsonify({"error": "Failed to search houses"}), 500

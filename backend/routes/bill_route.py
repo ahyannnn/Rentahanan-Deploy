@@ -7,7 +7,7 @@ from models.units_model import House as Unit
 from models.contracts_model import Contract
 from models.bills_model import Bill
 from models.notifications_model import Notification
-from werkzeug.utils import secure_filename
+import requests
 import os
 import logging
 
@@ -39,6 +39,30 @@ def safe_strftime(date_obj, format_str="%Y-%m-%d"):
         return date_obj.strftime(format_str)
     # If it's already a string, return as-is
     return str(date_obj)
+
+def upload_to_cloudinary(file, folder_name):
+    """Upload file to Cloudinary and return the URL"""
+    if not file:
+        return None
+        
+    try:
+        # Make request to our own upload endpoint
+        upload_response = requests.post(
+            f"{request.url_root}api/upload",
+            files={'file': file},
+            data={'folder': folder_name}
+        )
+        
+        if upload_response.status_code == 200:
+            data = upload_response.json()
+            return data['url']  # Return Cloudinary URL
+        else:
+            print(f"Upload failed: {upload_response.json()}")
+            return None
+            
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None
 
 # -------------------------------
 # 📘 Get all bills (for admin)
@@ -101,7 +125,7 @@ def get_bills():
                 "description": b.description,
                 "paymenttype": b.paymenttype,
                 "GCash_Ref": b.gcash_ref,
-                "GCash_receipt": b.gcash_receipt
+                "GCash_receipt": b.gcash_receipt  # Now this is a Cloudinary URL
             })
 
         logger.info(f"✅ Retrieved {len(result)} bills for {current_month}/{current_year}")
@@ -213,7 +237,8 @@ def get_paid_bills(tenant_id):
                 Bill.duedate,
                 Bill.paymenttype,
                 Bill.gcash_ref,
-                Bill.description
+                Bill.description,
+                Bill.gcash_receipt
             )
             .filter(
                 Bill.tenantid == tenant_id,
@@ -238,7 +263,8 @@ def get_paid_bills(tenant_id):
                 "paymentType": bill.paymenttype,
                 "gcashRef": bill.gcash_ref,
                 "description": bill.description,
-                "dueDate": due_date
+                "dueDate": due_date,
+                "receiptUrl": bill.gcash_receipt  # Cloudinary URL
             })
 
         logger.info(f"✅ Returning {len(bills_list)} paid bills for tenant {tenant_id}")
@@ -324,7 +350,7 @@ def get_tenant_bills(tenant_id):
                 "description": bill.description,
                 "paymenttype": bill.paymenttype,
                 "gcash_ref": bill.gcash_ref,
-                "gcash_receipt": bill.gcash_receipt,
+                "gcash_receipt": bill.gcash_receipt,  # Now Cloudinary URL
                 "contract_start_date": safe_isoformat(contract.startdate) if contract else None,
             })
 
@@ -376,8 +402,9 @@ def get_contract_details(tenant_id):
     except Exception as e:
         logger.error(f"❌ Error getting contract details: {e}")
         return jsonify({"error": f"Failed to get contract details: {str(e)}"}), 500
+
 # -------------------------------
-# 💸 Pay Bill (GCash / Cash)
+# 💸 Pay Bill (GCash / Cash) - UPDATED FOR CLOUDINARY
 # -------------------------------
 @bill_bp.route("/bills/pay/<int:bill_id>", methods=["PUT"])
 def pay_bill(bill_id):
@@ -399,26 +426,20 @@ def pay_bill(bill_id):
             bill.gcash_receipt = None
             logger.info(f"💰 Cash payment for bill {bill_id}")
 
-        # ✅ Handle GCash payment with file upload
+        # ✅ Handle GCash payment with Cloudinary upload
         elif payment_type == "GCash":
             bill.paymenttype = "GCash"
             bill.gcash_ref = gcash_ref
 
             if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                # Add timestamp to avoid filename conflicts
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"{timestamp}_{filename}"
-
-                # Save to uploads/gcash_receipts folder
-                gcash_folder = os.path.join(current_app.config["UPLOAD_FOLDER"], "gcash_receipts")
-                os.makedirs(gcash_folder, exist_ok=True)
-
-                save_path = os.path.join(gcash_folder, filename)
-                file.save(save_path)
-
-                bill.gcash_receipt = filename
-                logger.info(f"📄 GCash receipt saved: {filename}")
+                # Upload to Cloudinary instead of local storage
+                receipt_url = upload_to_cloudinary(file, "gcash_receipts")
+                
+                if receipt_url:
+                    bill.gcash_receipt = receipt_url
+                    logger.info(f"📄 GCash receipt uploaded to Cloudinary: {receipt_url}")
+                else:
+                    return jsonify({"error": "Failed to upload GCash receipt"}), 400
             else:
                 return jsonify({"error": "Invalid or missing GCash receipt file"}), 400
 
@@ -519,7 +540,7 @@ def reject_bill_payment(bill_id):
         bill.status = "Unpaid"
         bill.paymenttype = None
         bill.gcash_ref = None
-        bill.gcash_receipt = None
+        bill.gcash_receipt = None  # Cloudinary URL will be cleared
         
         # ✅ Create notification for tenant
         tenant = Tenant.query.filter_by(tenantid=bill.tenantid).first()
