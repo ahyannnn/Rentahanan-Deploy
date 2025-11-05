@@ -1,0 +1,12 @@
+[build]
+  command = "cd frontend && npm run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--no-optional"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
