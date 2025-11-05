@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory, current_app
+from flask import Flask, jsonify, send_from_directory, current_app, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 from extensions import db
@@ -29,15 +29,11 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ✅ Update CORS for production - allow both localhost and Netlify
-frontend_url = os.getenv("FRONTEND_URL", "https://your-frontend-name.netlify.app")
+# ✅ Update CORS for production - allow both localhost and your deployed frontend
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 CORS(app, resources={
     r"/api/*": {
-        "origins": [
-            "http://localhost:5173",  # Local development
-            frontend_url,  # Your Netlify domain
-            "https://your-frontend-name.netlify.app"  # Direct URL
-        ],
+        "origins": [frontend_url, "https://your-frontend.netlify.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
@@ -88,7 +84,7 @@ app.register_blueprint(email_verification_bp, url_prefix="/api")
 app.register_blueprint(tenant_dashboard_bp, url_prefix="/api")
 app.register_blueprint(owner_dashboard_bp, url_prefix="/api")
 
-# ✅ Cloudinary Upload Route
+# ✅ Cloudinary Upload Route (Add this new route)
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
     """
@@ -123,7 +119,27 @@ def upload_file():
         print(f"Cloudinary upload error: {e}")
         return jsonify({'error': 'File upload failed'}), 500
 
-# Example routes
+# ✅ Cloudinary Delete Route (Optional)
+@app.route("/api/delete-file", methods=["POST"])
+def delete_file():
+    """
+    Delete file from Cloudinary
+    Expects: public_id = Cloudinary public ID
+    """
+    data = request.get_json()
+    public_id = data.get('public_id')
+    
+    if not public_id:
+        return jsonify({'error': 'No public ID provided'}), 400
+    
+    try:
+        result = cloudinary.uploader.destroy(public_id)
+        return jsonify({'success': True, 'result': result}), 200
+    except Exception as e:
+        print(f"Cloudinary delete error: {e}")
+        return jsonify({'error': 'File deletion failed'}), 500
+
+# Your existing routes...
 @app.route("/api/houses", methods=["GET"])
 def get_houses():
     houses = House.query.all()
@@ -136,6 +152,16 @@ def ping():
 @app.route("/")
 def home():
     return jsonify({"message": "Flask backend is running!"})
+
+# ✅ Keep this for backward compatibility, but it won't be used in production
+@app.route("/uploads/<path:subpath>/<path:filename>")
+def serve_uploads(subpath, filename):
+    # This will only work in development
+    if os.environ.get('FLASK_ENV') == 'development':
+        full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], subpath)
+        if os.path.exists(full_path) and os.path.exists(os.path.join(full_path, filename)):
+            return send_from_directory(full_path, filename)
+    return jsonify({'error': 'File not found in production - use Cloudinary'}), 404
 
 # ✅ Health check route for Render
 @app.route("/health")

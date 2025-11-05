@@ -6,14 +6,44 @@ import { MapPin, Phone, Mail, Clock, Home } from "lucide-react";
 function LandingPage() {
   const [houses, setHouses] = useState([]);
   const [selectedHouse, setSelectedHouse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Use environment variable or fallback to Render URL
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   useEffect(() => {
-    // Fetch houses from Flask API
-    fetch("http://localhost:5000/api/houses")
-      .then((res) => res.json())
-      .then((data) => setHouses(data))
-      .catch((err) => console.error("Error fetching houses:", err));
-  }, []);
+    // Fetch houses from Render API
+    fetch(`${API_BASE}/api/houses`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setHouses(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching houses:", err);
+        setError("Failed to load properties. Please try again later.");
+        setLoading(false);
+      });
+  }, [API_BASE]);
+
+  // Function to get image URL - handles both local and Cloudinary URLs
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "/images/default-house.jpg";
+    
+    // If it's already a full URL (Cloudinary), use it directly
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // If it's a local path, use the Render backend
+    return `${API_BASE}/uploads/houseimages/${imagePath}`;
+  };
 
   return (
     <div className="landing-container-Layout">
@@ -45,15 +75,28 @@ function LandingPage() {
       {/* Houses Section */}
       <section className="houses-section-Layout">
         <h2 className="section-title-Layout">Available Properties</h2>
+        
+        {loading && (
+          <div className="loading-message-Layout">
+            <p>Loading properties...</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="error-message-Layout">
+            <p>{error}</p>
+          </div>
+        )}
+        
         <div className="houses-container-Layout">
           {houses.map((house) => (
             <div
-              key={house.id}
+              key={house.unitid || house.id}
               className="house-card-Layout"
               onClick={() => setSelectedHouse(house)}
             >
               <img
-                src={`http://localhost:5000/uploads/houseimages/${house.imagepath}`}
+                src={getImageUrl(house.imagepath)}
                 alt={house.name}
                 className="house-image-Layout"
                 onError={(e) => {
@@ -62,8 +105,8 @@ function LandingPage() {
               />
               <div className="house-info-Layout">
                 <h3 className="house-name-Layout">{house.name}</h3>
-                <p className="house-price-Layout">₱{house.price.toLocaleString()}</p>
-                <p className={`house-status-Layout status-${house.status.toLowerCase()}-Layout`}>
+                <p className="house-price-Layout">₱{parseFloat(house.price).toLocaleString()}</p>
+                <p className={`house-status-Layout status-${house.status?.toLowerCase()}-Layout`}>
                   {house.status}
                 </p>
               </div>
@@ -71,12 +114,18 @@ function LandingPage() {
           ))}
         </div>
 
+        {houses.length === 0 && !loading && !error && (
+          <div className="no-properties-Layout">
+            <p>No properties available at the moment.</p>
+          </div>
+        )}
+
         {/* Popup Modal */}
         {selectedHouse && (
           <div className="modal-overlay-Layout" onClick={() => setSelectedHouse(null)}>
             <div className="modal-content-Layout" onClick={(e) => e.stopPropagation()}>
               <img
-                src={`http://localhost:5000/uploads/houseimages/${selectedHouse.imagepath}`}
+                src={getImageUrl(selectedHouse.imagepath)}
                 alt={selectedHouse.name}
                 className="modal-image-Layout"
                 onError={(e) => {
@@ -85,8 +134,12 @@ function LandingPage() {
               />
               <h2 className="modal-title-Layout">{selectedHouse.name}</h2>
               <p className="modal-description-Layout">{selectedHouse.description}</p>
-              <p className="modal-price-Layout"><strong>₱{selectedHouse.price.toLocaleString()}</strong> / month</p>
-              <p className="modal-status-Layout">Status: <strong>{selectedHouse.status}</strong></p>
+              <p className="modal-price-Layout">
+                <strong>₱{parseFloat(selectedHouse.price).toLocaleString()}</strong> / month
+              </p>
+              <p className="modal-status-Layout">
+                Status: <strong>{selectedHouse.status}</strong>
+              </p>
               <button
                 className="close-btn-Layout"
                 onClick={() => setSelectedHouse(null)}
@@ -226,7 +279,6 @@ function LandingPage() {
         
         <div className="footer-bottom-Layout">
           <p>&copy; 2025 RENTAHANAN. All Rights Reserved.</p>
-          
         </div>
       </footer>
     </div>
