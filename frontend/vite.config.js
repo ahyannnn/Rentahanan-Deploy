@@ -16,8 +16,5 @@ export default defineConfig({
       }
     },
     chunkSizeWarningLimit: 800,
-  },
-  optimizeDeps: {
-    include: ['prop-types']
   }
 })
