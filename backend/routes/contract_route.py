@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
-from werkzeug.utils import secure_filename
 from extensions import db
 from models.contracts_model import Contract
 from models.tenants_model import Tenant
@@ -11,10 +10,42 @@ from models.notifications_model import Notification
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 import os, traceback
-from flask import send_from_directory
+import requests
 from PyPDF2 import PdfReader, PdfWriter
+import base64
+import io
+from reportlab.lib.utils import ImageReader
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from PIL import Image
 
 contract_bp = Blueprint("contract_bp", __name__)
+
+def upload_to_cloudinary(file, folder_name):
+    """Upload file to Cloudinary and return the URL"""
+    if not file:
+        return None
+        
+    try:
+        # Make request to our own upload endpoint
+        upload_response = requests.post(
+            f"{request.url_root}api/upload",
+            files={'file': file},
+            data={'folder': folder_name}
+        )
+        
+        if upload_response.status_code == 200:
+            data = upload_response.json()
+            return data['url']  # Return Cloudinary URL
+        else:
+            print(f"Upload failed: {upload_response.json()}")
+            return None
+            
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None
 
 # ✅ Fetch existing contracts
 @contract_bp.route("/contracts/tenants", methods=["GET"])
@@ -45,19 +76,18 @@ def get_tenant_contracts():
             "contractid": contractid,
             "tenantid": tenantid,
             "fullname": f"{firstname} {middlename + ' ' if middlename else ''}{lastname}",
-            "image":image,
+            "image": image,
             "unit_name": unit_name,
             "unit_price": unit_price,
             "start_date": start_date.strftime("%Y-%m-%d"),
             "end_date": end_date.strftime("%Y-%m-%d") if end_date else None,
             "status": status,
-            "signed_contract": signed_contract
+            "signed_contract": signed_contract  # Now Cloudinary URL
         }
         for contractid, tenantid, firstname, middlename, lastname, image, unit_name, unit_price, start_date, end_date, status, signed_contract in contracts
     ]
 
     return jsonify(result)
-
 
 # ✅ Applicants ready for contracts
 @contract_bp.route("/contracts/applicants", methods=["GET"])
@@ -109,21 +139,9 @@ def get_applicants_for_contract():
 
     return jsonify(result)
 
-
 # ✅ Generate Contract PDF
 @contract_bp.route("/contracts/generate-pdf", methods=["POST"])
 def generate_contract_pdf():
-    import base64
-    import io
-    from reportlab.lib.utils import ImageReader
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.pagesizes import A4, letter
-    from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from PIL import Image
-
     try:
         data = request.get_json()
         tenant_id = data.get("tenantid")
@@ -139,16 +157,13 @@ def generate_contract_pdf():
         if not tenant_id or not tenant_name:
             return jsonify({"error": "Missing tenant information"}), 400
 
-        contracts_folder = os.path.join(current_app.config["UPLOAD_FOLDER"], "contracts")
-        os.makedirs(contracts_folder, exist_ok=True)
-
-        filename = f"contract_{tenant_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
-        file_path = os.path.join(contracts_folder, filename)
+        # Create PDF in memory first
+        pdf_buffer = io.BytesIO()
 
         # ✅ Create professional PDF document
         doc = SimpleDocTemplate(
-            file_path,
-            pagesize=letter,
+            pdf_buffer,
+            pagesize=A4,
             topMargin=0.5*inch,
             bottomMargin=0.5*inch
         )
@@ -253,7 +268,7 @@ def generate_contract_pdf():
         story.append(parties_table)
         story.append(Spacer(1, 5))
 
-        # Property Details Section - FIXED: Replace peso sign with PHP
+        # Property Details Section
         story.append(Paragraph("PROPERTY DETAILS", section_style))
         
         # Format amounts with PHP instead of peso sign
@@ -311,9 +326,12 @@ def generate_contract_pdf():
         # ✅ Add signatures to the final PDF using canvas (if provided)
         if owner_signature_data:
             try:
-                # Reopen the PDF to add signatures
-                packet = io.BytesIO()
-                can = canvas.Canvas(packet, pagesize=letter)
+                # Get the PDF content from buffer
+                pdf_buffer.seek(0)
+                existing_pdf = PdfReader(pdf_buffer)
+                
+                # Create a new buffer for the signed PDF
+                signed_pdf_buffer = io.BytesIO()
                 
                 # Process owner signature
                 img_data = base64.b64decode(owner_signature_data.split(",")[1])
@@ -325,25 +343,28 @@ def generate_contract_pdf():
                     white_bg.paste(sig_image, mask=sig_image.split()[3])
                     sig_image = white_bg
 
+                # Create signature overlay
+                packet = io.BytesIO()
+                can = canvas.Canvas(packet, pagesize=A4)
+                
                 img_buffer = io.BytesIO()
                 sig_image.save(img_buffer, format="PNG")
                 img_buffer.seek(0)
                 signature_reader = ImageReader(img_buffer)
 
-                # UPDATED: Position for landlord signature - aligned horizontally with tenant
+                # Position for landlord signature
                 can.drawImage(signature_reader, 390, 65, width=120, height=40, mask='auto')
                 
-                # ADDED: Tenant and Landlord labels
+                # Add labels
                 can.setFont("Helvetica-Bold", 10)
-                can.drawString(100, 50, "Tenant")  # Position for Tenant label
-                can.drawString(430, 50, "Landlord")  # Position for Landlord label
+                can.drawString(100, 50, "Tenant")
+                can.drawString(430, 50, "Landlord")
                 
                 can.save()
 
                 # Merge the signature page with the original PDF
                 packet.seek(0)
                 new_pdf = PdfReader(packet)
-                existing_pdf = PdfReader(open(file_path, "rb"))
                 output = PdfWriter()
 
                 # Merge signatures onto the last page
@@ -351,26 +372,44 @@ def generate_contract_pdf():
                 page.merge_page(new_pdf.pages[0])
                 output.add_page(page)
 
-                # Save the final PDF with signatures
-                with open(file_path, "wb") as output_stream:
-                    output.write(output_stream)
+                # Write to signed buffer
+                output.write(signed_pdf_buffer)
+                signed_pdf_buffer.seek(0)
+                
+                # Use the signed buffer for upload
+                pdf_buffer = signed_pdf_buffer
                     
             except Exception as sig_error:
                 print(f"Signature addition failed, but PDF was generated: {sig_error}")
 
-        public_url = f"http://localhost:5000/uploads/contracts/{filename}"
+        # ✅ Upload PDF to Cloudinary
+        pdf_buffer.seek(0)
+        
+        # Create a file-like object for upload
+        files = {'file': (f'contract_{tenant_id}_{datetime.now().strftime("%Y%m%d%H%M%S")}.pdf', pdf_buffer, 'application/pdf')}
+        
+        upload_response = requests.post(
+            f"{request.url_root}api/upload",
+            files=files,
+            data={'folder': 'contracts'}
+        )
+        
+        if upload_response.status_code != 200:
+            return jsonify({"error": "Failed to upload contract to Cloudinary"}), 500
+        
+        cloudinary_data = upload_response.json()
+        pdf_url = cloudinary_data['url']
 
         return jsonify({
             "message": "Professional contract PDF generated successfully!",
-            "pdf_url": public_url,
-            "filename": filename,
+            "pdf_url": pdf_url,
+            "filename": cloudinary_data['public_id'],
             "contract_id": f"RT-{int(tenant_id):06d}"
         })
 
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": f"Failed to generate contract: {str(e)}"}), 500
-
 
 # ✅ Issue Contract to Tenant
 @contract_bp.route("/contracts/issuecontract", methods=["POST"])
@@ -437,7 +476,6 @@ def issue_contract():
         print(traceback.format_exc())
         return jsonify({"error": f"Failed to issue contract: {str(e)}"}), 500
 
-
 # ✅ Tenant view their contracts
 @contract_bp.route("/contracts/tenant/<int:tenant_id>", methods=["GET"])
 def get_contracts_by_tenant(tenant_id):
@@ -465,21 +503,17 @@ def get_contracts_by_tenant(tenant_id):
             "start_date": start_date.strftime("%Y-%m-%d"),
             "end_date": end_date.strftime("%Y-%m-%d") if end_date else None,
             "status": status,
-            "generated_contract": generated_contract,
-            "signed_contract": signed_contract
+            "generated_contract": generated_contract,  # Cloudinary URL
+            "signed_contract": signed_contract  # Cloudinary URL
         }
         for contractid, unit_name, unit_price, start_date, end_date, status, generated_contract, signed_contract in contracts
     ]
 
     return jsonify(result)
 
-
-# ✅ Tenant sign contract (upload signed PDF) - UPDATED: Adjusted signature position for horizontal alignment
+# ✅ Tenant sign contract (upload signed PDF) - UPDATED FOR CLOUDINARY
 @contract_bp.route("/contracts/sign", methods=["POST"])
 def sign_contract():
-    from io import BytesIO
-    from PIL import Image
-
     try:
         if "signed_contract" not in request.files:
             return jsonify({"error": "No signature file provided"}), 400
@@ -495,57 +529,13 @@ def sign_contract():
         if not contract:
             return jsonify({"error": "Contract not found"}), 404
 
-        uploads_root = current_app.config["UPLOAD_FOLDER"]
-        signed_folder = os.path.join(uploads_root, "signed_contracts")
-        os.makedirs(signed_folder, exist_ok=True)
+        # ✅ Upload signed contract directly to Cloudinary
+        signed_contract_url = upload_to_cloudinary(file, "signed_contracts")
+        if not signed_contract_url:
+            return jsonify({"error": "Failed to upload signed contract"}), 500
 
-        contract_path = os.path.join(uploads_root, "contracts", contract.generated_contract)
-        
-        # Check if original contract exists
-        if not os.path.exists(contract_path):
-            return jsonify({"error": "Original contract file not found"}), 404
-
-        signed_pdf_path = os.path.join(signed_folder, f"signed_{contract.contractid}.pdf")
-
-        # ✅ Save signature temporarily
-        sig_temp_path = os.path.join(signed_folder, "temp_signature.png")
-        file.save(sig_temp_path)
-
-        # ✅ Fix transparency (remove black box)
-        sig = Image.open(sig_temp_path)
-        if sig.mode == "RGBA":
-            white_bg = Image.new("RGB", sig.size, (255, 255, 255))
-            white_bg.paste(sig, mask=sig.split()[3])  # use alpha channel as mask
-            sig = white_bg
-            sig.save(sig_temp_path)
-
-        # ✅ Create signature overlay PDF
-        packet = BytesIO()
-        c = canvas.Canvas(packet, pagesize=A4)
-        # UPDATED: Adjusted signature position for horizontal alignment with landlord
-        c.drawImage(sig_temp_path, 50, 65, width=150, height=60, mask='auto')  # moved to align horizontally
-        c.save()
-        packet.seek(0)
-
-        overlay_pdf = PdfReader(packet)
-        reader = PdfReader(contract_path)
-        writer = PdfWriter()
-
-        # Merge first page
-        page = reader.pages[0]
-        page.merge_page(overlay_pdf.pages[0])
-        writer.add_page(page)
-
-        # Copy remaining pages if any
-        for i in range(1, len(reader.pages)):
-            writer.add_page(reader.pages[i])
-
-        # ✅ Save final signed PDF
-        with open(signed_pdf_path, "wb") as output_pdf:
-            writer.write(output_pdf)
-
-        # ✅ Update DB
-        contract.signed_contract = os.path.basename(signed_pdf_path)
+        # ✅ Update DB with Cloudinary URL
+        contract.signed_contract = signed_contract_url
         contract.status = "Signed"
         
         # ✅ Get tenant info for notification
@@ -579,13 +569,9 @@ def sign_contract():
 
         db.session.commit()
 
-        # Cleanup temp
-        if os.path.exists(sig_temp_path):
-            os.remove(sig_temp_path)
-
         return jsonify({
-            "message": "Contract signed and merged successfully!",
-            "filename": contract.signed_contract
+            "message": "Contract signed successfully!",
+            "signed_contract_url": signed_contract_url
         })
 
     except Exception as e:
@@ -593,30 +579,28 @@ def sign_contract():
         print(traceback.format_exc())
         return jsonify({"error": f"Failed to sign contract: {str(e)}"}), 500
 
-
-# ✅ Download contract file
+# ✅ Download contract file (now returns Cloudinary URL)
 @contract_bp.route("/contracts/download/<filename>", methods=["GET"])
 def download_contract(filename):
-    """Download contract PDF file"""
+    """Return Cloudinary URL for contract download"""
     try:
-        contracts_folder = os.path.join(current_app.config["UPLOAD_FOLDER"], "contracts")
-        signed_folder = os.path.join(current_app.config["UPLOAD_FOLDER"], "signed_contracts")
+        # Since files are in Cloudinary, we return the URL
+        # Frontend can handle the download directly from Cloudinary
+        contract = Contract.query.filter(
+            (Contract.generated_contract.contains(filename)) | 
+            (Contract.signed_contract.contains(filename))
+        ).first()
         
-        # Check in signed contracts first, then regular contracts
-        if filename.startswith("signed_"):
-            file_path = os.path.join(signed_folder, filename)
-            if os.path.exists(file_path):
-                return send_from_directory(signed_folder, filename, as_attachment=True)
-        
-        file_path = os.path.join(contracts_folder, filename)
-        if os.path.exists(file_path):
-            return send_from_directory(contracts_folder, filename, as_attachment=True)
+        if contract:
+            if filename in contract.generated_contract:
+                return jsonify({"url": contract.generated_contract})
+            elif filename in contract.signed_contract:
+                return jsonify({"url": contract.signed_contract})
         
         return jsonify({"error": "File not found"}), 404
         
     except Exception as e:
-        return jsonify({"error": f"Failed to download file: {str(e)}"}), 500
-
+        return jsonify({"error": f"Failed to get file URL: {str(e)}"}), 500
 
 # ✅ Update Contract Status (for landlords to approve/reject)
 @contract_bp.route("/contracts/update-status/<int:contract_id>", methods=["PUT"])
@@ -670,7 +654,6 @@ def update_contract_status(contract_id):
         print(f"❌ Error updating contract status: {e}")
         return jsonify({"error": f"Failed to update contract status: {str(e)}"}), 500
 
-
 @contract_bp.route('/contracts/terminate', methods=['POST'])
 def terminate_contract():
     try:
@@ -712,14 +695,14 @@ def terminate_contract():
         # Create notification for tenant
         tenant_user = User.query.filter_by(userid=tenant.userid).first()
         if tenant_user:
-            # Get unit name - FIXED: Use Unit.name instead of unit_name
+            # Get unit name
             unit_name = "the unit"  # Default fallback
             
             # Query the unit table using unitid from contract
             if hasattr(contract, 'unitid') and contract.unitid:
                 unit = Unit.query.filter_by(unitid=contract.unitid).first()
                 if unit:
-                    unit_name = unit.name  # FIXED: Use .name instead of .unit_name
+                    unit_name = unit.name
             
             notification = Notification(
                 title="Tenancy Ended",
@@ -754,7 +737,7 @@ def terminate_contract():
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error terminating contract: {str(e)}")  # For debugging
+        print(f"Error terminating contract: {str(e)}")
         return jsonify({
             'success': False,
             'message': f'Error terminating contract: {str(e)}'

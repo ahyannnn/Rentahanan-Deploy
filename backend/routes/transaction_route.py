@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, request,current_app
 from extensions import db
 from models.bills_model import Bill
 from models.tenants_model import Tenant
@@ -6,10 +6,38 @@ from models.transaction_model import Transaction
 from models.users_model import User
 from models.notifications_model import Notification
 from datetime import datetime
-from reportlab.pdfgen import canvas
+import requests
 import os
+import io
 
 transaction_bp = Blueprint("transactions", __name__)
+
+def upload_to_cloudinary(file_bytes, filename, folder_name):
+    """Upload file bytes to Cloudinary and return the URL"""
+    if not file_bytes:
+        return None
+        
+    try:
+        # Create a file-like object from bytes
+        files = {'file': (filename, file_bytes, 'application/pdf')}
+        
+        # Make request to our own upload endpoint
+        upload_response = requests.post(
+            f"{request.url_root}api/upload",
+            files=files,
+            data={'folder': folder_name}
+        )
+        
+        if upload_response.status_code == 200:
+            data = upload_response.json()
+            return data['url']  # Return Cloudinary URL
+        else:
+            print(f"Upload failed: {upload_response.json()}")
+            return None
+            
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None
 
 @transaction_bp.route("/transactions/issue-receipt/<int:billid>", methods=["POST"])
 def issue_receipt(billid):
@@ -38,25 +66,19 @@ def issue_receipt(billid):
         lastname = getattr(user, "lastname", "")
         full_name = f"{firstname} {middlename + ' ' if middlename else ''}{lastname}".strip()
 
-        # ✅ Use the configured UPLOAD_FOLDER (consistent with contracts)
-        receipts_folder = os.path.join(current_app.config["UPLOAD_FOLDER"], "receipts")
-        os.makedirs(receipts_folder, exist_ok=True)
-
-        receipt_filename = f"receipt_{bill.billid}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        receipt_path = os.path.join(receipts_folder, receipt_filename)
-
-        # 🧾 Generate Professional PDF using ReportLab
-        from reportlab.lib.pagesizes import letter, A4
+        # 🧾 Generate Professional PDF using ReportLab (in memory)
+        from reportlab.lib.pagesizes import A4
         from reportlab.lib import colors
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
         from reportlab.lib.units import inch
+        
+        # Create PDF in memory
+        pdf_buffer = io.BytesIO()
         
         # Create PDF document
         doc = SimpleDocTemplate(
-            receipt_path,
+            pdf_buffer,
             pagesize=A4,
             topMargin=0.5*inch,
             bottomMargin=0.5*inch
@@ -99,7 +121,7 @@ def issue_receipt(billid):
             fontWeight='bold'
         )
 
-        # Company Header - FIXED: Use proper formatting without <b> tags
+        # Company Header
         company_header = [
             Paragraph("RENTAL MANAGEMENT SYSTEM", title_style),
             Paragraph("Official Payment Receipt", styles['Heading2']),
@@ -107,7 +129,7 @@ def issue_receipt(billid):
         ]
         story.extend(company_header)
 
-        # Receipt Details in a table format - FIXED: Remove HTML tags and use proper formatting
+        # Receipt Details in a table format
         receipt_data = [
             ['RECEIPT INFORMATION', ''],
             ['Receipt Number:', f'RMS-{bill.billid:06d}'],
@@ -136,7 +158,7 @@ def issue_receipt(billid):
         story.append(receipt_table)
         story.append(Spacer(1, 20))
 
-        # Tenant Information - FIXED: Remove HTML tags
+        # Tenant Information
         story.append(Paragraph("TENANT INFORMATION", header_style))
         tenant_data = [
             ['Tenant ID:', str(tenant.tenantid)],
@@ -158,10 +180,10 @@ def issue_receipt(billid):
         story.append(tenant_table)
         story.append(Spacer(1, 20))
 
-        # Payment Details - FIXED: Use proper peso sign and formatting
+        # Payment Details
         story.append(Paragraph("PAYMENT DETAILS", header_style))
         
-        # Format amount with proper peso sign - use PHP symbol instead of HTML entity
+        # Format amount with proper peso sign
         amount_formatted = f"PHP {float(bill.amount):,.2f}"
         
         payment_data = [
@@ -189,7 +211,7 @@ def issue_receipt(billid):
         story.append(payment_table)
         story.append(Spacer(1, 30))
 
-        # Total Amount - FIXED: Use proper peso sign
+        # Total Amount
         total_data = [
             ['TOTAL PAID:', amount_formatted]
         ]
@@ -208,7 +230,7 @@ def issue_receipt(billid):
         story.append(total_table)
         story.append(Spacer(1, 30))
 
-        # Footer - FIXED: Remove HTML tags and use proper formatting
+        # Footer
         footer_text = """Thank you for your payment!
         
 This receipt serves as an official record of your transaction.
@@ -221,6 +243,14 @@ For any inquiries, please contact our administration office."""
         # Build PDF
         doc.build(story)
 
+        # ✅ Upload PDF to Cloudinary
+        pdf_buffer.seek(0)
+        receipt_filename = f"receipt_{bill.billid}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        receipt_url = upload_to_cloudinary(pdf_buffer, receipt_filename, "receipts")
+        
+        if not receipt_url:
+            return jsonify({"error": "Failed to upload receipt to Cloudinary"}), 500
+
         # ✅ Update Bill status to Paid
         bill.status = "Paid"
         db.session.add(bill)
@@ -231,7 +261,7 @@ For any inquiries, please contact our administration office."""
             tenantid=bill.tenantid,
             paymentdate=datetime.now().strftime("%Y-%m-%d"),
             amountpaid=bill.amount,
-            receipt=receipt_filename
+            receipt=receipt_url  # Store Cloudinary URL instead of filename
         )
         db.session.add(transaction)
 
@@ -264,13 +294,11 @@ For any inquiries, please contact our administration office."""
 
         return jsonify({
             "message": "Receipt issued successfully",
-            "receipt": receipt_filename,
+            "receipt_url": receipt_url,
             "receipt_number": f"RMS-{bill.billid:06d}"
         })
     except Exception as e:
         db.session.rollback()
-        if 'receipt_path' in locals() and os.path.exists(receipt_path):
-            os.remove(receipt_path)
         return jsonify({"error": f"Failed to issue receipt: {str(e)}"}), 500
 
 
@@ -304,8 +332,8 @@ def reject_payment(billid):
 
         # Reset bill status to Unpaid and clear payment details
         bill.status = "Unpaid"
-        bill.GCash_receipt = None  # Clear the receipt
-        bill.GCash_Ref = None      # Clear the reference number
+        bill.gcash_receipt = None  # Clear the receipt (Cloudinary URL)
+        bill.gcash_ref = None      # Clear the reference number
         bill.paymenttype = None    # Clear payment type
         
         db.session.add(bill)
@@ -360,9 +388,9 @@ def get_receipt(billid):
         if not transaction.receipt:
             return jsonify({"error": "No receipt available for this transaction"}), 404
         
-        # Just return the receipt filename
+        # Return the Cloudinary URL
         return jsonify({
-            "receiptUrl": transaction.receipt
+            "receipt_url": transaction.receipt
         })
         
     except Exception as e:
@@ -371,7 +399,7 @@ def get_receipt(billid):
 
 @transaction_bp.route("/transactions/download-receipt/<int:billid>", methods=["GET"])
 def download_receipt(billid):
-    """Endpoint to download the actual receipt PDF file"""
+    """Endpoint to redirect to Cloudinary receipt URL"""
     try:
         # Find the transaction for this bill
         transaction = db.session.query(Transaction).filter(Transaction.billid == billid).first()
@@ -379,25 +407,13 @@ def download_receipt(billid):
         if not transaction or not transaction.receipt:
             return jsonify({"error": "Receipt not found"}), 404
         
-        receipt_path = os.path.join(
-            current_app.config["UPLOAD_FOLDER"], 
-            "receipts", 
-            transaction.receipt
-        )
-        
-        if not os.path.exists(receipt_path):
-            return jsonify({"error": "Receipt file not found"}), 404
-            
-        from flask import send_file
-        return send_file(
-            receipt_path,
-            as_attachment=True,
-            download_name=transaction.receipt,
-            mimetype='application/pdf'
-        )
+        # Return the Cloudinary URL for download
+        return jsonify({
+            "download_url": transaction.receipt
+        })
         
     except Exception as e:
-        return jsonify({"error": f"Failed to download receipt: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to get receipt download URL: {str(e)}"}), 500
 
 
 # ✅ Additional route to get all transactions (for admin/landlord view)
@@ -432,7 +448,7 @@ def get_all_transactions():
                 "tenant_name": f"{t.firstname} {t.lastname}",
                 "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
                 "amount_paid": float(t.amountpaid),
-                "receipt": t.receipt,
+                "receipt_url": t.receipt,  # Cloudinary URL
                 "bill_type": t.billtype
             })
 
@@ -469,7 +485,7 @@ def get_tenant_transactions(tenant_id):
                 "billid": t.billid,
                 "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
                 "amount_paid": float(t.amountpaid),
-                "receipt": t.receipt,
+                "receipt_url": t.receipt,  # Cloudinary URL
                 "bill_type": t.billtype,
                 "description": t.description
             })
@@ -478,3 +494,64 @@ def get_tenant_transactions(tenant_id):
 
     except Exception as e:
         return jsonify({"error": f"Failed to fetch tenant transactions: {str(e)}"}), 500
+
+
+# ✅ Get transaction statistics
+@transaction_bp.route("/transactions/statistics", methods=["GET"])
+def get_transaction_statistics():
+    try:
+        # Total transactions count
+        total_transactions = db.session.query(Transaction).count()
+        
+        # Total revenue
+        total_revenue = db.session.query(db.func.sum(Transaction.amountpaid)).scalar() or 0
+        
+        # Monthly revenue (current year)
+        current_year = datetime.now().year
+        monthly_revenue = db.session.query(
+            db.func.extract('month', Transaction.paymentdate).label('month'),
+            db.func.sum(Transaction.amountpaid).label('total')
+        ).filter(
+            db.func.extract('year', Transaction.paymentdate) == current_year
+        ).group_by('month').all()
+
+        # Recent transactions (last 10)
+        recent_transactions = (
+            db.session.query(
+                Transaction.transactionid,
+                Transaction.paymentdate,
+                Transaction.amountpaid,
+                User.firstname,
+                User.lastname,
+                Bill.billtype
+            )
+            .join(Bill, Transaction.billid == Bill.billid)
+            .join(Tenant, Transaction.tenantid == Tenant.tenantid)
+            .join(User, Tenant.userid == User.userid)
+            .order_by(Transaction.paymentdate.desc())
+            .limit(10)
+            .all()
+        )
+
+        recent_list = []
+        for t in recent_transactions:
+            recent_list.append({
+                "transactionid": t.transactionid,
+                "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
+                "amount_paid": float(t.amountpaid),
+                "tenant_name": f"{t.firstname} {t.lastname}",
+                "bill_type": t.billtype
+            })
+
+        statistics = {
+            "total_transactions": total_transactions,
+            "total_revenue": float(total_revenue),
+            "monthly_revenue": {int(month): float(total) for month, total in monthly_revenue},
+            "current_year": current_year,
+            "recent_transactions": recent_list
+        }
+
+        return jsonify(statistics), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch transaction statistics: {str(e)}"}), 500

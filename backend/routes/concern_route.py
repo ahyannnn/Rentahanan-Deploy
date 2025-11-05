@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models.concerns_model import Concern
 from models.notifications_model import Notification
-from werkzeug.utils import secure_filename
+import requests
 import os
 from datetime import datetime
 from models.users_model import User
@@ -12,10 +12,34 @@ from models.applications_model import Application
 
 concern_bp = Blueprint("concern_bp", __name__)
 
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf"}
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_to_cloudinary(file, folder_name):
+    """Upload file to Cloudinary and return the URL"""
+    if not file:
+        return None
+        
+    try:
+        # Make request to our own upload endpoint
+        upload_response = requests.post(
+            f"{request.url_root}api/upload",
+            files={'file': file},
+            data={'folder': folder_name}
+        )
+        
+        if upload_response.status_code == 200:
+            data = upload_response.json()
+            return data['url']  # Return Cloudinary URL
+        else:
+            print(f"Upload failed: {upload_response.json()}")
+            return None
+            
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        return None
 
 # ✅ Memory storage for deleted concerns (NO DATABASE CHANGES)
 deleted_concerns_tracker = {
@@ -36,23 +60,21 @@ def add_concern():
         if not tenantid or not concerntype or not subject or not description:
             return jsonify({"error": "All required fields must be provided"}), 400
 
-        # Handle tenant image upload
-        tenantimage_path = None
+        # Handle tenant image upload with Cloudinary
+        tenantimage_url = None
         if "tenantimage" in request.files:
             file = request.files["tenantimage"]
             if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                upload_dir = os.path.join("backend", "uploads", "concern_image")
-                os.makedirs(upload_dir, exist_ok=True)
-                file.save(os.path.join(upload_dir, filename))
-                tenantimage_path = f"/uploads/concern_image/{filename}"
+                tenantimage_url = upload_to_cloudinary(file, "concern_images")
+                if not tenantimage_url:
+                    return jsonify({"error": "Failed to upload concern image"}), 500
 
         new_concern = Concern(
             tenantid=tenantid,
             concerntype=concerntype,
             subject=subject,
             description=description,
-            tenantimage=tenantimage_path,
+            tenantimage=tenantimage_url,  # Now storing Cloudinary URL
             status="Pending",
             creationdate=datetime.utcnow()
         )
@@ -138,10 +160,10 @@ def get_all_concerns():
                 "concerntype": c.concerntype,
                 "subject": c.subject,
                 "description": c.description,
-                "image": c.tenantimage,
-                "landlordimage": c.landlordimage,
+                "image": c.tenantimage,  # Now Cloudinary URL
+                "landlordimage": c.landlordimage,  # Now Cloudinary URL
                 "status": c.status,
-                "creationdate": c.creationdate,
+                "creationdate": c.creationdate.isoformat() if c.creationdate else None,
                 "tenant_name": fullname,
                 "unit": c.unit_name if c.unit_name else "",
             })
@@ -164,7 +186,18 @@ def get_concerns(tenantid):
             if c.concernid in deleted_concerns_tracker['tenant']:
                 continue  # Skip if tenant deleted it
 
-            concern_dict = c.to_dict()
+            concern_dict = {
+                "concernid": c.concernid,
+                "tenantid": c.tenantid,
+                "concerntype": c.concerntype,
+                "subject": c.subject,
+                "description": c.description,
+                "tenantimage": c.tenantimage,  # Now Cloudinary URL
+                "landlordimage": c.landlordimage,  # Now Cloudinary URL
+                "status": c.status,
+                "creationdate": c.creationdate.isoformat() if c.creationdate else None,
+                "resolutiondate": c.resolutiondate.isoformat() if c.resolutiondate else None
+            }
             result.append(concern_dict)
 
         return jsonify(result), 200
@@ -183,23 +216,25 @@ def update_concern(concernid):
         data = request.form
         status = data.get("status", concern.status)
 
-        landlordimage_path = concern.landlordimage
+        landlordimage_url = concern.landlordimage
         if "landlordimage" in request.files:
             file = request.files["landlordimage"]
             if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                upload_dir = os.path.join("backend", "uploads", "concern_image")
-                os.makedirs(upload_dir, exist_ok=True)
-                file.save(os.path.join(upload_dir, filename))
-                landlordimage_path = f"/uploads/concern_image/{filename}"
+                landlordimage_url = upload_to_cloudinary(file, "concern_images")
+                if not landlordimage_url:
+                    return jsonify({"error": "Failed to upload fix image"}), 500
 
         # ✅ Enforce that Resolved requires a landlord image
-        if status.lower() == "resolved" and not landlordimage_path:
+        if status.lower() == "resolved" and not landlordimage_url:
             return jsonify({"error": "Cannot mark as resolved without uploading a fix photo"}), 400
 
         old_status = concern.status
         concern.status = status
-        concern.landlordimage = landlordimage_path
+        concern.landlordimage = landlordimage_url
+        
+        # Update resolution date if resolved
+        if status.lower() == "resolved" and not concern.resolutiondate:
+            concern.resolutiondate = datetime.utcnow()
 
         # ✅ Get tenant info for notification
         tenant = Tenant.query.filter_by(tenantid=concern.tenantid).first()
@@ -241,7 +276,18 @@ def update_concern(concernid):
 
         return jsonify({
             "message": "Concern updated successfully",
-            "concern": concern.to_dict()
+            "concern": {
+                "concernid": concern.concernid,
+                "tenantid": concern.tenantid,
+                "concerntype": concern.concerntype,
+                "subject": concern.subject,
+                "description": concern.description,
+                "tenantimage": concern.tenantimage,
+                "landlordimage": concern.landlordimage,
+                "status": concern.status,
+                "creationdate": concern.creationdate.isoformat() if concern.creationdate else None,
+                "resolutiondate": concern.resolutiondate.isoformat() if concern.resolutiondate else None
+            }
         }), 200
 
     except Exception as e:
@@ -262,10 +308,10 @@ def delete_concern_tenant(concernid):
         
         # Check if both deleted for image deletion
         if concernid in deleted_concerns_tracker['landlord']:
-            # Both deleted - delete images permanently
-            delete_concern_images(concern)
+            # Both deleted - we could delete from Cloudinary here if needed
+            # But Cloudinary files are safe to keep for reference
             return jsonify({
-                "message": "Concern permanently deleted (both parties deleted)",
+                "message": "Concern permanently deleted from both views",
                 "permanent_delete": True
             }), 200
         else:
@@ -292,10 +338,10 @@ def delete_concern_landlord(concernid):
         
         # Check if both deleted for image deletion
         if concernid in deleted_concerns_tracker['tenant']:
-            # Both deleted - delete images permanently
-            delete_concern_images(concern)
+            # Both deleted - we could delete from Cloudinary here if needed
+            # But Cloudinary files are safe to keep for reference
             return jsonify({
-                "message": "Concern permanently deleted (both parties deleted)",
+                "message": "Concern permanently deleted from both views",
                 "permanent_delete": True
             }), 200
         else:
@@ -309,32 +355,18 @@ def delete_concern_landlord(concernid):
         print("Error in soft delete:", e)
         return jsonify({"error": "Failed to delete concern"}), 500
 
-# ✅ Delete concern images when both parties delete
+# ✅ Delete concern images when both parties delete (Updated for Cloudinary)
 def delete_concern_images(concern):
     try:
-        # Delete associated images if they exist
-        if concern.tenantimage:
-            try:
-                image_path = os.path.join("backend", concern.tenantimage.lstrip('/'))
-                if os.path.exists(image_path):
-                    os.remove(image_path)
-                    print(f"✅ Deleted tenant image: {image_path}")
-            except Exception as e:
-                print(f"Error deleting tenant image: {e}")
-
-        if concern.landlordimage:
-            try:
-                image_path = os.path.join("backend", concern.landlordimage.lstrip('/'))
-                if os.path.exists(image_path):
-                    os.remove(image_path)
-                    print(f"✅ Deleted landlord image: {image_path}")
-            except Exception as e:
-                print(f"Error deleting landlord image: {e}")
-
-        print(f"✅ Both parties deleted concern #{concern.concernid} - Images removed")
+        # With Cloudinary, we don't need to manually delete files
+        # Cloudinary handles storage management automatically
+        # Images remain accessible via their URLs
+        
+        print(f"✅ Both parties deleted concern #{concern.concernid}")
+        print(f"Note: Cloudinary images are preserved for reference")
 
     except Exception as e:
-        print(f"Error deleting concern images: {e}")
+        print(f"Error in concern cleanup: {e}")
 
 # ✅ Reset deleted concerns (for testing)
 @concern_bp.route("/reset-deleted-concerns", methods=["POST"])
@@ -385,3 +417,43 @@ def add_concern_comment(concernid):
         db.session.rollback()
         print("Error adding comment:", e)
         return jsonify({"error": "Failed to add comment"}), 500
+
+# ✅ Get concern details by ID
+@concern_bp.route("/concerns/<int:concernid>", methods=["GET"])
+def get_concern_details(concernid):
+    try:
+        concern = Concern.query.get(concernid)
+        if not concern:
+            return jsonify({"error": "Concern not found"}), 404
+
+        # Get tenant and unit info
+        tenant = Tenant.query.filter_by(tenantid=concern.tenantid).first()
+        user = User.query.filter_by(userid=tenant.userid).first() if tenant else None
+        
+        unit_name = None
+        if tenant and tenant.applicationid:
+            application = Application.query.filter_by(applicationid=tenant.applicationid).first()
+            if application and application.unitid:
+                unit = House.query.filter_by(unitid=application.unitid).first()
+                unit_name = unit.name if unit else None
+
+        concern_data = {
+            "concernid": concern.concernid,
+            "tenantid": concern.tenantid,
+            "concerntype": concern.concerntype,
+            "subject": concern.subject,
+            "description": concern.description,
+            "tenantimage": concern.tenantimage,  # Cloudinary URL
+            "landlordimage": concern.landlordimage,  # Cloudinary URL
+            "status": concern.status,
+            "creationdate": concern.creationdate.isoformat() if concern.creationdate else None,
+            "resolutiondate": concern.resolutiondate.isoformat() if concern.resolutiondate else None,
+            "tenant_name": f"{user.firstname} {user.lastname}" if user else "Unknown",
+            "unit_name": unit_name
+        }
+
+        return jsonify(concern_data), 200
+
+    except Exception as e:
+        print("Error fetching concern details:", e)
+        return jsonify({"error": "Failed to fetch concern details"}), 500
