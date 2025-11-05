@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.utils import secure_filename
+import requests
 import os
 from datetime import datetime
 from extensions import db
@@ -31,30 +31,38 @@ def apply_unit():
     # Get ALL landlords in the system
     all_landlords = User.query.filter_by(role='Owner').all()
 
-    # Base folder setup
-    base_folder = current_app.config["UPLOAD_FOLDER"]
-    folders = {
-        "valid_id": os.path.join(base_folder, "valid_ids"),
-        "brgy": os.path.join(base_folder, "brgy_clearances"),
-        "proof": os.path.join(base_folder, "proof_of_income")
-    }
-
-    # Ensure folders exist
-    for folder in folders.values():
-        os.makedirs(folder, exist_ok=True)
-
-    def save_file(file, folder_key, prefix):
-        filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        unique_filename = f"{user_id}_{prefix}_{timestamp}_{filename}"
-        save_path = os.path.join(folders[folder_key], unique_filename)
-        file.save(save_path)
-        return unique_filename
+    def upload_to_cloudinary(file, folder_name, prefix):
+        """Upload file to Cloudinary and return the URL"""
+        if not file:
+            return None
+            
+        try:
+            # Make request to our own upload endpoint
+            upload_response = requests.post(
+                f"{request.url_root}api/upload",
+                files={'file': file},
+                data={'folder': folder_name}
+            )
+            
+            if upload_response.status_code == 200:
+                data = upload_response.json()
+                return data['url']  # Return Cloudinary URL
+            else:
+                print(f"Upload failed: {upload_response.json()}")
+                return None
+                
+        except Exception as e:
+            print(f"Cloudinary upload error: {e}")
+            return None
 
     try:
-        valid_id_filename = save_file(valid_id_file, "valid_id", "validid")
-        brgy_filename = save_file(brgy_file, "brgy", "brgy") if brgy_file else None
-        proof_filename = save_file(proof_file, "proof", "proof") if proof_file else None
+        # Upload files to Cloudinary
+        valid_id_url = upload_to_cloudinary(valid_id_file, "valid_ids", "validid")
+        brgy_url = upload_to_cloudinary(brgy_file, "brgy_clearances", "brgy") if brgy_file else None
+        proof_url = upload_to_cloudinary(proof_file, "proof_of_income", "proof") if proof_file else None
+
+        if not valid_id_url:
+            return jsonify({"error": "Failed to upload valid ID"}), 500
 
         # Check if application exists
         application = Application.query.filter_by(userid=user_id).first()
@@ -62,9 +70,9 @@ def apply_unit():
 
         if application:
             application.unitid = unit_id
-            application.valid_id = valid_id_filename
-            application.brgy_clearance = brgy_filename
-            application.proof_of_income = proof_filename
+            application.valid_id = valid_id_url  # Now storing URL instead of filename
+            application.brgy_clearance = brgy_url
+            application.proof_of_income = proof_url
             application.status = "Pending"
             application.submissiondate = datetime.utcnow()
             application_id = application.applicationid
@@ -72,9 +80,9 @@ def apply_unit():
             new_app = Application(
                 unitid=unit_id,
                 userid=user.userid,
-                valid_id=valid_id_filename,
-                brgy_clearance=brgy_filename,
-                proof_of_income=proof_filename,
+                valid_id=valid_id_url,  # Now storing URL instead of filename
+                brgy_clearance=brgy_url,
+                proof_of_income=proof_url,
                 status="Pending",
                 submissiondate=datetime.utcnow()
             )
@@ -110,11 +118,7 @@ def apply_unit():
 
     except Exception as e:
         db.session.rollback()
-        # cleanup any saved files on error
-        for folder in folders.values():
-            for f in os.listdir(folder):
-                if f.startswith(f"{user_id}_"):
-                    os.remove(os.path.join(folder, f))
+        # No need to cleanup files since they're in Cloudinary
         return jsonify({"error": f"Failed to submit application: {str(e)}"}), 500
 
 # ✅ Fetch application details
@@ -138,7 +142,10 @@ def get_application(tenant_id):
         "email": user.email,
         "phone": user.phone,
         "status": application.status,
-        "unitid": application.unitid
+        "unitid": application.unitid,
+        "valid_id_url": application.valid_id,  # Now returns Cloudinary URL
+        "brgy_clearance_url": application.brgy_clearance,
+        "proof_of_income_url": application.proof_of_income
     })
 
 @application_bp.route("/applicants/for-billing", methods=["GET"])
@@ -198,3 +205,22 @@ def get_applicants_for_billing():
     except Exception as e:
         print("❌ Error fetching applicants for billing:", e)
         return jsonify({"error": str(e)}), 500
+
+# ✅ New route to get application documents
+@application_bp.route("/application/<int:tenant_id>/documents", methods=["GET"])
+def get_application_documents(tenant_id):
+    """Get all documents for an application"""
+    application = Application.query.filter_by(userid=tenant_id).first()
+    
+    if not application:
+        return jsonify({"error": "No application found"}), 404
+
+    documents = {}
+    if application.valid_id:
+        documents["valid_id"] = application.valid_id
+    if application.brgy_clearance:
+        documents["brgy_clearance"] = application.brgy_clearance
+    if application.proof_of_income:
+        documents["proof_of_income"] = application.proof_of_income
+
+    return jsonify(documents)

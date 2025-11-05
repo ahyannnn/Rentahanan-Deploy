@@ -9,9 +9,9 @@ class Application(db.Model):
     status = db.Column(db.String(50), default="Registered")
     submissiondate = db.Column(db.DateTime, default=datetime.utcnow)
     userid = db.Column(db.Integer, db.ForeignKey("Users.userid", ondelete="CASCADE"), nullable=False)
-    valid_id = db.Column(db.String(255), nullable=True)
-    brgy_clearance = db.Column(db.String(255), nullable=True)
-    proof_of_income = db.Column(db.String(255), nullable=True)
+    valid_id = db.Column(db.String(500), nullable=True)
+    brgy_clearance = db.Column(db.String(500), nullable=True)
+    proof_of_income = db.Column(db.String(500), nullable=True)
 
     user = db.relationship("User", backref=db.backref("Applications", lazy=True))
 

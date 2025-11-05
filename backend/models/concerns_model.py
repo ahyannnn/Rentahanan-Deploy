@@ -10,8 +10,8 @@ class Concern(db.Model):
     subject = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), default='Pending')
-    tenantimage = db.Column(db.String(255))  # ✅ image uploaded by tenant (broken item)
-    landlordimage = db.Column(db.String(255))  # ✅ image uploaded by landlord (fix proof)
+    tenantimage = db.Column(db.String(500))  # ✅ image uploaded by tenant (broken item)
+    landlordimage = db.Column(db.String(500))  # ✅ image uploaded by landlord (fix proof)
     creationdate = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Optional relationship to Tenant model

@@ -7,7 +7,7 @@ class House(db.Model):
     description = db.Column(db.Text)
     price = db.Column(db.Float)
     status = db.Column(db.String(50))
-    imagepath = db.Column(db.String(200))
+    imagepath = db.Column(db.String(500))
 
     def to_dict(self):
         return {

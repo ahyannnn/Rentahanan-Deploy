@@ -7,7 +7,7 @@ class Transaction(db.Model):
     tenantid = db.Column(db.Integer, db.ForeignKey('Tenants.tenantid'))
     paymentdate = db.Column(db.String(100))
     amountpaid = db.Column(db.String(100))
-    receipt = db.Column(db.String(100))
+    receipt = db.Column(db.String(500))
 
     def to_dict(self):
         return {
