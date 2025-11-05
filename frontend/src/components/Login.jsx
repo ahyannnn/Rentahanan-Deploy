@@ -13,6 +13,9 @@ const Login = () => {
 
     const navigate = useNavigate();
 
+    // Use environment variable or fallback to production URL
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
     const handleLogin = async (e) => {
         e.preventDefault();
 
@@ -42,7 +45,7 @@ const Login = () => {
         if (!isValid) return;
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/api/login", {
+            const response = await fetch(`${API_BASE}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
