@@ -33,7 +33,7 @@ app = Flask(__name__)
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 CORS(app, resources={
     r"/api/*": {
-        "origins": [frontend_url, "https://your-frontend.netlify.app"],
+        "origins": [frontend_url, "https://rentahanan.vercel.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
