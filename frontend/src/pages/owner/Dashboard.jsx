@@ -51,17 +51,27 @@ const Dashboard = () => {
   const financialData = dashboardData?.financialData || [];
   const propertiesData = dashboardData?.propertiesData || [];
 
-  // Calculate property status distribution for donut chart
+  // Calculate property status distribution for donut chart - FIXED VERSION
   const propertyStatusCount = propertiesData.reduce((acc, property) => {
-    const status = property.status;
-    acc[status] = (acc[status] || 0) + 1;
+    // Use original_status directly from your data
+    const status = property.original_status;
+    
+    if (status) {
+      // Count each status directly
+      acc[status] = (acc[status] || 0) + 1;
+    }
     return acc;
   }, {});
+
+  // Debug log to verify counts
+  console.log('Property status counts:', propertyStatusCount);
+  console.log('Total properties in data:', propertiesData.length);
+  console.log('Properties data:', propertiesData);
 
   const propertyStatusData = Object.entries(propertyStatusCount).map(([status, count]) => ({
     status,
     count,
-    percentage: ((count / totalProperties) * 100).toFixed(1)
+    percentage: totalProperties > 0 ? ((count / totalProperties) * 100).toFixed(1) : '0'
   }));
 
   // Calculate revenue trend data

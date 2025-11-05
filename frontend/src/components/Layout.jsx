@@ -585,133 +585,148 @@ const Layout = () => {
     links.find((link) => link.to === location.pathname)?.name || "Dashboard";
 
   const ProfileModal = () => {
-    if (!isProfileModalOpen || !userData) return null;
+  if (!isProfileModalOpen || !userData) return null;
 
-    const formatDate = (dateString) => {
-      if (!dateString || dateString === "N/A") return "N/A";
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return "N/A";
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        });
-      } catch (error) {
-        return "N/A";
-      }
-    };
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === "N/A") return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "N/A";
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
+    } catch (error) {
+      return "N/A";
+    }
+  };
 
-    return (
-      <div className="modal-overlay-Layout" onClick={closeProfileModal}>
-        <div className="profile-modal-content-Layout" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-header-Layout">
-            <h2>User Profile</h2>
-            <button className="close-text-btn-Layout" onClick={closeProfileModal}>
-              <X size={16} /> Close
-            </button>
+  // ✅ UPDATED: Conditionally show status, edit button, and joined date
+  const showStatus = userRole !== "owner"; // Hide status for owners
+  const showEditButton = userRole === "owner" || (userRole === "tenant" && tenantStatus !== "Terminated"); // Show edit for owners, hide for terminated tenants
+  const showJoinedDate = userRole !== "owner"; // Hide joined date for owners
+
+  return (
+    <div className="modal-overlay-Layout" onClick={closeProfileModal}>
+      <div className="profile-modal-content-Layout" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header-Layout">
+          <h2>User Profile</h2>
+          <button className="close-text-btn-Layout" onClick={closeProfileModal}>
+            <X size={16} /> Close
+          </button>
+        </div>
+
+        <div className="modal-body-Layout">
+          <div className="current-pic-holder-Layout">
+            {profileImageError || !profilePictureUrl || profilePictureUrl === "/default-profile.png" ? (
+              <div className="profile-icon-fallback-Layout">
+                <User size={48} />
+              </div>
+            ) : (
+              <img
+                src={profilePictureUrl}
+                alt="Profile"
+                width="120"
+                height="120"
+                style={{ borderRadius: "50%", background: "#eee", objectFit: "cover" }}
+                onError={handleProfileImageError}
+              />
+            )}
+            {isEditing && (
+              <label className="upload-btn-icon-label-Layout">
+                <Camera size={18} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  style={{ display: "none" }}
+                />
+              </label>
+            )}
           </div>
 
-          <div className="modal-body-Layout">
-            <div className="current-pic-holder-Layout">
-              {profileImageError || !profilePictureUrl || profilePictureUrl === "/default-profile.png" ? (
-                <div className="profile-icon-fallback-Layout">
-                  <User size={48} />
-                </div>
-              ) : (
-                <img
-                  src={profilePictureUrl}
-                  alt="Profile"
-                  width="120"
-                  height="120"
-                  style={{ borderRadius: "50%", background: "#eee", objectFit: "cover" }}
-                  onError={handleProfileImageError}
-                />
-              )}
-              {isEditing && (
-                <label className="upload-btn-icon-label-Layout">
-                  <Camera size={18} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
-            </div>
-
-            <h3 className="user-full-name-Layout">
-              {userData.firstname} {userData.middlename || ""} {userData.lastname}
-            </h3>
-            <p className="user-role-label-Layout">
-              Role: {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-            </p>
+          <h3 className="user-full-name-Layout">
+            {userData.firstname} {userData.middlename || ""} {userData.lastname}
+          </h3>
+          <p className="user-role-label-Layout">
+            {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+          </p>
+          
+          {/* ✅ CONDITIONAL: Only show status if user is not owner */}
+          {showStatus && (
             <p className="user-status-label-Layout">
               Status: <span className={`status-badge status-${tenantStatus?.toLowerCase()}`}>
                 {tenantStatus || "Registered"}
               </span>
             </p>
+          )}
 
-            <div className="user-details-list-Layout">
-              <div className="detail-item-Layout">
-                <Mail size={18} className="detail-icon-Layout" />
-                {isEditing ? (
-                  <input
-                    type="email"
-                    name="email"
-                    value={userData.email || ""}
-                    onChange={handleInputChange}
-                    className="editable-input-Layout"
-                  />
-                ) : (
-                  <span>{userData.email || "N/A"}</span>
-                )}
-              </div>
+          <div className="user-details-list-Layout">
+            <div className="detail-item-Layout">
+              <Mail size={18} className="detail-icon-Layout" />
+              {isEditing ? (
+                <input
+                  type="email"
+                  name="email"
+                  value={userData.email || ""}
+                  onChange={handleInputChange}
+                  className="editable-input-Layout"
+                />
+              ) : (
+                <span>{userData.email || "N/A"}</span>
+              )}
+            </div>
 
-              <div className="detail-item-Layout">
-                <Phone size={18} className="detail-icon-Layout" />
-                {isEditing ? (
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={userData.phone || ""}
-                    onChange={handleInputChange}
-                    className="editable-input-Layout"
-                  />
-                ) : (
-                  <span>{userData.phone || "N/A"}</span>
-                )}
-              </div>
+            <div className="detail-item-Layout">
+              <Phone size={18} className="detail-icon-Layout" />
+              {isEditing ? (
+                <input
+                  type="tel"
+                  name="phone"
+                  value={userData.phone || ""}
+                  onChange={handleInputChange}
+                  className="editable-input-Layout"
+                />
+              ) : (
+                <span>{userData.phone || "N/A"}</span>
+              )}
+            </div>
 
+            {/* ✅ CONDITIONAL: Only show joined date if user is not owner */}
+            {showJoinedDate && (
               <div className="detail-item-Layout detail-view-only-Layout">
                 <Calendar size={18} className="detail-icon-Layout" />
                 <span>Joined: {formatDate(userData.datecreated || "")}</span>
               </div>
-            </div>
+            )}
+          </div>
 
-            <div className="modal-actions-Layout">
-              {isEditing ? (
-                <>
-                  <button className="btn-save-Layout" onClick={handleSaveEdit}>
-                    <Save size={16} /> Save
-                  </button>
-                  <button className="btn-cancel-Layout" onClick={handleCancelEdit}>
-                    <RotateCcw size={16} /> Cancel
-                  </button>
-                </>
-              ) : (
+          <div className="modal-actions-Layout">
+            {isEditing ? (
+              <>
+                <button className="btn-save-Layout" onClick={handleSaveEdit}>
+                  <Save size={16} /> Save
+                </button>
+                <button className="btn-cancel-Layout" onClick={handleCancelEdit}>
+                  <RotateCcw size={16} /> Cancel
+                </button>
+              </>
+            ) : (
+              /* ✅ UPDATED: Show edit button for owners, hide only for terminated tenants */
+              showEditButton && (
                 <button className="btn-edit-Layout" onClick={() => setIsEditing(true)}>
                   <Edit size={16} /> Edit Profile
                 </button>
-              )}
-            </div>
+              )
+            )}
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   return (
     <div className="container-Layout">

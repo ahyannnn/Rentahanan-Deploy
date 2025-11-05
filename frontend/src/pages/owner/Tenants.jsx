@@ -38,6 +38,9 @@ const Tenants = () => {
   const [showRejectSuccessModal, setShowRejectSuccessModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   
+  // NEW: Store user info for success modals
+  const [successModalUser, setSuccessModalUser] = useState(null);
+  
   const navigate = useNavigate();
 
   // Fetch active tenants
@@ -125,6 +128,12 @@ const Tenants = () => {
       );
 
       if (response.ok) {
+        // Store user info before clearing
+        setSuccessModalUser({
+          fullname: selectedUser.fullname,
+          unit_name: selectedUser.unit_name
+        });
+        
         setShowApproveModal(false);
         setShowSuccessModal(true);
         setApplicants((prev) =>
@@ -159,6 +168,12 @@ const Tenants = () => {
       );
 
       if (response.ok) {
+        // Store user info before clearing
+        setSuccessModalUser({
+          fullname: selectedUser.fullname,
+          unit_name: selectedUser.unit_name
+        });
+        
         setShowRejectModal(false);
         setShowRejectSuccessModal(true);
         setApplicants((prev) =>
@@ -171,6 +186,18 @@ const Tenants = () => {
     } catch (error) {
       console.error("Error rejecting application:", error);
     }
+  };
+
+  // NEW: Function to close success modals and clear stored user data
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    setSuccessModalUser(null);
+  };
+
+  const handleCloseRejectSuccessModal = () => {
+    setShowRejectSuccessModal(false);
+    setSuccessModalUser(null);
+    setRejectReason(""); // Also clear reject reason
   };
 
   const handleIssueContract = (applicationId) => {
@@ -608,23 +635,23 @@ const Tenants = () => {
             <h2 className="modal-title-transactions">Application Approved!</h2>
             
             <p className="modal-message-transactions">
-              <strong>{selectedUser?.fullname}</strong> has been successfully approved and is now an active tenant.
+              <strong>{successModalUser?.fullname}</strong> has been successfully approved and is now an active tenant.
             </p>
             
             <div className="modal-bill-details-transactions">
               <div className="bill-detail-item">
                 <span>Tenant:</span>
-                <strong>{selectedUser?.fullname}</strong>
+                <strong>{successModalUser?.fullname}</strong>
               </div>
               <div className="bill-detail-item">
                 <span>Unit:</span>
-                <span>{selectedUser?.unit_name || "N/A"}</span>
+                <span>{successModalUser?.unit_name || "N/A"}</span>
               </div>
             </div>
             
             <button 
               className="modal-btn-transactions modal-btn-success"
-              onClick={() => setShowSuccessModal(false)}
+              onClick={handleCloseSuccessModal}
             >
               Continue
             </button>
@@ -643,13 +670,13 @@ const Tenants = () => {
             <h2 className="modal-title-transactions">Application Rejected!</h2>
             
             <p className="modal-message-transactions">
-              <strong>{selectedUser?.fullname}</strong>'s application has been rejected.
+              <strong>{successModalUser?.fullname}</strong>'s application has been rejected.
             </p>
             
             <div className="modal-bill-details-transactions">
               <div className="bill-detail-item">
                 <span>Applicant:</span>
-                <strong>{selectedUser?.fullname}</strong>
+                <strong>{successModalUser?.fullname}</strong>
               </div>
               <div className="bill-detail-item">
                 <span>Reason:</span>
@@ -659,7 +686,7 @@ const Tenants = () => {
             
             <button 
               className="modal-btn-transactions modal-btn-success"
-              onClick={() => setShowRejectSuccessModal(false)}
+              onClick={handleCloseRejectSuccessModal}
             >
               Continue
             </button>

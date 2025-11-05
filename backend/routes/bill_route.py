@@ -746,7 +746,7 @@ def detect_automated_bills():
         ).join(User, Tenant.userid == User.userid)\
          .join(Contract, Tenant.tenantid == Contract.tenantid)\
          .join(Unit, Contract.unitid == Unit.unitid)\
-         .filter(Contract.status == 'active')\
+         .filter(Tenant.status == 'Active')\
          .all()
 
         current_month = current_date.month

@@ -18,7 +18,7 @@ class User(db.Model):
     province = db.Column(db.String(100), nullable=True)
     zipcode = db.Column(db.String(10), nullable=True)
     role = db.Column(db.String(20), nullable=False, default="Tenant")
-    image = db.Column(db.String(100), nullable=True)
+    image = db.Column(db.String(500), nullable=True)
     datecreated = db.Column(db.DateTime, nullable=False)
 
     # Optional helper

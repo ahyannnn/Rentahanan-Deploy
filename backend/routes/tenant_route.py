@@ -206,8 +206,12 @@ def reject_applicant(application_id):
         if not application:
             return jsonify({"success": False, "message": "Application not found"}), 404
 
-        # Update status to Rejected
+        # Update status to Rejected and set other fields to NULL
         application.status = "Rejected"
+        application.unitid = None
+        application.valid_id = None
+        application.brgy_clearance = None
+        application.proof_of_income = None
 
         # ✅ Get tenant info for notification
         tenant = Tenant.query.filter_by(applicationid=application_id).first()
@@ -215,7 +219,7 @@ def reject_applicant(application_id):
             # ✅ Create UNIFIED notification for tenant
             tenant_notification = Notification(
                 title='Application Status Update',
-                message='Your rental application has been reviewed. Unfortunately, it was not approved at this time.',
+                message='Your rental application has been reviewed. Unfortunately, it was not approved.',
                 targetuserid=tenant.userid,  # Specific to this tenant
                 isgroupnotification=False,
                 recipientcount=1,
