@@ -5,10 +5,9 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      external: ['prop-types'],
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
+          vendor: ['react', 'react-dom', 'prop-types'],
           router: ['react-router-dom'],
           icons: ['lucide-react'],
           utils: ['axios'],
