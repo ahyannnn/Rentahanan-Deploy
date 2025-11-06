@@ -21,6 +21,19 @@ const BrowseUnits = () => {
 
   const statusOptions = ["All", "Available", "Occupied", "Pending"];
 
+  // ✅ UPDATED: Get image URL function
+  const getImageUrl = (imagepath) => {
+    if (!imagepath) return null;
+    
+    // If it's already a full URL (Cloudinary), use it directly
+    if (imagepath.startsWith('http')) {
+      return imagepath;
+    }
+    
+    // Otherwise, construct the local path
+    return `${API_BASE}/uploads/houseimages/${imagepath}`;
+  };
+
   // ✅ UPDATED API ENDPOINT for fetching houses
   useEffect(() => {
     fetch(`${API_BASE}/api/houses`)
@@ -198,7 +211,8 @@ const BrowseUnits = () => {
                 <div className="unit-image-container-Browse">
                   {unit.imagepath ? (
                     <img
-                      src={`${API_BASE}/uploads/houseimages/${unit.imagepath}`}
+                      // ✅ FIXED: Use the helper function to get correct image URL
+                      src={getImageUrl(unit.imagepath)}
                       alt={unit.name}
                       className="unit-image-Browse"
                     />
@@ -273,7 +287,8 @@ const BrowseUnits = () => {
             <div className="modal-image-container-Browse">
               {selectedUnit.imagepath ? (
                 <img
-                  src={`${API_BASE}/uploads/houseimages/${selectedUnit.imagepath}`}
+                  // ✅ FIXED: Use the helper function to get correct image URL
+                  src={getImageUrl(selectedUnit.imagepath)}
                   alt={selectedUnit.name}
                   className="modal-image-Browse"
                 />
