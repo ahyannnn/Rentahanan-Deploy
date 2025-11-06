@@ -12,8 +12,9 @@ const BrowseUnits = () => {
   const [hasApplied, setHasApplied] = useState(false);
   const [tenantDetails, setTenantDetails] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ ADD API BASE - same as Billing component
+  // ✅ SAME API BASE AS UNITS COMPONENT
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -21,64 +22,80 @@ const BrowseUnits = () => {
 
   const statusOptions = ["All", "Available", "Occupied", "Pending"];
 
-  // ✅ UPDATED: Get image URL function
+  // ✅ SIMPLIFIED IMAGE URL - SAME AS UNITS COMPONENT
   const getImageUrl = (imagepath) => {
     if (!imagepath) return null;
-    
-    // If it's already a full URL (Cloudinary), use it directly
-    if (imagepath.startsWith('http')) {
-      return imagepath;
-    }
-    
-    // Otherwise, construct the local path
-    return `${API_BASE}/uploads/houseimages/${imagepath}`;
+    return imagepath; // ✅ DIRECT CLOUDINARY URL - NO CONSTRUCTION NEEDED
   };
 
-  // ✅ UPDATED API ENDPOINT for fetching houses
+  // ✅ FETCH HOUSES - SAME AS UNITS COMPONENT
   useEffect(() => {
-    fetch(`${API_BASE}/api/houses`)
-      .then((res) => res.json())
-      .then((data) => setUnits(data))
-      .catch((err) => console.error("Error fetching units:", err));
+    const fetchHouses = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE}/api/houses`);
+        if (response.ok) {
+          const data = await response.json();
+          setUnits(data);
+        }
+      } catch (err) {
+        console.error("Error fetching units:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHouses();
   }, []);
 
-  // ✅ UPDATED API ENDPOINT for fetching application status
+  // ✅ CHECK APPLICATION STATUS
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchApplication = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/application/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/applications/tenant/${tenantId}`);
         if (res.ok) {
           const data = await res.json();
-          const shouldSetApplied = !!data.unitid;
-          setHasApplied(shouldSetApplied);
-          setApplicationStatus(data);
-        } else if (res.status === 404) {
-          setHasApplied(false);
-          setApplicationStatus({});
+          const hasActiveApplication = data.some(app => 
+            app.status === 'pending' || app.status === 'under review'
+          );
+          setHasApplied(hasActiveApplication);
         }
       } catch (err) {
-        console.error("Error fetching tenant application:", err);
+        console.error("Error fetching application:", err);
       }
     };
 
     fetchApplication();
   }, [tenantId]);
 
-  // ✅ UPDATED API ENDPOINT for fetching tenant details
+  // ✅ FETCH TENANT DETAILS
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchTenantDetails = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/application/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/tenants/${tenantId}`);
         if (res.ok) {
           const data = await res.json();
           setTenantDetails(data);
+        } else {
+          // Fallback to localStorage data
+          setTenantDetails({
+            fullName: storedUser.name || storedUser.username || "",
+            email: storedUser.email || "",
+            phone: storedUser.phone || ""
+          });
         }
       } catch (err) {
         console.error("Error fetching tenant details:", err);
+        // Fallback to localStorage data
+        setTenantDetails({
+          fullName: storedUser.name || storedUser.username || "",
+          email: storedUser.email || "",
+          phone: storedUser.phone || ""
+        });
       }
     };
 
@@ -105,8 +122,8 @@ const BrowseUnits = () => {
 
   const handleApply = () => setShowApplyForm(true);
 
-  // ✅ UPDATED API ENDPOINT for application submission
-  const handleFormSubmit = (e) => {
+  // ✅ FIXED APPLICATION SUBMISSION - SIMILAR TO UNITS COMPONENT
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
 
     if (!selectedUnit || hasApplied) {
@@ -123,33 +140,67 @@ const BrowseUnits = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("tenant_id", tenantId);
-    formData.append("unit_id", selectedUnit.id);
-    formData.append("validId", validIdFile);
-    formData.append("brgyClearance", brgyClearanceFile);
-    formData.append("proofOfIncome", proofOfIncomeFile);
+    try {
+      // ✅ SIMPLE FORMDATA - SAME AS UNITS COMPONENT
+      const formData = new FormData();
+      formData.append("tenant_id", tenantId);
+      formData.append("unit_id", selectedUnit.id);
+      formData.append("validId", validIdFile);
+      formData.append("brgyClearance", brgyClearanceFile);
+      formData.append("proofOfIncome", proofOfIncomeFile);
 
-    fetch(`${API_BASE}/api/apply`, {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((data) => {
+      console.log("Submitting application...");
+
+      // ✅ SPECIFIC API ENDPOINT LIKE UNITS COMPONENT
+      const response = await fetch(`${API_BASE}/api/applications/apply`, {
+        method: "POST",
+        body: formData,
+      });
+
+      console.log("Response status:", response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Application submitted:", result);
+        
         setShowApplyForm(false);
         setShowSuccessModal(true);
         setHasApplied(true);
-      })
-      .catch((err) => {
-        console.error("Error submitting application:", err);
-        alert("Failed to submit application.");
-      });
+        
+        // Update unit status
+        setUnits(prevUnits => 
+          prevUnits.map(unit => 
+            unit.id === selectedUnit.id 
+              ? { ...unit, status: "Pending" }
+              : unit
+          )
+        );
+      } else {
+        const errorText = await response.text();
+        console.error("Application failed:", errorText);
+        alert("Failed to submit application. Please try again.");
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      alert("Network error. Please check your connection.");
+    }
   };
 
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
     setSelectedUnit(null);
   };
+
+  if (loading) {
+    return (
+      <div className="browse-units-container-Browse">
+        <div className="loading-container-Browse">
+          <div className="loading-spinner-Browse"></div>
+          <p>Loading units...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="browse-units-container-Browse">
@@ -159,6 +210,11 @@ const BrowseUnits = () => {
           <h2 className="page-header-Browse">Browse Units 🏘️</h2>
           <p className="page-subtext-Browse">Discover available rental units that match your lifestyle and budget</p>
         </div>
+      </div>
+
+      {/* Debug Info */}
+      <div style={{ padding: '10px', background: '#f5f5f5', margin: '10px', borderRadius: '5px', fontSize: '12px' }}>
+        <strong>Debug:</strong> TenantID: {tenantId} | Applied: {hasApplied ? 'Yes' : 'No'} | Units: {units.length}
       </div>
 
       {/* Search and Filter Section */}
@@ -211,8 +267,8 @@ const BrowseUnits = () => {
                 <div className="unit-image-container-Browse">
                   {unit.imagepath ? (
                     <img
-                      // ✅ FIXED: Use the helper function to get correct image URL
-                      src={getImageUrl(unit.imagepath)}
+                      // ✅ FIXED: Direct Cloudinary URL - SAME AS UNITS COMPONENT
+                      src={unit.imagepath}
                       alt={unit.name}
                       className="unit-image-Browse"
                     />
@@ -286,8 +342,8 @@ const BrowseUnits = () => {
             <div className="modal-image-container-Browse">
               {selectedUnit.imagepath ? (
                 <img
-                  // ✅ FIXED: Use the helper function to get correct image URL
-                  src={getImageUrl(selectedUnit.imagepath)}
+                  // ✅ FIXED: Direct Cloudinary URL
+                  src={selectedUnit.imagepath}
                   alt={selectedUnit.name}
                   className="modal-image-Browse"
                 />
@@ -302,7 +358,6 @@ const BrowseUnits = () => {
             <div className="modal-details-Browse">
               <div className="detail-section-Browse">
                 <div className="detail-item-Browse">
-             
                   <div className="detail-content-Browse">
                     <span className="detail-label-Browse">Monthly Rent</span>
                     <span className="detail-price-Browse">₱{selectedUnit.price?.toLocaleString() || '0'}</span>
@@ -380,7 +435,7 @@ const BrowseUnits = () => {
                         type="text"
                         name="fullName"
                         className="form-input-Browse form-input-readonly-Browse"
-                        value={tenantDetails.fullName || ""}
+                        value={tenantDetails.fullName || tenantDetails.name || ""}
                         readOnly
                         required
                       />
