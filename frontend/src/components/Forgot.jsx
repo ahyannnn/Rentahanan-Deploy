@@ -13,6 +13,9 @@ const Forgot = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // ✅ ADD API BASE - Same as Login and Layout components
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   const codeRefs = useRef([]);
 
   // Auto-focus first empty code input when step 2 starts
@@ -34,7 +37,8 @@ const Forgot = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/forgot/send", {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/forgot/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -83,7 +87,8 @@ const Forgot = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/forgot/verify", {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/forgot/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: enteredCode }),
@@ -115,7 +120,8 @@ const Forgot = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/forgot/reset", {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/forgot/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
