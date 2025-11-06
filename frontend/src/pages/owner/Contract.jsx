@@ -97,15 +97,13 @@ const OwnerContract = () => {
         fetchData();
     }, []);
 
-    // Function to get profile image URL
+    // ✅ FIXED: Use the full Cloudinary URL directly
     const getProfileImage = (user) => {
         if (user.image) {
-            // ✅ UPDATED IMAGE URL
-            return `${API_BASE}/uploads/profile_images/${user.image}`;
+            return user.image; // ✅ user.image already contains the full Cloudinary URL
         }
         if (user.profile_image) {
-            // ✅ UPDATED IMAGE URL
-            return `${API_BASE}/uploads/profile_images/${user.profile_image}`;
+            return user.profile_image; // ✅ user.profile_image already contains the full Cloudinary URL
         }
         return null;
     };
@@ -311,7 +309,7 @@ const OwnerContract = () => {
                     tenantid: formData.tenantid,
                     unitid: formData.unitid,
                     startdate: formData.startdate,
-                    generated_contract: pdfData.filename,
+                    generated_contract: pdfData.pdf_url, // ✅ FIXED: Store Cloudinary URL
                 }),
             });
 
@@ -325,8 +323,8 @@ const OwnerContract = () => {
                 monthlyRent: formData.monthlyrent,
                 issuedDate: new Date().toLocaleDateString(),
                 contractId: pdfData.contract_id || `CONTRACT-${Date.now()}`,
-                // ✅ UPDATED PDF URL
-                pdfUrl: pdfData.pdf_url || `${API_BASE}/api/contracts/download/${pdfData.filename}`
+                // ✅ FIXED: Use Cloudinary URL directly
+                pdfUrl: pdfData.pdf_url // ✅ No need to construct URL
             });
 
             // Close add modal and show success modal
@@ -359,17 +357,22 @@ const OwnerContract = () => {
         fetchData();
     };
 
+    // ✅ FIXED: Helper function to get contract URLs
+    const getContractUrl = (contract) => {
+        if (contract.signed_contract) {
+            return contract.signed_contract; // ✅ Already contains full Cloudinary URL
+        }
+        if (contract.generated_contract) {
+            return contract.generated_contract; // ✅ Already contains full Cloudinary URL
+        }
+        return null;
+    };
+
     // Function to view existing contracts
     const handleViewExistingContract = (contract) => {
-        let contractUrl = '';
+        const contractUrl = getContractUrl(contract);
         
-        if (contract.signed_contract) {
-            // ✅ UPDATED CONTRACT URL
-            contractUrl = `${API_BASE}/uploads/signed_contracts/${contract.signed_contract}`;
-        } else if (contract.generated_contract) {
-            // ✅ UPDATED CONTRACT URL
-            contractUrl = `${API_BASE}/uploads/contracts/${contract.generated_contract}`;
-        } else {
+        if (!contractUrl) {
             console.error("No contract file found for:", contract);
             alert("Contract file not found. Please contact administrator.");
             return;

@@ -75,7 +75,7 @@ function Transactions() {
         
         setBills((prev) =>
           prev.map((b) =>
-            b.billid === selectedBill.billid ? { ...b, GCash_receipt: data.receipt } : b
+            b.billid === selectedBill.billid ? { ...b, GCash_receipt: data.receipt_url } : b // ✅ FIXED: Use receipt_url from response
           )
         );
 
@@ -100,55 +100,62 @@ function Transactions() {
   };
 
   const handleRejectConfirm = async () => {
-  if (!selectedBill) return;
-  
-  try {
-    // ✅ UPDATED API ENDPOINT
-    const res = await fetch(
-      `${API_BASE}/api/transactions/reject/${selectedBill.billid}`,
-      { method: "PUT" }
-    );
+    if (!selectedBill) return;
     
-    if (res.ok) {
-      setBills((prev) =>
-        prev.map((b) =>
-          b.billid === selectedBill.billid ? { 
-            ...b, 
-            status: "Unpaid",
-            GCash_receipt: null,
-            GCash_Ref: null,
-            paymenttype: null
-          } : b
-        )
+    try {
+      // ✅ UPDATED API ENDPOINT
+      const res = await fetch(
+        `${API_BASE}/api/transactions/reject/${selectedBill.billid}`,
+        { method: "PUT" }
       );
       
+      if (res.ok) {
+        setBills((prev) =>
+          prev.map((b) =>
+            b.billid === selectedBill.billid ? { 
+              ...b, 
+              status: "Unpaid",
+              GCash_receipt: null,
+              GCash_Ref: null,
+              paymenttype: null
+            } : b
+          )
+        );
+        
+        setShowRejectModal(false);
+        setShowRejectSuccessModal(true);
+      } else {
+        throw new Error("Failed to reject payment");
+      }
+    } catch (err) {
+      console.error("Reject error:", err);
       setShowRejectModal(false);
-      setShowRejectSuccessModal(true);
-    } else {
-      throw new Error("Failed to reject payment");
     }
-  } catch (err) {
-    console.error("Reject error:", err);
-    setShowRejectModal(false);
-  }
-};
+  };
 
+  // ✅ FIXED: Use Cloudinary URL directly for receipts
   const handleViewReceipt = async (billId) => {
     try {
       // ✅ UPDATED API ENDPOINT
       const response = await fetch(`${API_BASE}/api/transactions/receipt/${billId}`);
       const receiptData = await response.json();
 
-      if (response.ok && receiptData.receiptUrl) {
-        // ✅ UPDATED RECEIPT URL
-        const receiptFullUrl = `${API_BASE}/uploads/receipts/${receiptData.receiptUrl}`;
-        window.open(receiptFullUrl, '_blank');
+      if (response.ok && receiptData.receipt_url) { // ✅ FIXED: Use receipt_url directly
+        window.open(receiptData.receipt_url, '_blank'); // ✅ No need to construct URL
       } else {
         console.log(receiptData.error || `No receipt available for bill ${billId}`);
       }
     } catch (error) {
       console.error('Error fetching receipt:', error);
     }
+  };
+
+  // ✅ FIXED: Helper function to get document URLs
+  const getDocumentUrl = (documentPath) => {
+    if (documentPath) {
+      return documentPath; // ✅ documentPath already contains the full Cloudinary URL
+    }
+    return null;
   };
 
   const getStatusVariant = (status) => {
@@ -337,8 +344,8 @@ function Transactions() {
                         <td className="owner-transactions-proof">
                           {b.GCash_receipt ? (
                             <a
-                              // ✅ UPDATED RECEIPT URL
-                              href={`${API_BASE}/uploads/gcash_receipts/${b.GCash_receipt}`}
+                              // ✅ FIXED: Use Cloudinary URL directly
+                              href={getDocumentUrl(b.GCash_receipt)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="proof-link"

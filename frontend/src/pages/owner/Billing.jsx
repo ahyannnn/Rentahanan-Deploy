@@ -215,9 +215,12 @@ function Billing() {
                 if (automatedBillsData.length > 0) {
                     setShowAutomatedModal(true);
                 }
+            } else {
+                console.warn("No automated bills endpoint found or error occurred");
             }
         } catch (error) {
-            console.error("Error detecting automated bills:", error);
+            console.warn("Automated bill detection not available:", error.message);
+            // Silently fail - this is an optional feature
         }
     };
 
@@ -243,6 +246,8 @@ function Billing() {
                 setTenants(await tenantsRes.json());
                 
                 showModal("Success", `${billData.billType} bill created for ${billData.tenantName}`, "success");
+            } else {
+                showModal("Error", "Failed to create automated bill", "error");
             }
         } catch (error) {
             console.error("Error creating automated bill:", error);
@@ -270,10 +275,12 @@ function Billing() {
                 setTenants(await tenantsRes.json());
                 
                 showModal("Success", "All automated bills created successfully!", "success");
+            } else {
+                showModal("Error", "Failed to create some automated bills", "error");
             }
         } catch (error) {
             console.error("Error creating automated bills:", error);
-            showModal("Error", "Failed to create some automated bills", "error");
+            showModal("Error", "Failed to create automated bills", "error");
         }
     };
 
@@ -471,15 +478,17 @@ function Billing() {
                     }),
                 });
 
-                const duplicateResult = await duplicateCheck.json();
-                
-                if (duplicateResult.isDuplicate) {
-                    showModal(
-                        "Duplicate Bill", 
-                        `A ${tenantFormData.billType} bill already exists for this tenant for the selected period.`,
-                        "error"
-                    );
-                    return;
+                if (duplicateCheck.ok) {
+                    const duplicateResult = await duplicateCheck.json();
+                    
+                    if (duplicateResult.isDuplicate) {
+                        showModal(
+                            "Duplicate Bill", 
+                            `A ${tenantFormData.billType} bill already exists for this tenant for the selected period.`,
+                            "error"
+                        );
+                        return;
+                    }
                 }
             } catch (error) {
                 console.error("Error checking for duplicates:", error);
@@ -683,7 +692,7 @@ function Billing() {
             </div>
 
             {/* Automated Bills Notification Modal */}
-            {showAutomatedModal && (
+            {showAutomatedModal && automatedBills.length > 0 && (
                 <div className="Owner-Billing-modal-overlay">
                     <div className="Owner-Billing-modal Owner-Billing-automated-modal">
                         <div className="Owner-Billing-modal-header">
