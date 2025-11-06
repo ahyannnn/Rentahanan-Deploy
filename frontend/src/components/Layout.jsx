@@ -50,6 +50,9 @@ const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // ✅ Use the same API base as Login component
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   useEffect(() => {
     // If current path is /tenant and user is Registered tenant, redirect to browse-units
     if (location.pathname === '/tenant' &&
@@ -63,11 +66,11 @@ const Layout = () => {
     }
   }, [location.pathname, userRole, tenantStatus, navigate]);
 
-  // Fetch user profile data from API
+  // Fetch user profile data from API - ✅ UPDATED API BASE
   const fetchUserProfile = async (userId) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://127.0.0.1:5000/api/profile/${userId}`);
+      const response = await fetch(`${API_BASE}/api/profile/${userId}`);
       const data = await response.json();
 
       if (data.success && data.profile) {
@@ -89,9 +92,9 @@ const Layout = () => {
         setProfileImageError(false);
         setHeaderImageError(false);
 
-        // Set profile picture URL for both modal and header
+        // Set profile picture URL for both modal and header - ✅ UPDATED URL
         if (data.profile.image) {
-          const imageUrl = `http://127.0.0.1:5000/uploads/profile_images/${data.profile.image}`;
+          const imageUrl = `${API_BASE}/uploads/profile_images/${data.profile.image}`;
           setProfilePictureUrl(imageUrl);
           setHeaderProfilePictureUrl(imageUrl);
         } else {
@@ -111,7 +114,7 @@ const Layout = () => {
     }
   };
 
-  // Fetch notifications from API - UPDATED for unified system
+  // Fetch notifications from API - ✅ UPDATED API BASE
   const fetchNotifications = async () => {
     try {
       setNotificationsLoading(true);
@@ -121,7 +124,7 @@ const Layout = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${userId}`);
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -197,7 +200,7 @@ const Layout = () => {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${notification.notificationid}`, {
+      const response = await fetch(`${API_BASE}/api/notifications/${notification.notificationid}`, {
         method: 'DELETE',
       });
 
@@ -218,10 +221,10 @@ const Layout = () => {
     }
   };
 
-  // Mark notification as read
+  // Mark notification as read - ✅ UPDATED API BASE
   const markNotificationAsRead = async (notificationId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${notificationId}/read`, {
+      const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
         method: 'PUT',
       });
 
@@ -383,6 +386,7 @@ const Layout = () => {
     setUserData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle save edit - ✅ UPDATED API BASE
   const handleSaveEdit = async () => {
     try {
       const formData = new FormData();
@@ -394,7 +398,7 @@ const Layout = () => {
         formData.append("image", selectedImageFile);
       }
 
-      const response = await fetch(`http://127.0.0.1:5000/api/profile/${userData.userid}`, {
+      const response = await fetch(`${API_BASE}/api/profile/${userData.userid}`, {
         method: "PUT",
         body: formData,
       });
@@ -406,7 +410,7 @@ const Layout = () => {
         localStorage.setItem("user", JSON.stringify(data.user));
 
         if (data.user.image) {
-          const imageUrl = `http://127.0.0.1:5000/api/profile/image/${data.user.image}`;
+          const imageUrl = `${API_BASE}/api/profile/image/${data.user.image}`;
           setProfilePictureUrl(imageUrl);
           setHeaderProfilePictureUrl(imageUrl);
           setProfileImageError(false);
@@ -436,7 +440,7 @@ const Layout = () => {
 
   const handleCancelEdit = () => {
     if (userData?.image) {
-      const imageUrl = `http://localhost:5000/uploads/profile_images/${userData.image}`;
+      const imageUrl = `${API_BASE}/uploads/profile_images/${userData.image}`;
       setProfilePictureUrl(imageUrl);
       setHeaderProfilePictureUrl(imageUrl);
     } else {
@@ -502,17 +506,6 @@ const Layout = () => {
       console.error('Error formatting notification time:', error);
       return "Recently";
     }
-  };
-
-  // ✅ NEW: Get current time in correct timezone for debugging
-  const getCurrentTimeInfo = () => {
-    const now = new Date();
-    return {
-      local: now.toString(),
-      utc: now.toUTCString(),
-      iso: now.toISOString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    };
   };
 
   // Get notifications to display (3 by default, 10 when expanded)
