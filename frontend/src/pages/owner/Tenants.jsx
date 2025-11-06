@@ -98,11 +98,10 @@ const Tenants = () => {
     setSelectedDocument(null);
   };
 
-  // Function to get profile image URL or fallback to initials
+  // ✅ FIXED: Use the full Cloudinary URL directly
   const getProfileImage = (user) => {
     if (user.image) {
-      // ✅ UPDATED IMAGE URL
-      return `${API_BASE}/uploads/profile_images/${user.image}`;
+      return user.image; // ✅ user.image already contains the full Cloudinary URL
     }
     return null;
   };
@@ -114,6 +113,14 @@ const Tenants = () => {
     if (fallbackElement) {
       fallbackElement.style.display = 'flex';
     }
+  };
+
+  // ✅ FIXED: Document URLs - use Cloudinary URLs directly
+  const getDocumentUrl = (documentPath) => {
+    if (documentPath) {
+      return documentPath; // ✅ documentPath already contains the full Cloudinary URL
+    }
+    return null;
   };
 
   // Approve functions
@@ -434,12 +441,13 @@ const Tenants = () => {
                         <span className="Owner-Tenant-document-label">Valid ID</span>
                         <button
                           className="Owner-Tenant-document-btn"
-                          onClick={() =>
-                            window.open(
-                              `${API_BASE}/uploads/valid_ids/${selectedUser.valid_id}`,
-                              "_blank"
-                            )
-                          }
+                          onClick={() => {
+                            const url = getDocumentUrl(selectedUser.valid_id);
+                            if (url) {
+                              window.open(url, "_blank");
+                            }
+                          }}
+                          disabled={!selectedUser.valid_id}
                         >
                           <Download size={14} /> View Document
                         </button>
@@ -448,12 +456,13 @@ const Tenants = () => {
                         <span className="Owner-Tenant-document-label">Barangay Clearance</span>
                         <button
                           className="Owner-Tenant-document-btn"
-                          onClick={() =>
-                            window.open(
-                              `${API_BASE}/uploads/brgy_clearances/${selectedUser.brgy_clearance}`,
-                              "_blank"
-                            )
-                          }
+                          onClick={() => {
+                            const url = getDocumentUrl(selectedUser.brgy_clearance);
+                            if (url) {
+                              window.open(url, "_blank");
+                            }
+                          }}
+                          disabled={!selectedUser.brgy_clearance}
                         >
                           <Download size={14} /> View Document
                         </button>
@@ -462,12 +471,13 @@ const Tenants = () => {
                         <span className="Owner-Tenant-document-label">Proof of Income</span>
                         <button
                           className="Owner-Tenant-document-btn"
-                          onClick={() =>
-                            window.open(
-                              `${API_BASE}/uploads/proof_of_income/${selectedUser.proof_of_income}`,
-                              "_blank"
-                            )
-                          }
+                          onClick={() => {
+                            const url = getDocumentUrl(selectedUser.proof_of_income);
+                            if (url) {
+                              window.open(url, "_blank");
+                            }
+                          }}
+                          disabled={!selectedUser.proof_of_income}
                         >
                           <Download size={14} /> View Document
                         </button>

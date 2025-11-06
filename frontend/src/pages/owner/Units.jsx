@@ -54,7 +54,6 @@ function Units() {
     const fetchUnits = async () => {
       try {
         setLoading(true);
-        // ✅ UPDATED API ENDPOINT
         const response = await fetch(`${API_BASE}/api/houses`);
         const data = await response.json();
         setUnits(data);
@@ -84,51 +83,51 @@ function Units() {
     }
   };
 
-  // ✅ Add this to your handleAddUnit function
-const handleAddUnit = async () => {
-  if (!formData.name || !formData.price || !formData.image) {
-    showModal("Missing Information", "Please fill in all required fields and select an image.", "error");
-    return;
-  }
-
-  const newFormData = new FormData();
-  newFormData.append("name", formData.name);
-  newFormData.append("description", formData.description);
-  newFormData.append("price", formData.price);
-  newFormData.append("status", formData.status);
-  newFormData.append("image", formData.image);
-
-  try {
-    console.log("Sending request to:", `${API_BASE}/api/add-houses`);
-    
-    const response = await fetch(`${API_BASE}/api/add-houses`, {
-      method: "POST",
-      body: newFormData,
-      // Remove Content-Type header for FormData
-    });
-
-    console.log("Response status:", response.status);
-    
-    if (response.ok) {
-      const result = await response.json();
-      console.log("Success:", result);
-      showModal("Success", "Unit added successfully!", "success");
-      setShowAddModal(false);
-      resetForm();
-      
-      // Refresh units
-      const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) => res.json());
-      setUnits(updatedUnits);
-    } else {
-      const errorText = await response.text();
-      console.error("Error response:", errorText);
-      showModal("Error", `Failed to add unit: ${response.status} ${errorText}`, "error");
+  // ✅ Add new unit
+  const handleAddUnit = async () => {
+    if (!formData.name || !formData.price || !formData.image) {
+      showModal("Missing Information", "Please fill in all required fields and select an image.", "error");
+      return;
     }
-  } catch (err) {
-    console.error("Network error:", err);
-    showModal("Network Error", "Cannot connect to server. Please check your connection.", "error");
-  }
-};
+
+    const newFormData = new FormData();
+    newFormData.append("name", formData.name);
+    newFormData.append("description", formData.description);
+    newFormData.append("price", formData.price);
+    newFormData.append("status", formData.status);
+    newFormData.append("image", formData.image);
+
+    try {
+      console.log("Sending request to:", `${API_BASE}/api/add-houses`);
+      
+      const response = await fetch(`${API_BASE}/api/add-houses`, {
+        method: "POST",
+        body: newFormData,
+      });
+
+      console.log("Response status:", response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Success:", result);
+        showModal("Success", "Unit added successfully!", "success");
+        setShowAddModal(false);
+        resetForm();
+        
+        // Refresh units
+        const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) => res.json());
+        setUnits(updatedUnits);
+      } else {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        showModal("Error", `Failed to add unit: ${response.status} ${errorText}`, "error");
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      showModal("Network Error", "Cannot connect to server. Please check your connection.", "error");
+    }
+  };
+
   // ✅ Edit unit
   const handleEditUnit = async () => {
     if (!formData.name || !formData.price) {
@@ -137,7 +136,7 @@ const handleAddUnit = async () => {
     }
 
     // Check if selectedUnit and unitid exist
-    if (!selectedUnit || !selectedUnit.id) {
+    if (!selectedUnit || !selectedUnit.unitid) { // ✅ FIXED: Changed from 'id' to 'unitid'
       showModal("Error", "Unit ID is missing. Please try again.", "error");
       return;
     }
@@ -154,8 +153,7 @@ const handleAddUnit = async () => {
     }
 
     try {
-      // ✅ UPDATED API ENDPOINT
-      const response = await fetch(`${API_BASE}/api/houses/${selectedUnit.id}`, {
+      const response = await fetch(`${API_BASE}/api/houses/${selectedUnit.unitid}`, { // ✅ FIXED: Changed from 'id' to 'unitid'
         method: "PUT",
         body: editFormData,
       });
@@ -165,10 +163,7 @@ const handleAddUnit = async () => {
         setShowEditModal(false);
         resetForm();
         // Refresh units
-        // ✅ UPDATED API ENDPOINT
-        const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) =>
-          res.json()
-        );
+        const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) => res.json());
         setUnits(updatedUnits);
       } else {
         const errorData = await response.json();
@@ -194,7 +189,7 @@ const handleAddUnit = async () => {
 
   // ✅ Open edit modal with unit data
   const handleOpenEditModal = (unit) => {
-    if (!unit.id) {
+    if (!unit.unitid) { // ✅ FIXED: Changed from 'id' to 'unitid'
       showModal("Error", "This unit cannot be edited because it's missing an ID.", "error");
       return;
     }
@@ -207,8 +202,8 @@ const handleAddUnit = async () => {
       status: unit.status,
       image: null,
     });
-    // ✅ UPDATED IMAGE URL
-    setPreviewImage(unit.imagepath ? `${API_BASE}/uploads/houseimages/${unit.imagepath}` : null);
+    // ✅ FIXED: Use the full Cloudinary URL directly, no need to construct path
+    setPreviewImage(unit.imagepath || null); // ✅ unit.imagepath already contains the full Cloudinary URL
     setShowEditModal(true);
   };
 
@@ -315,9 +310,9 @@ const handleAddUnit = async () => {
               <div key={unit.unitid} className="Owner-Units-card">
                 <div className="Owner-Units-image-container">
                   {unit.imagepath ? (
-                    // ✅ UPDATED IMAGE URL
+                    // ✅ FIXED: Use the full Cloudinary URL directly
                     <img
-                      src={`${API_BASE}/uploads/houseimages/${unit.imagepath}`}
+                      src={unit.imagepath}
                       alt={unit.name}
                       className="Owner-Units-thumbnail"
                     />
@@ -570,9 +565,9 @@ const handleAddUnit = async () => {
                 {!previewImage && selectedUnit.imagepath && (
                   <div className="Owner-Units-current-image">
                     <p className="Owner-Units-current-image-label">Current Image:</p>
-                    {/* ✅ UPDATED IMAGE URL */}
+                    {/* ✅ FIXED: Use the full Cloudinary URL directly */}
                     <img
-                      src={`${API_BASE}/uploads/houseimages/${selectedUnit.imagepath}`}
+                      src={selectedUnit.imagepath}
                       alt={selectedUnit.name}
                       className="Owner-Units-preview-image"
                     />
@@ -607,9 +602,9 @@ const handleAddUnit = async () => {
             <div className="Owner-Units-modal-body">
               <div className="Owner-Units-detail-image">
                 {selectedUnit.imagepath ? (
-                  // ✅ UPDATED IMAGE URL
+                  // ✅ FIXED: Use the full Cloudinary URL directly
                   <img
-                    src={`${API_BASE}/uploads/houseimages/${selectedUnit.imagepath}`}
+                    src={selectedUnit.imagepath}
                     alt={selectedUnit.name}
                     className="Owner-Units-detail-thumbnail"
                   />
