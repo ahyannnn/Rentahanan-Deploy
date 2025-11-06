@@ -24,6 +24,19 @@ const Support = () => {
     // ✅ ADD API BASE
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
+    // ✅ ADD: Get image URL function (consistent with other components)
+    const getImageUrl = (imagePath, folder = 'concerns') => {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL (Cloudinary), use it directly
+        if (imagePath.startsWith('http')) {
+            return imagePath;
+        }
+        
+        // Otherwise, construct the local path
+        return `${API_BASE}/uploads/${folder}/${imagePath}`;
+    };
+
     useEffect(() => {
         const userData = localStorage.getItem("user");
         if (userData) {
@@ -182,14 +195,6 @@ const Support = () => {
         return icons[category] || <HelpCircle size={18} />;
     };
 
-    // ✅ Function to get image URL
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        // Handle both full URLs and relative paths
-        if (imagePath.startsWith('http')) return imagePath;
-        return `${API_BASE}${imagePath}`;
-    };
-
     return (
         <div className="support-container-Tenant-Support">
             {/* Header */}
@@ -305,8 +310,9 @@ const Support = () => {
                                     {concern.tenantimage && (
                                         <button
                                             className="view-image-btn-Tenant-Support"
+                                            // ✅ FIXED: Use the helper function
                                             onClick={() =>
-                                                window.open(getImageUrl(concern.tenantimage), "_blank")
+                                                window.open(getImageUrl(concern.tenantimage, 'concerns'), "_blank")
                                             }
                                         >
                                             <Image size={16} />
@@ -316,8 +322,9 @@ const Support = () => {
                                     {concern.landlordimage && (
                                         <button
                                             className="view-image-btn-Tenant-Support landlord"
+                                            // ✅ FIXED: Use the helper function
                                             onClick={() =>
-                                                window.open(getImageUrl(concern.landlordimage), "_blank")
+                                                window.open(getImageUrl(concern.landlordimage, 'concerns'), "_blank")
                                             }
                                         >
                                             <Image size={16} />

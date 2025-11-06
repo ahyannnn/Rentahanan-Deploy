@@ -24,6 +24,19 @@ const MyBills = () => {
   // ✅ ADD API BASE - same as other components
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
+  // ✅ ADD: Get image URL function (same as other components)
+  const getImageUrl = (filename, folder = 'receipts') => {
+    if (!filename) return null;
+    
+    // If it's already a full URL (Cloudinary), use it directly
+    if (filename.startsWith('http')) {
+      return filename;
+    }
+    
+    // Otherwise, construct the local path
+    return `${API_BASE}/uploads/${folder}/${filename}`;
+  };
+
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const tenantId = storedUser.tenantid || storedUser.userid || null;
 
@@ -154,14 +167,15 @@ const MyBills = () => {
     setGcashReceipt(null);
   };
 
-  // ✅ UPDATED API ENDPOINT for receipt viewing
+  // ✅ FIXED: UPDATED API ENDPOINT for receipt viewing with proper URL handling
   const handleViewReceipt = async (billId) => {
     try {
       const response = await fetch(`${API_BASE}/api/transactions/receipt/${billId}`);
       const receiptData = await response.json();
 
       if (response.ok && receiptData.receiptUrl) {
-        const receiptFullUrl = `${API_BASE}/uploads/receipts/${receiptData.receiptUrl}`;
+        // ✅ FIXED: Use the helper function to get correct receipt URL
+        const receiptFullUrl = getImageUrl(receiptData.receiptUrl, 'receipts');
         window.open(receiptFullUrl, '_blank');
       } else {
         alert(receiptData.error || `No receipt available for bill ${billId}`);
