@@ -12,8 +12,8 @@ const BrowseUnits = () => {
   const [hasApplied, setHasApplied] = useState(false);
   const [tenantDetails, setTenantDetails] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ ADD API BASE - same as Billing component
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -21,20 +21,16 @@ const BrowseUnits = () => {
 
   const statusOptions = ["All", "Available", "Occupied", "Pending"];
 
-  // ✅ UPDATED: Get image URL function
   const getImageUrl = (imagepath) => {
     if (!imagepath) return null;
     
-    // If it's already a full URL (Cloudinary), use it directly
     if (imagepath.startsWith('http')) {
       return imagepath;
     }
     
-    // Otherwise, construct the local path
     return `${API_BASE}/uploads/houseimages/${imagepath}`;
   };
 
-  // ✅ UPDATED API ENDPOINT for fetching houses
   useEffect(() => {
     fetch(`${API_BASE}/api/houses`)
       .then((res) => res.json())
@@ -42,7 +38,6 @@ const BrowseUnits = () => {
       .catch((err) => console.error("Error fetching units:", err));
   }, []);
 
-  // ✅ UPDATED API ENDPOINT for fetching application status
   useEffect(() => {
     if (!tenantId) return;
 
@@ -66,19 +61,23 @@ const BrowseUnits = () => {
     fetchApplication();
   }, [tenantId]);
 
-  // ✅ UPDATED API ENDPOINT for fetching tenant details
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchTenantDetails = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/application/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/tenant/${tenantId}`);
         if (res.ok) {
           const data = await res.json();
           setTenantDetails(data);
         }
       } catch (err) {
         console.error("Error fetching tenant details:", err);
+        setTenantDetails({
+          fullName: storedUser.name || "",
+          email: storedUser.email || "",
+          phone: storedUser.phone || ""
+        });
       }
     };
 
@@ -105,12 +104,19 @@ const BrowseUnits = () => {
 
   const handleApply = () => setShowApplyForm(true);
 
-  // ✅ UPDATED API ENDPOINT for application submission
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!selectedUnit || hasApplied) {
       alert("Cannot apply. You have either not selected a unit or have already applied.");
+      setLoading(false);
+      return;
+    }
+
+    if (!tenantId) {
+      alert("Please log in to apply for a unit.");
+      setLoading(false);
       return;
     }
 
@@ -120,30 +126,40 @@ const BrowseUnits = () => {
 
     if (!validIdFile || !brgyClearanceFile || !proofOfIncomeFile) {
       alert("All required documents must be uploaded.");
+      setLoading(false);
       return;
     }
 
-    const formData = new FormData();
-    formData.append("tenant_id", tenantId);
-    formData.append("unit_id", selectedUnit.id);
-    formData.append("validId", validIdFile);
-    formData.append("brgyClearance", brgyClearanceFile);
-    formData.append("proofOfIncome", proofOfIncomeFile);
+    try {
+      const formData = new FormData();
+      
+      // ✅ FIXED: Changed field names to match backend
+      formData.append("tenant_id", tenantId);
+      formData.append("unit_id", selectedUnit.unitid);
+      
+      formData.append("validId", validIdFile);
+      formData.append("brgyClearance", brgyClearanceFile);
+      formData.append("proofOfIncome", proofOfIncomeFile);
 
-    fetch(`${API_BASE}/api/apply`, {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((data) => {
+      const response = await fetch(`${API_BASE}/api/apply`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
         setShowApplyForm(false);
         setShowSuccessModal(true);
         setHasApplied(true);
-      })
-      .catch((err) => {
-        console.error("Error submitting application:", err);
-        alert("Failed to submit application.");
-      });
+      } else {
+        alert(`Failed to submit application: ${result.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      alert("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseSuccessModal = () => {
@@ -153,7 +169,6 @@ const BrowseUnits = () => {
 
   return (
     <div className="browse-units-container-Browse">
-      {/* Header Section */}
       <div className="page-header-section-Browse">
         <div className="header-content-Browse">
           <h2 className="page-header-Browse">Browse Units 🏘️</h2>
@@ -161,7 +176,6 @@ const BrowseUnits = () => {
         </div>
       </div>
 
-      {/* Search and Filter Section */}
       <div className="controls-container-Browse">
         <div className="search-container-Browse">
           <div className="search-box-Browse">
@@ -196,7 +210,6 @@ const BrowseUnits = () => {
         </div>
       </div>
 
-      {/* Units Grid Section */}
       <div className="units-grid-container-Browse">
         <h2 className="section-title-Browse">Available Properties</h2>
 
@@ -204,14 +217,13 @@ const BrowseUnits = () => {
           {filteredUnits.length > 0 ? (
             filteredUnits.map((unit) => (
               <div
-                key={unit.id}
+                key={unit.unitid}
                 className="unit-card-Browse"
                 onClick={() => setSelectedUnit(unit)}
               >
                 <div className="unit-image-container-Browse">
                   {unit.imagepath ? (
                     <img
-                      // ✅ FIXED: Use the helper function to get correct image URL
                       src={getImageUrl(unit.imagepath)}
                       alt={unit.name}
                       className="unit-image-Browse"
@@ -267,7 +279,6 @@ const BrowseUnits = () => {
         </div>
       </div>
 
-      {/* Unit Detail Modal */}
       {selectedUnit && !showApplyForm && (
         <div className="modal-overlay-Browse" onClick={() => setSelectedUnit(null)}>
           <div className="modal-content-Browse" onClick={(e) => e.stopPropagation()}>
@@ -286,7 +297,6 @@ const BrowseUnits = () => {
             <div className="modal-image-container-Browse">
               {selectedUnit.imagepath ? (
                 <img
-                  // ✅ FIXED: Use the helper function to get correct image URL
                   src={getImageUrl(selectedUnit.imagepath)}
                   alt={selectedUnit.name}
                   className="modal-image-Browse"
@@ -302,7 +312,6 @@ const BrowseUnits = () => {
             <div className="modal-details-Browse">
               <div className="detail-section-Browse">
                 <div className="detail-item-Browse">
-             
                   <div className="detail-content-Browse">
                     <span className="detail-label-Browse">Monthly Rent</span>
                     <span className="detail-price-Browse">₱{selectedUnit.price?.toLocaleString() || '0'}</span>
@@ -350,7 +359,6 @@ const BrowseUnits = () => {
         </div>
       )}
 
-      {/* Apply Form Modal */}
       {selectedUnit && showApplyForm && (
         <div className="modal-overlay-Browse" onClick={() => setShowApplyForm(false)}>
           <div className="modal-content-Browse form-modal-Browse" onClick={(e) => e.stopPropagation()}>
@@ -475,8 +483,8 @@ const BrowseUnits = () => {
                 <button type="button" className="form-cancel-btn-Browse" onClick={() => setShowApplyForm(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="form-submit-btn-Browse">
-                  Submit Application
+                <button type="submit" className="form-submit-btn-Browse" disabled={loading}>
+                  {loading ? "Submitting..." : "Submit Application"}
                 </button>
               </div>
             </form>
@@ -484,7 +492,6 @@ const BrowseUnits = () => {
         </div>
       )}
 
-      {/* Success Modal */}
       {showSuccessModal && (
         <div className="modal-overlay-Browse success-modal-overlay-Browse">
           <div className="success-modal-Browse">
