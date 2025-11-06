@@ -13,24 +13,29 @@ const BrowseUnits = () => {
   const [tenantDetails, setTenantDetails] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  // ✅ ADD API BASE - same as Billing component
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const tenantId = storedUser.userid;
 
   const statusOptions = ["All", "Available", "Occupied", "Pending"];
 
+  // ✅ UPDATED API ENDPOINT for fetching houses
   useEffect(() => {
-    fetch("http://localhost:5000/api/houses")
+    fetch(`${API_BASE}/api/houses`)
       .then((res) => res.json())
       .then((data) => setUnits(data))
       .catch((err) => console.error("Error fetching units:", err));
   }, []);
 
+  // ✅ UPDATED API ENDPOINT for fetching application status
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchApplication = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/application/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/application/${tenantId}`);
         if (res.ok) {
           const data = await res.json();
           const shouldSetApplied = !!data.unitid;
@@ -48,12 +53,13 @@ const BrowseUnits = () => {
     fetchApplication();
   }, [tenantId]);
 
+  // ✅ UPDATED API ENDPOINT for fetching tenant details
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchTenantDetails = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/application/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/application/${tenantId}`);
         if (res.ok) {
           const data = await res.json();
           setTenantDetails(data);
@@ -86,6 +92,7 @@ const BrowseUnits = () => {
 
   const handleApply = () => setShowApplyForm(true);
 
+  // ✅ UPDATED API ENDPOINT for application submission
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
@@ -110,7 +117,7 @@ const BrowseUnits = () => {
     formData.append("brgyClearance", brgyClearanceFile);
     formData.append("proofOfIncome", proofOfIncomeFile);
 
-    fetch("http://localhost:5000/api/apply", {
+    fetch(`${API_BASE}/api/apply`, {
       method: "POST",
       body: formData,
     })
@@ -191,7 +198,7 @@ const BrowseUnits = () => {
                 <div className="unit-image-container-Browse">
                   {unit.imagepath ? (
                     <img
-                      src={`http://localhost:5000/uploads/houseimages/${unit.imagepath}`}
+                      src={`${API_BASE}/uploads/houseimages/${unit.imagepath}`}
                       alt={unit.name}
                       className="unit-image-Browse"
                     />
@@ -266,7 +273,7 @@ const BrowseUnits = () => {
             <div className="modal-image-container-Browse">
               {selectedUnit.imagepath ? (
                 <img
-                  src={`http://localhost:5000/uploads/houseimages/${selectedUnit.imagepath}`}
+                  src={`${API_BASE}/uploads/houseimages/${selectedUnit.imagepath}`}
                   alt={selectedUnit.name}
                   className="modal-image-Browse"
                 />

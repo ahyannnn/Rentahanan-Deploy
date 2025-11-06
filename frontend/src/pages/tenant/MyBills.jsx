@@ -21,9 +21,13 @@ const MyBills = () => {
     gcashRef: ""
   });
 
+  // ✅ ADD API BASE - same as other components
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const tenantId = storedUser.tenantid || storedUser.userid || null;
 
+  // ✅ UPDATED API ENDPOINT for fetching bills
   useEffect(() => {
     if (!tenantId) {
       console.warn("Tenant ID is missing!");
@@ -33,7 +37,7 @@ const MyBills = () => {
 
     const fetchBills = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/bills/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/bills/${tenantId}`);
         const data = await res.json();
         setBills(data);
       } catch (error) {
@@ -79,6 +83,7 @@ const MyBills = () => {
     setGcashReceipt(null);
   };
 
+  // ✅ UPDATED API ENDPOINT for payment submission
   const handleSubmitPayment = async () => {
     if (selectedBills.length === 0) return;
 
@@ -106,7 +111,7 @@ const MyBills = () => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/bills/pay/${billId}`,
+          `${API_BASE}/api/bills/pay/${billId}`,
           {
             method: "PUT",
             body: formData,
@@ -128,8 +133,8 @@ const MyBills = () => {
       setShowSuccessModal(true);
       handleCloseModal();
 
-      // Refresh bills data
-      const res = await fetch(`http://localhost:5000/api/bills/${tenantId}`);
+      // Refresh bills data - UPDATED API ENDPOINT
+      const res = await fetch(`${API_BASE}/api/bills/${tenantId}`);
       const data = await res.json();
       setBills(data);
     } catch (error) {
@@ -149,13 +154,14 @@ const MyBills = () => {
     setGcashReceipt(null);
   };
 
+  // ✅ UPDATED API ENDPOINT for receipt viewing
   const handleViewReceipt = async (billId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/transactions/receipt/${billId}`);
+      const response = await fetch(`${API_BASE}/api/transactions/receipt/${billId}`);
       const receiptData = await response.json();
 
       if (response.ok && receiptData.receiptUrl) {
-        const receiptFullUrl = `http://localhost:5000/uploads/receipts/${receiptData.receiptUrl}`;
+        const receiptFullUrl = `${API_BASE}/uploads/receipts/${receiptData.receiptUrl}`;
         window.open(receiptFullUrl, '_blank');
       } else {
         alert(receiptData.error || `No receipt available for bill ${billId}`);

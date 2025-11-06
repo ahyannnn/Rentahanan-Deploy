@@ -26,6 +26,9 @@ const Register = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
+  // ✅ ADD API BASE
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (errors[e.target.name]) {
@@ -149,7 +152,8 @@ const Register = () => {
   // NEW: Send welcome email after successful registration (no verification needed)
   const sendWelcomeEmail = async (email, firstName) => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/welcome/send", {
+      // ✅ UPDATED API ENDPOINT
+      const res = await fetch(`${API_BASE}/api/welcome/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -180,7 +184,8 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/register", {
+      // ✅ UPDATED API ENDPOINT
+      const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

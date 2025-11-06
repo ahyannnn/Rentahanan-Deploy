@@ -33,6 +33,9 @@ const Contract = () => {
   const [terminationDate, setTerminationDate] = useState('');
   const sigCanvas = useRef();
 
+  // ✅ ADD API BASE
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   // ✅ Get tenantid from both possible locations
   const getTenantId = () => {
     // First try to get from localStorage directly
@@ -63,8 +66,9 @@ const Contract = () => {
           return;
         }
 
+        // ✅ UPDATED API ENDPOINT
         const response = await axios.get(
-          `http://localhost:5000/api/contracts/tenant/${tenantId}`
+          `${API_BASE}/api/contracts/tenant/${tenantId}`
         );
 
         const data = response.data;
@@ -88,7 +92,7 @@ const Contract = () => {
     };
     
     fetchContract();
-  }, [tenantId]);
+  }, [tenantId, API_BASE]);
 
   // Calculate min and max dates for termination
   const today = new Date();
@@ -124,7 +128,8 @@ const Contract = () => {
   // Function to handle termination
   const handleTerminateContract = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/contracts/terminate-tenant", {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/contracts/terminate-tenant`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -140,7 +145,8 @@ const Contract = () => {
       if (!response.ok) throw new Error(result.message || "Failed to terminate contract");
 
       // Refresh data to show updated status
-      const updatedResponse = await axios.get(`http://localhost:5000/api/contracts/tenant/${tenantId}`);
+      // ✅ UPDATED API ENDPOINT
+      const updatedResponse = await axios.get(`${API_BASE}/api/contracts/tenant/${tenantId}`);
       const updatedData = updatedResponse.data;
       
       if (Array.isArray(updatedData) && updatedData.length > 0) {
@@ -192,8 +198,9 @@ const Contract = () => {
       formData.append("signed_contract", blob, `signed_${tenantId}.png`);
       formData.append("contractid", contract.contractid);
 
+      // ✅ UPDATED API ENDPOINT
       const response = await axios.post(
-        "http://localhost:5000/api/contracts/sign",
+        `${API_BASE}/api/contracts/sign`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -229,6 +236,13 @@ const Contract = () => {
     };
     return icons[status?.toLowerCase()] || <FileText className="status-icon default" />;
   };
+
+  // ✅ Update file URLs
+  const contractURL = contract?.signed_contract
+    ? `${API_BASE}/uploads/signed_contracts/${contract.signed_contract}`
+    : contract?.generated_contract
+    ? `${API_BASE}/uploads/contracts/${contract.generated_contract}`
+    : null;
 
   // ✅ Add debug information
   if (!tenantId) {
@@ -288,9 +302,6 @@ const Contract = () => {
   }
 
   const isActiveContract = contract.status === 'Active';
-  const contractURL = contract.signed_contract
-    ? `http://localhost:5000/uploads/signed_contracts/${contract.signed_contract}`
-    : `http://localhost:5000/uploads/contracts/${contract.generated_contract}`;
 
   return (
     <div className="contract-container-Contract">
@@ -467,7 +478,7 @@ const Contract = () => {
                 className="view-signed-btn-Contract"
                 onClick={() =>
                   window.open(
-                    `http://localhost:5000/uploads/signed_contracts/${contract.signed_contract}`,
+                    `${API_BASE}/uploads/signed_contracts/${contract.signed_contract}`,
                     "_blank"
                   )
                 }

@@ -18,8 +18,11 @@ const Support = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false); // NEW: Success modal for deletion
+    const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
     const [concernToDelete, setConcernToDelete] = useState(null);
+
+    // ✅ ADD API BASE
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
     useEffect(() => {
         const userData = localStorage.getItem("user");
@@ -33,7 +36,8 @@ const Support = () => {
     }, []);
 
     const fetchConcerns = (tenantId) => {
-        fetch(`http://localhost:5000/api/get-concerns/${tenantId}`)
+        // ✅ UPDATED API ENDPOINT
+        fetch(`${API_BASE}/api/get-concerns/${tenantId}`)
             .then((res) => res.json())
             .then((data) => setConcerns(data))
             .catch((err) => console.error("Error fetching concerns:", err));
@@ -76,7 +80,8 @@ const Support = () => {
                 formDataToSend.append(key, formData[key]);
             });
 
-            const res = await fetch("http://localhost:5000/api/add-concerns", {
+            // ✅ UPDATED API ENDPOINT
+            const res = await fetch(`${API_BASE}/api/add-concerns`, {
                 method: "POST",
                 body: formDataToSend,
             });
@@ -115,7 +120,8 @@ const Support = () => {
         
         setIsDeleting(true);
         try {
-            const res = await fetch(`http://localhost:5000/api/delete-concern-tenant/${concernToDelete.concernid}`, {
+            // ✅ UPDATED API ENDPOINT
+            const res = await fetch(`${API_BASE}/api/delete-concern-tenant/${concernToDelete.concernid}`, {
                 method: "DELETE",
             });
 
@@ -174,6 +180,14 @@ const Support = () => {
             Other: <HelpCircle size={18} />,
         };
         return icons[category] || <HelpCircle size={18} />;
+    };
+
+    // ✅ Function to get image URL
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return null;
+        // Handle both full URLs and relative paths
+        if (imagePath.startsWith('http')) return imagePath;
+        return `${API_BASE}${imagePath}`;
     };
 
     return (
@@ -292,7 +306,7 @@ const Support = () => {
                                         <button
                                             className="view-image-btn-Tenant-Support"
                                             onClick={() =>
-                                                window.open(`http://localhost:5000${concern.tenantimage}`, "_blank")
+                                                window.open(getImageUrl(concern.tenantimage), "_blank")
                                             }
                                         >
                                             <Image size={16} />
@@ -303,7 +317,7 @@ const Support = () => {
                                         <button
                                             className="view-image-btn-Tenant-Support landlord"
                                             onClick={() =>
-                                                window.open(`http://localhost:5000${concern.landlordimage}`, "_blank")
+                                                window.open(getImageUrl(concern.landlordimage), "_blank")
                                             }
                                         >
                                             <Image size={16} />
