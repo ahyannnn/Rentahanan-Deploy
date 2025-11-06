@@ -52,6 +52,9 @@ const OwnerContract = () => {
         remarks: "",
     });
 
+    // ✅ ADD API BASE
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
     const sigPadRef = useRef(null);
 
     useEffect(() => {
@@ -67,9 +70,10 @@ const OwnerContract = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
+            // ✅ UPDATED API ENDPOINTS
             const [contractsRes, applicantsRes] = await Promise.all([
-                fetch("http://localhost:5000/api/contracts/tenants"),
-                fetch("http://localhost:5000/api/contracts/applicants"),
+                fetch(`${API_BASE}/api/contracts/tenants`),
+                fetch(`${API_BASE}/api/contracts/applicants`),
             ]);
             const contractsData = await contractsRes.json();
             const applicantsData = await applicantsRes.json();
@@ -96,10 +100,12 @@ const OwnerContract = () => {
     // Function to get profile image URL
     const getProfileImage = (user) => {
         if (user.image) {
-            return `http://localhost:5000/uploads/profile_images/${user.image}`;
+            // ✅ UPDATED IMAGE URL
+            return `${API_BASE}/uploads/profile_images/${user.image}`;
         }
         if (user.profile_image) {
-            return `http://localhost:5000/uploads/profile_images/${user.profile_image}`;
+            // ✅ UPDATED IMAGE URL
+            return `${API_BASE}/uploads/profile_images/${user.profile_image}`;
         }
         return null;
     };
@@ -165,7 +171,8 @@ const OwnerContract = () => {
     // Function to handle termination
     const handleTerminateContract = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/contracts/terminate", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/contracts/terminate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -197,7 +204,8 @@ const OwnerContract = () => {
     // Function to handle approval of tenant termination request
     const handleApproveTermination = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/contracts/approve-termination", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/contracts/approve-termination`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -226,7 +234,8 @@ const OwnerContract = () => {
     // Function to handle rejection of tenant termination request
     const handleRejectTermination = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/contracts/reject-termination", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/contracts/reject-termination`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -273,7 +282,8 @@ const OwnerContract = () => {
                 ? null
                 : sigPadRef.current.getCanvas().toDataURL("image/png");
 
-            const pdfResponse = await fetch("http://localhost:5000/api/contracts/generate-pdf", {
+            // ✅ UPDATED API ENDPOINT
+            const pdfResponse = await fetch(`${API_BASE}/api/contracts/generate-pdf`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -293,7 +303,8 @@ const OwnerContract = () => {
             if (!pdfResponse.ok) throw new Error(pdfData.error || "Failed to generate contract");
 
             // Save to backend
-            const issueResponse = await fetch("http://localhost:5000/api/contracts/issuecontract", {
+            // ✅ UPDATED API ENDPOINT
+            const issueResponse = await fetch(`${API_BASE}/api/contracts/issuecontract`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -314,7 +325,8 @@ const OwnerContract = () => {
                 monthlyRent: formData.monthlyrent,
                 issuedDate: new Date().toLocaleDateString(),
                 contractId: pdfData.contract_id || `CONTRACT-${Date.now()}`,
-                pdfUrl: pdfData.pdf_url || `http://localhost:5000/api/contracts/download/${pdfData.filename}`
+                // ✅ UPDATED PDF URL
+                pdfUrl: pdfData.pdf_url || `${API_BASE}/api/contracts/download/${pdfData.filename}`
             });
 
             // Close add modal and show success modal
@@ -352,9 +364,11 @@ const OwnerContract = () => {
         let contractUrl = '';
         
         if (contract.signed_contract) {
-            contractUrl = `http://localhost:5000/uploads/signed_contracts/${contract.signed_contract}`;
+            // ✅ UPDATED CONTRACT URL
+            contractUrl = `${API_BASE}/uploads/signed_contracts/${contract.signed_contract}`;
         } else if (contract.generated_contract) {
-            contractUrl = `http://localhost:5000/uploads/contracts/${contract.generated_contract}`;
+            // ✅ UPDATED CONTRACT URL
+            contractUrl = `${API_BASE}/uploads/contracts/${contract.generated_contract}`;
         } else {
             console.error("No contract file found for:", contract);
             alert("Contract file not found. Please contact administrator.");

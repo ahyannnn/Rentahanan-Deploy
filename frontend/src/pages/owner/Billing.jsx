@@ -59,6 +59,9 @@ function Billing() {
         unitName: ""
     });
 
+    // ✅ ADD API BASE
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
     // ✅ Helper function
     const getTodayDate = () => new Date().toISOString().split("T")[0];
 
@@ -158,11 +161,12 @@ function Billing() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // ✅ UPDATED API ENDPOINTS
                 const [tenantsRes, applicantsRes, contractsRes, issuedInvoicesRes] = await Promise.all([
-                    fetch("http://localhost:5000/api/billing/bills"),
-                    fetch("http://localhost:5000/api/applicants/for-billing"),
-                    fetch("http://localhost:5000/api/contracts/tenants"),
-                    fetch("http://localhost:5000/api/billing/issued-applicant-invoices")
+                    fetch(`${API_BASE}/api/billing/bills`),
+                    fetch(`${API_BASE}/api/applicants/for-billing`),
+                    fetch(`${API_BASE}/api/contracts/tenants`),
+                    fetch(`${API_BASE}/api/billing/issued-applicant-invoices`)
                 ]);
                 setTenants(await tenantsRes.json());
                 setApplicants(await applicantsRes.json());
@@ -194,7 +198,8 @@ function Billing() {
     // ✅ Detect automated bills
     const detectAutomatedBills = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/billing/automated-detect", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/billing/automated-detect`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -219,7 +224,8 @@ function Billing() {
     // ✅ Create single automated bill
     const createAutomatedBill = async (billData) => {
         try {
-            const response = await fetch("http://localhost:5000/api/billing/create-automated", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/billing/create-automated`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(billData),
@@ -232,7 +238,8 @@ function Billing() {
                 ));
                 
                 // Refresh tenants list
-                const tenantsRes = await fetch("http://localhost:5000/api/billing/bills");
+                // ✅ UPDATED API ENDPOINT
+                const tenantsRes = await fetch(`${API_BASE}/api/billing/bills`);
                 setTenants(await tenantsRes.json());
                 
                 showModal("Success", `${billData.billType} bill created for ${billData.tenantName}`, "success");
@@ -246,7 +253,8 @@ function Billing() {
     // ✅ Create all automated bills at once
     const createAllAutomatedBills = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/billing/create-all-automated", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/billing/create-all-automated`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ bills: automatedBills }),
@@ -257,7 +265,8 @@ function Billing() {
                 setShowAutomatedModal(false);
                 
                 // Refresh tenants list
-                const tenantsRes = await fetch("http://localhost:5000/api/billing/bills");
+                // ✅ UPDATED API ENDPOINT
+                const tenantsRes = await fetch(`${API_BASE}/api/billing/bills`);
                 setTenants(await tenantsRes.json());
                 
                 showModal("Success", "All automated bills created successfully!", "success");
@@ -400,7 +409,8 @@ function Billing() {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/api/billing/create", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/billing/create`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
@@ -427,10 +437,11 @@ function Billing() {
                 });
                 setFormErrors({});
 
+                // ✅ UPDATED API ENDPOINTS
                 const [tenantsRes, applicantsRes, issuedInvoicesRes] = await Promise.all([
-                    fetch("http://localhost:5000/api/billing/bills"),
-                    fetch("http://localhost:5000/api/applicants/for-billing"),
-                    fetch("http://localhost:5000/api/billing/issued-applicant-invoices")
+                    fetch(`${API_BASE}/api/billing/bills`),
+                    fetch(`${API_BASE}/api/applicants/for-billing`),
+                    fetch(`${API_BASE}/api/billing/issued-applicant-invoices`)
                 ]);
                 setTenants(await tenantsRes.json());
                 setApplicants(await applicantsRes.json());
@@ -448,7 +459,8 @@ function Billing() {
         // Check for duplicate bills first
         if (tenantFormData.tenantId && tenantFormData.billType && tenantFormData.issuedDate) {
             try {
-                const duplicateCheck = await fetch(`http://localhost:5000/api/billing/check-duplicate`, {
+                // ✅ UPDATED API ENDPOINT
+                const duplicateCheck = await fetch(`${API_BASE}/api/billing/check-duplicate`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -484,7 +496,8 @@ function Billing() {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/api/billing/create", {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/billing/create`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(tenantFormData),
@@ -513,7 +526,8 @@ function Billing() {
                 });
                 setTenantFormErrors({});
 
-                const tenantsRes = await fetch("http://localhost:5000/api/billing/bills");
+                // ✅ UPDATED API ENDPOINT
+                const tenantsRes = await fetch(`${API_BASE}/api/billing/bills`);
                 setTenants(await tenantsRes.json());
             } else {
                 showModal("Error", "Failed to create invoice. Please try again.", "error");
@@ -538,13 +552,15 @@ function Billing() {
         if (!selectedInvoice) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/billing/mark-paid/${selectedInvoice}`, {
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/billing/mark-paid/${selectedInvoice}`, {
                 method: "PUT",
             });
 
             if (response.ok) {
                 showModal("Success", "Invoice marked as paid successfully!", "success");
-                const tenantsRes = await fetch("http://localhost:5000/api/billing/bills");
+                // ✅ UPDATED API ENDPOINT
+                const tenantsRes = await fetch(`${API_BASE}/api/billing/bills`);
                 setTenants(await tenantsRes.json());
             } else {
                 showModal("Error", "Failed to mark invoice as paid.", "error");

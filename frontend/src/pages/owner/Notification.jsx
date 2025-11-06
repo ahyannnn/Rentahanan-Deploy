@@ -8,7 +8,7 @@ import "../../styles/owners/Notification.css";
 function Notification() {
   const [showProblemModal, setShowProblemModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false); // NEW: Success modal for deletion
+  const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false);
   const [problemToDelete, setProblemToDelete] = useState(null);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
@@ -17,11 +17,14 @@ function Notification() {
   const [uploadedLandlordImage, setUploadedLandlordImage] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ✅ Fetch all concerns from backend (only non-deleted ones)
+  // ✅ ADD API BASE - same as Billing component
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
+  // ✅ Fetch all concerns from backend (only non-deleted ones) - UPDATED API ENDPOINT
   useEffect(() => {
     const fetchConcerns = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/concerns");
+        const response = await fetch(`${API_BASE}/api/concerns`);
         const data = await response.json();
         setProblems(data);
       } catch (error) {
@@ -55,7 +58,7 @@ function Notification() {
     }
   };
 
-  // ✅ Updated Delete Function for Owner (Soft Delete)
+  // ✅ Updated Delete Function for Owner (Soft Delete) - UPDATED API ENDPOINT
   const handleDeleteClick = (problem, e) => {
     if (e) e.stopPropagation();
     setProblemToDelete(problem);
@@ -67,7 +70,7 @@ function Notification() {
     
     setIsDeleting(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/delete-concern-landlord/${problemToDelete.id}`, {
+      const response = await fetch(`${API_BASE}/api/delete-concern-landlord/${problemToDelete.id}`, {
         method: "DELETE",
       });
 
@@ -103,6 +106,7 @@ function Notification() {
     setShowDeleteSuccessModal(false);
   };
 
+  // ✅ UPDATED API ENDPOINT for status update
   const handleUpdateStatus = async (newStatus) => {
     if (!selectedProblem || selectedProblem.status === "Resolved") return;
     try {
@@ -115,7 +119,7 @@ function Notification() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/concerns/${selectedProblem.id}`, {
+      const response = await fetch(`${API_BASE}/api/concerns/${selectedProblem.id}`, {
         method: "PUT",
         body: formData,
       });
@@ -146,6 +150,7 @@ function Notification() {
     Resolved: problems.filter(p => p.status === "Resolved").length
   };
 
+  // ✅ UPDATED API ENDPOINT for landlord image upload
   const handleUploadLandlordImage = async (file) => {
     if (!file || !selectedProblem) return;
 
@@ -154,7 +159,7 @@ function Notification() {
       formData.append("landlordimage", file);
       formData.append("status", "Resolved"); // Auto-mark as resolved when uploading fix photo
 
-      const response = await fetch(`http://localhost:5000/api/concerns/${selectedProblem.id}`, {
+      const response = await fetch(`${API_BASE}/api/concerns/${selectedProblem.id}`, {
         method: "PUT",
         body: formData,
       });
@@ -336,7 +341,7 @@ function Notification() {
                     <button
                       className="owner-view-photo-btn"
                       onClick={() =>
-                        window.open(`http://localhost:5000${selectedProblem.image}`, "_blank", "noopener,noreferrer")
+                        window.open(`${API_BASE}${selectedProblem.image}`, "_blank", "noopener,noreferrer")
                       }
                     >
                       View Tenant Photo
@@ -352,7 +357,7 @@ function Notification() {
                     <button
                       className="owner-view-photo-btn"
                       onClick={() =>
-                        window.open(`http://localhost:5000${selectedProblem.landlordimage}`, "_blank", "noopener,noreferrer")
+                        window.open(`${API_BASE}${selectedProblem.landlordimage}`, "_blank", "noopener,noreferrer")
                       }
                     >
                       View Your Photo
@@ -458,7 +463,7 @@ function Notification() {
         </div>
       )}
 
-      {/* ✅ DELETE SUCCESS MODAL - Same as Tenant */}
+      {/* ✅ DELETE SUCCESS MODAL */}
       {showDeleteSuccessModal && (
         <div className="owner-delete-success-modal-overlay">
           <div className="owner-delete-success-modal">

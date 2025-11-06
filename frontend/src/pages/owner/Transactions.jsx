@@ -15,11 +15,15 @@ function Transactions() {
   const [showRejectSuccessModal, setShowRejectSuccessModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState(null);
 
+  // ✅ ADD API BASE
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   useEffect(() => {
     const fetchBills = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch("http://localhost:5000/api/billing/bills");
+        // ✅ UPDATED API ENDPOINT
+        const res = await fetch(`${API_BASE}/api/billing/bills`);
         const data = await res.json();
         setBills(data);
       } catch (err) {
@@ -60,8 +64,9 @@ function Transactions() {
     );
 
     try {
+      // ✅ UPDATED API ENDPOINT
       const res = await fetch(
-        `http://localhost:5000/api/transactions/issue-receipt/${selectedBill.billid}`,
+        `${API_BASE}/api/transactions/issue-receipt/${selectedBill.billid}`,
         { method: "POST" }
       );
 
@@ -98,8 +103,9 @@ function Transactions() {
   if (!selectedBill) return;
   
   try {
+    // ✅ UPDATED API ENDPOINT
     const res = await fetch(
-      `http://localhost:5000/api/transactions/reject/${selectedBill.billid}`,
+      `${API_BASE}/api/transactions/reject/${selectedBill.billid}`,
       { method: "PUT" }
     );
     
@@ -129,11 +135,13 @@ function Transactions() {
 
   const handleViewReceipt = async (billId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/transactions/receipt/${billId}`);
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/transactions/receipt/${billId}`);
       const receiptData = await response.json();
 
       if (response.ok && receiptData.receiptUrl) {
-        const receiptFullUrl = `http://localhost:5000/uploads/receipts/${receiptData.receiptUrl}`;
+        // ✅ UPDATED RECEIPT URL
+        const receiptFullUrl = `${API_BASE}/uploads/receipts/${receiptData.receiptUrl}`;
         window.open(receiptFullUrl, '_blank');
       } else {
         console.log(receiptData.error || `No receipt available for bill ${billId}`);
@@ -329,7 +337,8 @@ function Transactions() {
                         <td className="owner-transactions-proof">
                           {b.GCash_receipt ? (
                             <a
-                              href={`http://localhost:5000/uploads/gcash_receipts/${b.GCash_receipt}`}
+                              // ✅ UPDATED RECEIPT URL
+                              href={`${API_BASE}/uploads/gcash_receipts/${b.GCash_receipt}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="proof-link"
