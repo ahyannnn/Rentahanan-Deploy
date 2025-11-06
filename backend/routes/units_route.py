@@ -3,6 +3,9 @@ import os
 from extensions import db
 from models.units_model import House
 import requests
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 houses_bp = Blueprint("houses_bp", __name__)
 
@@ -12,19 +15,13 @@ def upload_to_cloudinary(file, folder_name):
         return None
         
     try:
-        # Make request to our own upload endpoint
-        upload_response = requests.post(
-            f"{request.url_root}api/upload",
-            files={'file': file},
-            data={'folder': folder_name}
+        # Upload directly to Cloudinary
+        result = cloudinary.uploader.upload(
+            file,
+            folder=f"house-rental/{folder_name}",
+            resource_type="image"
         )
-        
-        if upload_response.status_code == 200:
-            data = upload_response.json()
-            return data['url']  # Return Cloudinary URL
-        else:
-            print(f"Upload failed: {upload_response.json()}")
-            return None
+        return result['secure_url']
             
     except Exception as e:
         print(f"Cloudinary upload error: {e}")
@@ -32,32 +29,41 @@ def upload_to_cloudinary(file, folder_name):
 
 @houses_bp.route("/add-houses", methods=["POST"])
 def add_house():
-    name = request.form.get("name")
-    description = request.form.get("description", "")
-    price = request.form.get("price")
-    status = request.form.get("status", "Available")
-    image = request.files.get("image")
-
-    if not name or not price or not image:
-        return jsonify({"error": "Missing required fields"}), 400
-
     try:
+        name = request.form.get("name")
+        description = request.form.get("description", "")
+        price = request.form.get("price")
+        status = request.form.get("status", "Available")
+        image = request.files.get("image")
+
+        print(f"Received data - Name: {name}, Price: {price}, Image: {image}")
+
+        if not name or not price:
+            return jsonify({"error": "Name and price are required fields"}), 400
+
+        if not image:
+            return jsonify({"error": "Image is required"}), 400
+
         # Upload image to Cloudinary
         image_url = upload_to_cloudinary(image, "house_images")
         if not image_url:
-            return jsonify({"error": "Failed to upload house image"}), 500
+            return jsonify({"error": "Failed to upload house image to Cloudinary"}), 500
+
+        print(f"Image uploaded successfully: {image_url}")
 
         # Create house record
         new_house = House(
             name=name,
             description=description,
-            price=price,
+            price=float(price),
             status=status,
-            imagepath=image_url,  # Store Cloudinary URL
+            imagepath=image_url,
         )
 
         db.session.add(new_house)
         db.session.commit()
+
+        print(f"House created with ID: {new_house.unitid}")
 
         return jsonify({
             "message": "Unit added successfully!",
@@ -73,7 +79,7 @@ def add_house():
 
     except Exception as e:
         db.session.rollback()
-        print("Error adding house:", e)
+        print("Error adding house:", str(e))
         return jsonify({"error": "Failed to add unit", "details": str(e)}), 500
 
 @houses_bp.route("/houses/<int:house_id>", methods=["PUT"])
