@@ -234,7 +234,6 @@ const BrowseUnits = () => {
                   <div className="unit-header-Browse">
                     <h3 className="unit-name-Browse">{unit.name}</h3>
                     <div className="unit-price-Browse">
-                      <DollarSign size={16} />
                       ₱{unit.price?.toLocaleString() || '0'}/month
                     </div>
                   </div>
@@ -303,7 +302,7 @@ const BrowseUnits = () => {
             <div className="modal-details-Browse">
               <div className="detail-section-Browse">
                 <div className="detail-item-Browse">
-                  <DollarSign size={20} className="detail-icon-Browse" />
+             
                   <div className="detail-content-Browse">
                     <span className="detail-label-Browse">Monthly Rent</span>
                     <span className="detail-price-Browse">₱{selectedUnit.price?.toLocaleString() || '0'}</span>
