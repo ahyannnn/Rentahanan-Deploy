@@ -23,11 +23,9 @@ const BrowseUnits = () => {
 
   const getImageUrl = (imagepath) => {
     if (!imagepath) return null;
-    
     if (imagepath.startsWith('http')) {
       return imagepath;
     }
-    
     return `${API_BASE}/uploads/houseimages/${imagepath}`;
   };
 
@@ -61,20 +59,34 @@ const BrowseUnits = () => {
     fetchApplication();
   }, [tenantId]);
 
+  // ✅ FIXED: Fetch tenant details from USER endpoint, not application endpoint
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchTenantDetails = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/tenant/${tenantId}`);
+        // Try to fetch from user endpoint first
+        const res = await fetch(`${API_BASE}/api/users/${tenantId}`);
         if (res.ok) {
-          const data = await res.json();
-          setTenantDetails(data);
+          const userData = await res.json();
+          setTenantDetails({
+            fullName: `${userData.firstname || ''} ${userData.lastname || ''}`.trim(),
+            email: userData.email || '',
+            phone: userData.phone || ''
+          });
+        } else {
+          // Fallback to localStorage data
+          setTenantDetails({
+            fullName: storedUser.name || `${storedUser.firstname || ''} ${storedUser.lastname || ''}`.trim(),
+            email: storedUser.email || '',
+            phone: storedUser.phone || ''
+          });
         }
       } catch (err) {
         console.error("Error fetching tenant details:", err);
+        // Final fallback to localStorage
         setTenantDetails({
-          fullName: storedUser.name || "",
+          fullName: storedUser.name || "User",
           email: storedUser.email || "",
           phone: storedUser.phone || ""
         });
@@ -104,6 +116,7 @@ const BrowseUnits = () => {
 
   const handleApply = () => setShowApplyForm(true);
 
+  // ✅ FIXED: Use correct unit ID field and add loading state
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -132,11 +145,8 @@ const BrowseUnits = () => {
 
     try {
       const formData = new FormData();
-      
-      // ✅ FIXED: Changed field names to match backend
       formData.append("tenant_id", tenantId);
-      formData.append("unit_id", selectedUnit.unitid);
-      
+      formData.append("unit_id", selectedUnit.unitid); // ✅ FIXED: Use unitid instead of id
       formData.append("validId", validIdFile);
       formData.append("brgyClearance", brgyClearanceFile);
       formData.append("proofOfIncome", proofOfIncomeFile);
@@ -156,7 +166,8 @@ const BrowseUnits = () => {
         alert(`Failed to submit application: ${result.error || "Unknown error"}`);
       }
     } catch (err) {
-      alert("Network error. Please check your connection and try again.");
+      console.error("Error submitting application:", err);
+      alert("Failed to submit application.");
     } finally {
       setLoading(false);
     }
@@ -169,6 +180,7 @@ const BrowseUnits = () => {
 
   return (
     <div className="browse-units-container-Browse">
+      {/* Header Section */}
       <div className="page-header-section-Browse">
         <div className="header-content-Browse">
           <h2 className="page-header-Browse">Browse Units 🏘️</h2>
@@ -176,6 +188,7 @@ const BrowseUnits = () => {
         </div>
       </div>
 
+      {/* Search and Filter Section */}
       <div className="controls-container-Browse">
         <div className="search-container-Browse">
           <div className="search-box-Browse">
@@ -210,6 +223,7 @@ const BrowseUnits = () => {
         </div>
       </div>
 
+      {/* Units Grid Section */}
       <div className="units-grid-container-Browse">
         <h2 className="section-title-Browse">Available Properties</h2>
 
@@ -279,6 +293,7 @@ const BrowseUnits = () => {
         </div>
       </div>
 
+      {/* Unit Detail Modal */}
       {selectedUnit && !showApplyForm && (
         <div className="modal-overlay-Browse" onClick={() => setSelectedUnit(null)}>
           <div className="modal-content-Browse" onClick={(e) => e.stopPropagation()}>
@@ -359,6 +374,7 @@ const BrowseUnits = () => {
         </div>
       )}
 
+      {/* Apply Form Modal */}
       {selectedUnit && showApplyForm && (
         <div className="modal-overlay-Browse" onClick={() => setShowApplyForm(false)}>
           <div className="modal-content-Browse form-modal-Browse" onClick={(e) => e.stopPropagation()}>
@@ -492,6 +508,7 @@ const BrowseUnits = () => {
         </div>
       )}
 
+      {/* Success Modal */}
       {showSuccessModal && (
         <div className="modal-overlay-Browse success-modal-overlay-Browse">
           <div className="success-modal-Browse">
