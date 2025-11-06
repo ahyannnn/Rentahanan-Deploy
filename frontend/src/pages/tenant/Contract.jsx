@@ -36,6 +36,19 @@ const Contract = () => {
   // ✅ ADD API BASE
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
+  // ✅ Get image URL function (same as BrowseUnits)
+  const getImageUrl = (filename, folder = 'signed_contracts') => {
+    if (!filename) return null;
+    
+    // If it's already a full URL (Cloudinary), use it directly
+    if (filename.startsWith('http')) {
+      return filename;
+    }
+    
+    // Otherwise, construct the local path
+    return `${API_BASE}/uploads/${folder}/${filename}`;
+  };
+
   // ✅ Get tenantid from both possible locations
   const getTenantId = () => {
     // First try to get from localStorage directly
@@ -237,11 +250,11 @@ const Contract = () => {
     return icons[status?.toLowerCase()] || <FileText className="status-icon default" />;
   };
 
-  // ✅ Update file URLs
+  // ✅ FIXED: Update file URLs using the helper function
   const contractURL = contract?.signed_contract
-    ? `${API_BASE}/uploads/signed_contracts/${contract.signed_contract}`
+    ? getImageUrl(contract.signed_contract, 'signed_contracts')
     : contract?.generated_contract
-    ? `${API_BASE}/uploads/contracts/${contract.generated_contract}`
+    ? getImageUrl(contract.generated_contract, 'contracts')
     : null;
 
   // ✅ Add debug information
@@ -478,7 +491,8 @@ const Contract = () => {
                 className="view-signed-btn-Contract"
                 onClick={() =>
                   window.open(
-                    `${API_BASE}/uploads/signed_contracts/${contract.signed_contract}`,
+                    // ✅ FIXED: Use the helper function
+                    getImageUrl(contract.signed_contract, 'signed_contracts'),
                     "_blank"
                   )
                 }

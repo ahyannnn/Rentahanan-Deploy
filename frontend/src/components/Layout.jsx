@@ -53,6 +53,19 @@ const Layout = () => {
   // ✅ Use the same API base as Login component
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
+  // ✅ ADD: Get image URL function for profile images
+  const getImageUrl = (imagePath, folder = 'profile_images') => {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL (Cloudinary), use it directly
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Otherwise, construct the local path
+    return `${API_BASE}/uploads/${folder}/${imagePath}`;
+  };
+
   useEffect(() => {
     // If current path is /tenant and user is Registered tenant, redirect to browse-units
     if (location.pathname === '/tenant' &&
@@ -92,9 +105,9 @@ const Layout = () => {
         setProfileImageError(false);
         setHeaderImageError(false);
 
-        // Set profile picture URL for both modal and header - ✅ UPDATED URL
+        // ✅ FIXED: Use the helper function for profile picture URL
         if (data.profile.image) {
-          const imageUrl = `${API_BASE}/uploads/profile_images/${data.profile.image}`;
+          const imageUrl = getImageUrl(data.profile.image, 'profile_images');
           setProfilePictureUrl(imageUrl);
           setHeaderProfilePictureUrl(imageUrl);
         } else {
@@ -409,8 +422,9 @@ const Layout = () => {
         setUserData(data.user);
         localStorage.setItem("user", JSON.stringify(data.user));
 
+        // ✅ FIXED: Use the helper function for updated profile image
         if (data.user.image) {
-          const imageUrl = `${API_BASE}/api/profile/image/${data.user.image}`;
+          const imageUrl = getImageUrl(data.user.image, 'profile_images');
           setProfilePictureUrl(imageUrl);
           setHeaderProfilePictureUrl(imageUrl);
           setProfileImageError(false);
@@ -439,8 +453,9 @@ const Layout = () => {
   };
 
   const handleCancelEdit = () => {
+    // ✅ FIXED: Use the helper function when canceling edit
     if (userData?.image) {
-      const imageUrl = `${API_BASE}/uploads/profile_images/${userData.image}`;
+      const imageUrl = getImageUrl(userData.image, 'profile_images');
       setProfilePictureUrl(imageUrl);
       setHeaderProfilePictureUrl(imageUrl);
     } else {

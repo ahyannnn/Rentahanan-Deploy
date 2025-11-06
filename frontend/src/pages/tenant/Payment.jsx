@@ -26,6 +26,19 @@ const Payment = () => {
     // ✅ ADD API BASE
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
+    // ✅ ADD: Get image URL function for receipts
+    const getImageUrl = (imagePath, folder = 'receipts') => {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL (Cloudinary), use it directly
+        if (imagePath.startsWith('http')) {
+            return imagePath;
+        }
+        
+        // Otherwise, construct the local path
+        return `${API_BASE}/uploads/${folder}/${imagePath}`;
+    };
+
     const itemsPerPage = 6;
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
     const tenantId = storedUser.tenantid || storedUser.userid || null;
@@ -147,16 +160,33 @@ const Payment = () => {
         }
     };
 
-    // ✅ Function to handle viewing receipt
-    const handleViewReceipt = (payment) => {
-        if (payment.receipt_url) {
-            // If there's a specific receipt URL, open it
-            window.open(payment.receipt_url, "_blank");
-        } else {
-            // Otherwise, show payment details in a modal or generate receipt
-            console.log("View receipt for payment:", payment);
-            // You can implement a receipt generation function here
-            alert(`Receipt for Payment #${payment.id}\nAmount: ₱${payment.amount}\nDate: ${new Date(payment.date).toLocaleDateString()}`);
+    // ✅ FIXED: Function to handle viewing receipt with proper URL handling
+    const handleViewReceipt = async (payment) => {
+        try {
+            // First try to get receipt from the payment data
+            if (payment.receipt_url) {
+                const receiptUrl = getImageUrl(payment.receipt_url, 'receipts');
+                window.open(receiptUrl, "_blank");
+                return;
+            }
+
+            // If no receipt_url in payment data, try to fetch it from API
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/transactions/receipt/${payment.id || payment.billid}`);
+            const receiptData = await response.json();
+
+            if (response.ok && receiptData.receiptUrl) {
+                const receiptUrl = getImageUrl(receiptData.receiptUrl, 'receipts');
+                window.open(receiptUrl, "_blank");
+            } else {
+                // If no receipt available, show payment details
+                console.log("No receipt available for payment:", payment);
+                alert(`Receipt for Payment #${payment.id || payment.billid}\nAmount: ₱${payment.amount}\nDate: ${new Date(payment.date).toLocaleDateString()}\n\nNo digital receipt available.`);
+            }
+        } catch (error) {
+            console.error("Error fetching receipt:", error);
+            // Fallback to showing basic payment info
+            alert(`Payment Details:\n- ID: #${payment.id || payment.billid}\n- Amount: ₱${payment.amount}\n- Date: ${new Date(payment.date).toLocaleDateString()}\n- Status: ${payment.status}\n\nReceipt is not available.`);
         }
     };
 
@@ -304,7 +334,7 @@ const Payment = () => {
                                 <div className="payment-card-footer-tenant-p">
                                     <div className="payment-id-tenant-p">
                                         <span className="id-label-tenant-p">Payment ID:</span>
-                                        <span className="id-value-tenant-p">#{payment.id}</span>
+                                        <span className="id-value-tenant-p">#{payment.id || payment.billid}</span>
                                     </div>
                                     <div className="payment-actions-tenant-p">
                                         <button 

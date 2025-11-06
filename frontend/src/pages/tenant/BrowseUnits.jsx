@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Search, Home, DollarSign, Users, CheckCircle, X, Upload, FileText, User, Mail, Phone } from "lucide-react";
+import { Search, Home, Users, CheckCircle, X, Upload, FileText, User, Mail, Phone } from "lucide-react";
 import "../../styles/tenant/BrowseUnits.css";
 
 const BrowseUnits = () => {
