@@ -14,7 +14,7 @@ const BrowseUnits = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ SAME API BASE AS UNITS COMPONENT
+  // ✅ API BASE
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -22,77 +22,65 @@ const BrowseUnits = () => {
 
   const statusOptions = ["All", "Available", "Occupied", "Pending"];
 
-  // ✅ SIMPLIFIED IMAGE URL - SAME AS UNITS COMPONENT
+  // ✅ Get image URL function
   const getImageUrl = (imagepath) => {
     if (!imagepath) return null;
-    return imagepath; // ✅ DIRECT CLOUDINARY URL - NO CONSTRUCTION NEEDED
+    
+    if (imagepath.startsWith('http')) {
+      return imagepath;
+    }
+    
+    return `${API_BASE}/uploads/houseimages/${imagepath}`;
   };
 
-  // ✅ FETCH HOUSES - SAME AS UNITS COMPONENT
+  // ✅ Fetch houses
   useEffect(() => {
-    const fetchHouses = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_BASE}/api/houses`);
-        if (response.ok) {
-          const data = await response.json();
-          setUnits(data);
-        }
-      } catch (err) {
-        console.error("Error fetching units:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHouses();
+    fetch(`${API_BASE}/api/houses`)
+      .then((res) => res.json())
+      .then((data) => setUnits(data))
+      .catch((err) => console.error("Error fetching units:", err));
   }, []);
 
-  // ✅ CHECK APPLICATION STATUS
+  // ✅ Fetch application status
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchApplication = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/applications/tenant/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/application/${tenantId}`);
         if (res.ok) {
           const data = await res.json();
-          const hasActiveApplication = data.some(app => 
-            app.status === 'pending' || app.status === 'under review'
-          );
-          setHasApplied(hasActiveApplication);
+          const shouldSetApplied = !!data.unitid;
+          setHasApplied(shouldSetApplied);
+          setApplicationStatus(data);
+        } else if (res.status === 404) {
+          setHasApplied(false);
+          setApplicationStatus({});
         }
       } catch (err) {
-        console.error("Error fetching application:", err);
+        console.error("Error fetching tenant application:", err);
       }
     };
 
     fetchApplication();
   }, [tenantId]);
 
-  // ✅ FETCH TENANT DETAILS
+  // ✅ Fetch tenant details
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchTenantDetails = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/tenants/${tenantId}`);
+        const res = await fetch(`${API_BASE}/api/tenant/${tenantId}`);
         if (res.ok) {
           const data = await res.json();
           setTenantDetails(data);
-        } else {
-          // Fallback to localStorage data
-          setTenantDetails({
-            fullName: storedUser.name || storedUser.username || "",
-            email: storedUser.email || "",
-            phone: storedUser.phone || ""
-          });
         }
       } catch (err) {
         console.error("Error fetching tenant details:", err);
-        // Fallback to localStorage data
+        // Fallback to user data from localStorage
         setTenantDetails({
-          fullName: storedUser.name || storedUser.username || "",
+          fullName: storedUser.name || "",
           email: storedUser.email || "",
           phone: storedUser.phone || ""
         });
@@ -122,12 +110,21 @@ const BrowseUnits = () => {
 
   const handleApply = () => setShowApplyForm(true);
 
-  // ✅ FIXED APPLICATION SUBMISSION - SIMILAR TO UNITS COMPONENT
+  // ✅ FIXED: Application submission with correct field names
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!selectedUnit || hasApplied) {
       alert("Cannot apply. You have either not selected a unit or have already applied.");
+      setLoading(false);
+      return;
+    }
+
+    // Check if tenantId exists
+    if (!tenantId) {
+      alert("Please log in to apply for a unit.");
+      setLoading(false);
       return;
     }
 
@@ -137,52 +134,52 @@ const BrowseUnits = () => {
 
     if (!validIdFile || !brgyClearanceFile || !proofOfIncomeFile) {
       alert("All required documents must be uploaded.");
+      setLoading(false);
       return;
     }
 
     try {
-      // ✅ SIMPLE FORMDATA - SAME AS UNITS COMPONENT
       const formData = new FormData();
-      formData.append("tenant_id", tenantId);
-      formData.append("unit_id", selectedUnit.id);
+      
+      // ✅ FIXED: Use correct field names that match backend expectations
+      formData.append("tenantid", tenantId); // Changed from tenant_id
+      formData.append("unitid", selectedUnit.unitid); // Changed from unit_id and using unitid
+      
+      // ✅ FIXED: Use consistent file field names
       formData.append("validId", validIdFile);
       formData.append("brgyClearance", brgyClearanceFile);
       formData.append("proofOfIncome", proofOfIncomeFile);
 
-      console.log("Submitting application...");
+      console.log("Submitting application with:", {
+        tenantid: tenantId,
+        unitid: selectedUnit.unitid,
+        files: {
+          validId: validIdFile.name,
+          brgyClearance: brgyClearanceFile.name,
+          proofOfIncome: proofOfIncomeFile.name
+        }
+      });
 
-      // ✅ SPECIFIC API ENDPOINT LIKE UNITS COMPONENT
-      const response = await fetch(`${API_BASE}/api/applications/apply`, {
+      const response = await fetch(`${API_BASE}/api/apply`, {
         method: "POST",
         body: formData,
       });
 
-      console.log("Response status:", response.status);
+      const result = await response.json();
 
       if (response.ok) {
-        const result = await response.json();
-        console.log("Application submitted:", result);
-        
         setShowApplyForm(false);
         setShowSuccessModal(true);
         setHasApplied(true);
-        
-        // Update unit status
-        setUnits(prevUnits => 
-          prevUnits.map(unit => 
-            unit.id === selectedUnit.id 
-              ? { ...unit, status: "Pending" }
-              : unit
-          )
-        );
       } else {
-        const errorText = await response.text();
-        console.error("Application failed:", errorText);
-        alert("Failed to submit application. Please try again.");
+        console.error("Application failed:", result);
+        alert(`Failed to submit application: ${result.error || "Unknown error"}`);
       }
     } catch (err) {
-      console.error("Network error:", err);
-      alert("Network error. Please check your connection.");
+      console.error("Error submitting application:", err);
+      alert("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -190,17 +187,6 @@ const BrowseUnits = () => {
     setShowSuccessModal(false);
     setSelectedUnit(null);
   };
-
-  if (loading) {
-    return (
-      <div className="browse-units-container-Browse">
-        <div className="loading-container-Browse">
-          <div className="loading-spinner-Browse"></div>
-          <p>Loading units...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="browse-units-container-Browse">
@@ -210,11 +196,6 @@ const BrowseUnits = () => {
           <h2 className="page-header-Browse">Browse Units 🏘️</h2>
           <p className="page-subtext-Browse">Discover available rental units that match your lifestyle and budget</p>
         </div>
-      </div>
-
-      {/* Debug Info */}
-      <div style={{ padding: '10px', background: '#f5f5f5', margin: '10px', borderRadius: '5px', fontSize: '12px' }}>
-        <strong>Debug:</strong> TenantID: {tenantId} | Applied: {hasApplied ? 'Yes' : 'No'} | Units: {units.length}
       </div>
 
       {/* Search and Filter Section */}
@@ -260,15 +241,14 @@ const BrowseUnits = () => {
           {filteredUnits.length > 0 ? (
             filteredUnits.map((unit) => (
               <div
-                key={unit.id}
+                key={unit.unitid}
                 className="unit-card-Browse"
                 onClick={() => setSelectedUnit(unit)}
               >
                 <div className="unit-image-container-Browse">
                   {unit.imagepath ? (
                     <img
-                      // ✅ FIXED: Direct Cloudinary URL - SAME AS UNITS COMPONENT
-                      src={unit.imagepath}
+                      src={getImageUrl(unit.imagepath)}
                       alt={unit.name}
                       className="unit-image-Browse"
                     />
@@ -342,8 +322,7 @@ const BrowseUnits = () => {
             <div className="modal-image-container-Browse">
               {selectedUnit.imagepath ? (
                 <img
-                  // ✅ FIXED: Direct Cloudinary URL
-                  src={selectedUnit.imagepath}
+                  src={getImageUrl(selectedUnit.imagepath)}
                   alt={selectedUnit.name}
                   className="modal-image-Browse"
                 />
@@ -435,7 +414,7 @@ const BrowseUnits = () => {
                         type="text"
                         name="fullName"
                         className="form-input-Browse form-input-readonly-Browse"
-                        value={tenantDetails.fullName || tenantDetails.name || ""}
+                        value={tenantDetails.fullName || ""}
                         readOnly
                         required
                       />
@@ -530,8 +509,8 @@ const BrowseUnits = () => {
                 <button type="button" className="form-cancel-btn-Browse" onClick={() => setShowApplyForm(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="form-submit-btn-Browse">
-                  Submit Application
+                <button type="submit" className="form-submit-btn-Browse" disabled={loading}>
+                  {loading ? "Submitting..." : "Submit Application"}
                 </button>
               </div>
             </form>
