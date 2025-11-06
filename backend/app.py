@@ -40,9 +40,13 @@ CORS(app, resources={
     }
 })
 
-# ✅ Or use this simpler approach:
-# Replace your current CORS line with this:
-CORS(app, origins=["https://rentahanan.vercel.app", "http://localhost:5173", "http://localhost:3000"])
+
+# ✅ Simplified CORS configuration
+CORS(app, origins=[
+    "https://rentahanan.vercel.app", 
+    "http://localhost:5173", 
+    "http://localhost:3000"
+], supports_credentials=True)
 
 # ✅ Config
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))

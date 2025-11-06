@@ -84,46 +84,51 @@ function Units() {
     }
   };
 
-  // ✅ Add new unit
-  const handleAddUnit = async () => {
-    if (!formData.name || !formData.price || !formData.image) {
-      showModal("Missing Information", "Please fill in all required fields and select an image.", "error");
-      return;
+  // ✅ Add this to your handleAddUnit function
+const handleAddUnit = async () => {
+  if (!formData.name || !formData.price || !formData.image) {
+    showModal("Missing Information", "Please fill in all required fields and select an image.", "error");
+    return;
+  }
+
+  const newFormData = new FormData();
+  newFormData.append("name", formData.name);
+  newFormData.append("description", formData.description);
+  newFormData.append("price", formData.price);
+  newFormData.append("status", formData.status);
+  newFormData.append("image", formData.image);
+
+  try {
+    console.log("Sending request to:", `${API_BASE}/api/add-houses`);
+    
+    const response = await fetch(`${API_BASE}/api/add-houses`, {
+      method: "POST",
+      body: newFormData,
+      // Remove Content-Type header for FormData
+    });
+
+    console.log("Response status:", response.status);
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log("Success:", result);
+      showModal("Success", "Unit added successfully!", "success");
+      setShowAddModal(false);
+      resetForm();
+      
+      // Refresh units
+      const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) => res.json());
+      setUnits(updatedUnits);
+    } else {
+      const errorText = await response.text();
+      console.error("Error response:", errorText);
+      showModal("Error", `Failed to add unit: ${response.status} ${errorText}`, "error");
     }
-
-    const newFormData = new FormData();
-    newFormData.append("name", formData.name);
-    newFormData.append("description", formData.description);
-    newFormData.append("price", formData.price);
-    newFormData.append("status", formData.status);
-    newFormData.append("image", formData.image);
-
-    try {
-      // ✅ UPDATED API ENDPOINT
-      const response = await fetch(`${API_BASE}/api/add-houses`, {
-        method: "POST",
-        body: newFormData,
-      });
-
-      if (response.ok) {
-        showModal("Success", "Unit added successfully!", "success");
-        setShowAddModal(false);
-        resetForm();
-        // Refresh units
-        // ✅ UPDATED API ENDPOINT
-        const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) =>
-          res.json()
-        );
-        setUnits(updatedUnits);
-      } else {
-        showModal("Error", "Failed to add unit. Please try again.", "error");
-      }
-    } catch (err) {
-      console.error("Error adding unit:", err);
-      showModal("Error", "An error occurred while adding the unit.", "error");
-    }
-  };
-
+  } catch (err) {
+    console.error("Network error:", err);
+    showModal("Network Error", "Cannot connect to server. Please check your connection.", "error");
+  }
+};
   // ✅ Edit unit
   const handleEditUnit = async () => {
     if (!formData.name || !formData.price) {
