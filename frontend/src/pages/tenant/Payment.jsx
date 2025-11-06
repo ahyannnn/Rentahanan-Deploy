@@ -23,6 +23,9 @@ const Payment = () => {
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
 
+    // ✅ ADD API BASE
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
     const itemsPerPage = 6;
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
     const tenantId = storedUser.tenantid || storedUser.userid || null;
@@ -38,7 +41,8 @@ const Payment = () => {
     const fetchPaidBills = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5000/api/bills/paid/${tenantId}`);
+            // ✅ UPDATED API ENDPOINT
+            const response = await fetch(`${API_BASE}/api/bills/paid/${tenantId}`);
             
             if (!response.ok) {
                 throw new Error(`Failed to fetch payment history: ${response.status}`);
@@ -143,6 +147,19 @@ const Payment = () => {
         }
     };
 
+    // ✅ Function to handle viewing receipt
+    const handleViewReceipt = (payment) => {
+        if (payment.receipt_url) {
+            // If there's a specific receipt URL, open it
+            window.open(payment.receipt_url, "_blank");
+        } else {
+            // Otherwise, show payment details in a modal or generate receipt
+            console.log("View receipt for payment:", payment);
+            // You can implement a receipt generation function here
+            alert(`Receipt for Payment #${payment.id}\nAmount: ₱${payment.amount}\nDate: ${new Date(payment.date).toLocaleDateString()}`);
+        }
+    };
+
     if (loading) {  
         return (
             <div className="payment-history-container-tenant-p">
@@ -244,7 +261,7 @@ const Payment = () => {
                                 <div className="payment-card-content-tenant-p">
                                     <div className="payment-main-info-tenant-p">
                                         <h3 className="payment-amount-tenant-p">
-                                            {payment.amount?.toLocaleString() || '0.00'}
+                                            ₱{payment.amount?.toLocaleString() || '0.00'}
                                         </h3>
                                         <p className="payment-description-tenant-p">
                                             {payment.description || `Payment for ${payment.billType}`}
@@ -290,7 +307,10 @@ const Payment = () => {
                                         <span className="id-value-tenant-p">#{payment.id}</span>
                                     </div>
                                     <div className="payment-actions-tenant-p">
-                                        <button className="view-receipt-btn-tenant-p">
+                                        <button 
+                                            className="view-receipt-btn-tenant-p"
+                                            onClick={() => handleViewReceipt(payment)}
+                                        >
                                             <Download size={16} className="receipt-icon-tenant-p" />
                                             <span className="receipt-text-tenant-p">View Receipt</span>
                                         </button>

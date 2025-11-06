@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Add this import
+import { useNavigate } from "react-router-dom";
 import {
   DollarSign,
   Calendar,
@@ -19,20 +19,23 @@ const Dashboard = ({ tenantId: propTenantId }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate();
+
+  // ✅ ADD API BASE - same as other components
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   const quickActions = [
     { 
       label: "Pay Bills", 
       icon: <DollarSign size={20} />, 
       color: "blue",
-      path: "/tenant/bills" // Add path for navigation
+      path: "/tenant/bills"
     },
     { 
       label: "View History", 
       icon: <FileText size={20} />, 
       color: "green",
-      path: "/tenant/payment" // Assuming payment history page
+      path: "/tenant/payment"
     },
     { 
       label: "Report Issue", 
@@ -63,10 +66,11 @@ const Dashboard = ({ tenantId: propTenantId }) => {
     }
   }, [tenantId]);
 
+  // ✅ UPDATED API ENDPOINT for dashboard data
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/tenant/dashboard/${tenantId}`);
+      const response = await fetch(`${API_BASE}/api/tenant/dashboard/${tenantId}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
@@ -87,11 +91,10 @@ const Dashboard = ({ tenantId: propTenantId }) => {
   };
 
   const handleViewAllClick = () => {
-    navigate("/tenant/bills"); // Navigate to bills page
+    navigate("/tenant/bills");
   };
 
   const handlePayNowClick = (bill) => {
-    // You can navigate to a specific payment page or handle payment logic here
     navigate("/tenant/bills", { 
       state: { 
         selectedBill: bill,
@@ -226,7 +229,7 @@ const Dashboard = ({ tenantId: propTenantId }) => {
           <button
             key={index}
             className={`quick-action-btn-Tenant-Dashboard ${action.color}-action`}
-            onClick={() => handleQuickActionClick(action.path)} // Add onClick handler
+            onClick={() => handleQuickActionClick(action.path)}
           >
             <div className="action-icon-Tenant-Dashboard">
               {action.icon}
@@ -312,7 +315,7 @@ const Dashboard = ({ tenantId: propTenantId }) => {
             </div>
             <button 
               className="view-all-btn-Tenant-Dashboard"
-              onClick={handleViewAllClick} // Add onClick handler
+              onClick={handleViewAllClick}
             >
               View All
               <ChevronRight size={16} />
@@ -367,7 +370,7 @@ const Dashboard = ({ tenantId: propTenantId }) => {
                         <td className="table-data-Tenant-Dashboard action-cell-Tenant-Dashboard" data-label="Action">
                           <button
                             className={`action-btn-Tenant-Dashboard action-${bill.action.toLowerCase().replace(" ", "-")}`}
-                            onClick={() => handlePayNowClick(bill)} // Add onClick handler
+                            onClick={() => handlePayNowClick(bill)}
                           >
                             {bill.action}
                           </button>

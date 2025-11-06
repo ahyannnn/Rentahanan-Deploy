@@ -191,7 +191,7 @@ body {
 
 /* --- Button Styles (General/Desktop) --- */
 .btn-Register {
-  background-color: #007bff;
+  background-color: #061A53;
   color: white;
   border: none;
   padding: 1rem;
@@ -206,7 +206,7 @@ body {
 }
 
 .btn-Register:hover {
-  background-color: #0056b3;
+  background-color: #061A53;
 }
 
 .btn-Register.secondary-Register {

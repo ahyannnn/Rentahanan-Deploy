@@ -21,7 +21,10 @@ const TenantNotifications = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Fetch notifications from API
+  // ✅ ADD API BASE - same as other components
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
+  // ✅ UPDATED API ENDPOINT for fetching notifications
   const fetchNotifications = async () => {
     try {
       setLoading(true);
@@ -31,7 +34,7 @@ const TenantNotifications = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${userId}`);
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -48,10 +51,10 @@ const TenantNotifications = () => {
     }
   };
 
-  // Mark notification as read
+  // ✅ UPDATED API ENDPOINT for marking as read
   const markAsRead = async (notificationId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${notificationId}/read`, {
+      const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
         method: "PUT",
       });
 
@@ -72,7 +75,7 @@ const TenantNotifications = () => {
     }
   };
 
-  // Mark all notifications as read
+  // ✅ UPDATED API ENDPOINT for marking all as read
   const markAllAsRead = async () => {
     try {
       const storedUserRaw = localStorage.getItem("user");
@@ -81,7 +84,7 @@ const TenantNotifications = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${userId}/mark-all-read`, {
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}/mark-all-read`, {
         method: "PUT",
       });
 
@@ -98,10 +101,10 @@ const TenantNotifications = () => {
     }
   };
 
-  // Delete notification
+  // ✅ UPDATED API ENDPOINT for deleting notification
   const deleteNotification = async (notificationId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${notificationId}`, {
+      const response = await fetch(`${API_BASE}/api/notifications/${notificationId}`, {
         method: "DELETE",
       });
 
@@ -181,34 +184,34 @@ const TenantNotifications = () => {
   };
 
   // Format time for notifications - FIXED TIMEZONE ISSUE
-const formatDate = (dateString) => {
-  if (!dateString) return "Recently";
+  const formatDate = (dateString) => {
+    if (!dateString) return "Recently";
 
-  // Parse the database timestamp (UTC time)
-  const dbDate = new Date(dateString);
-  
-  // Get current time in UTC to match the database timezone
-  const now = new Date();
-  const nowUtc = new Date(now.getTime());
-  
-  // Calculate difference in milliseconds
-  const diffInMs = nowUtc - dbDate;
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    // Parse the database timestamp (UTC time)
+    const dbDate = new Date(dateString);
+    
+    // Get current time in UTC to match the database timezone
+    const now = new Date();
+    const nowUtc = new Date(now.getTime());
+    
+    // Calculate difference in milliseconds
+    const diffInMs = nowUtc - dbDate;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-  if (diffInMinutes < 1) return "Just now";
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  if (diffInDays < 7) return `${diffInDays}d ago`;
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 7) return `${diffInDays}d ago`;
 
-  // For older dates, use a formatted date string
-  return dbDate.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
+    // For older dates, use a formatted date string
+    return dbDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   const unreadCount = notifications.filter(n => n.status === "unread").length;
   const totalCount = notifications.length;
@@ -384,6 +387,5 @@ const formatDate = (dateString) => {
     </div>
   );
 };
-
 
 export default TenantNotifications;
