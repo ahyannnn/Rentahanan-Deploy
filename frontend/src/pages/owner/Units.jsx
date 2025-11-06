@@ -27,10 +27,8 @@ function Units() {
     image: null,
   });
 
-  const API_URL =
-    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
-    (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
-    "http://localhost:5000";
+  // ✅ UPDATED API BASE
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   // ✅ Show modal function
   const showModal = (title, message, type = "success") => {
@@ -56,7 +54,8 @@ function Units() {
     const fetchUnits = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/api/houses`);
+        // ✅ UPDATED API ENDPOINT
+        const response = await fetch(`${API_BASE}/api/houses`);
         const data = await response.json();
         setUnits(data);
       } catch (err) {
@@ -68,7 +67,7 @@ function Units() {
     };
 
     fetchUnits();
-  }, [API_URL]);
+  }, [API_BASE]);
 
   // ✅ Handle form inputs
   const handleInputChange = (e) => {
@@ -100,7 +99,8 @@ function Units() {
     newFormData.append("image", formData.image);
 
     try {
-      const response = await fetch(`${API_URL}/api/add-houses`, {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/add-houses`, {
         method: "POST",
         body: newFormData,
       });
@@ -110,7 +110,8 @@ function Units() {
         setShowAddModal(false);
         resetForm();
         // Refresh units
-        const updatedUnits = await fetch(`${API_URL}/api/houses`).then((res) =>
+        // ✅ UPDATED API ENDPOINT
+        const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) =>
           res.json()
         );
         setUnits(updatedUnits);
@@ -148,7 +149,8 @@ function Units() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/houses/${selectedUnit.id}`, {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/houses/${selectedUnit.id}`, {
         method: "PUT",
         body: editFormData,
       });
@@ -158,7 +160,8 @@ function Units() {
         setShowEditModal(false);
         resetForm();
         // Refresh units
-        const updatedUnits = await fetch(`${API_URL}/api/houses`).then((res) =>
+        // ✅ UPDATED API ENDPOINT
+        const updatedUnits = await fetch(`${API_BASE}/api/houses`).then((res) =>
           res.json()
         );
         setUnits(updatedUnits);
@@ -199,7 +202,8 @@ function Units() {
       status: unit.status,
       image: null,
     });
-    setPreviewImage(unit.imagepath ? `${API_URL}/uploads/houseimages/${unit.imagepath}` : null);
+    // ✅ UPDATED IMAGE URL
+    setPreviewImage(unit.imagepath ? `${API_BASE}/uploads/houseimages/${unit.imagepath}` : null);
     setShowEditModal(true);
   };
 
@@ -294,7 +298,6 @@ function Units() {
       </div>
 
       {/* --- Units Grid --- */}
-      {/* --- Units Grid --- */}
       {loading ? (
         <div className="Owner-Units-loading">
           <div className="Owner-Units-loading-spinner"></div>
@@ -307,8 +310,9 @@ function Units() {
               <div key={unit.unitid} className="Owner-Units-card">
                 <div className="Owner-Units-image-container">
                   {unit.imagepath ? (
+                    // ✅ UPDATED IMAGE URL
                     <img
-                      src={`${API_URL}/uploads/houseimages/${unit.imagepath}`}
+                      src={`${API_BASE}/uploads/houseimages/${unit.imagepath}`}
                       alt={unit.name}
                       className="Owner-Units-thumbnail"
                     />
@@ -561,8 +565,9 @@ function Units() {
                 {!previewImage && selectedUnit.imagepath && (
                   <div className="Owner-Units-current-image">
                     <p className="Owner-Units-current-image-label">Current Image:</p>
+                    {/* ✅ UPDATED IMAGE URL */}
                     <img
-                      src={`${API_URL}/uploads/houseimages/${selectedUnit.imagepath}`}
+                      src={`${API_BASE}/uploads/houseimages/${selectedUnit.imagepath}`}
                       alt={selectedUnit.name}
                       className="Owner-Units-preview-image"
                     />
@@ -597,8 +602,9 @@ function Units() {
             <div className="Owner-Units-modal-body">
               <div className="Owner-Units-detail-image">
                 {selectedUnit.imagepath ? (
+                  // ✅ UPDATED IMAGE URL
                   <img
-                    src={`${API_URL}/uploads/houseimages/${selectedUnit.imagepath}`}
+                    src={`${API_BASE}/uploads/houseimages/${selectedUnit.imagepath}`}
                     alt={selectedUnit.name}
                     className="Owner-Units-detail-thumbnail"
                   />

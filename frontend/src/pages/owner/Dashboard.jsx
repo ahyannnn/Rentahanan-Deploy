@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import "../../styles/owners/Dashboard.css";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +24,7 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/owner/dashboard');
+         const response = await fetch(`${API_BASE}/api/owner/dashboard`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard data');

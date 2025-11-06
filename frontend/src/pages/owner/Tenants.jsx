@@ -43,10 +43,14 @@ const Tenants = () => {
   
   const navigate = useNavigate();
 
+  // ✅ ADD API BASE
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   // Fetch active tenants
   useEffect(() => {
     if (activeTab === "active") {
-      fetch("http://localhost:5000/api/tenants/active")
+      // ✅ UPDATED API ENDPOINT
+      fetch(`${API_BASE}/api/tenants/active`)
         .then((res) => res.json())
         .then((data) => setTenants(data))
         .catch((err) => console.error("Error fetching active tenants:", err));
@@ -56,7 +60,8 @@ const Tenants = () => {
   // Fetch pending applicants
   useEffect(() => {
     if (activeTab === "applications") {
-      fetch("http://localhost:5000/api/tenants/applicants")
+      // ✅ UPDATED API ENDPOINT
+      fetch(`${API_BASE}/api/tenants/applicants`)
         .then((res) => res.json())
         .then((data) => setApplicants(data))
         .catch((err) => console.error("Error fetching applicants:", err));
@@ -96,7 +101,8 @@ const Tenants = () => {
   // Function to get profile image URL or fallback to initials
   const getProfileImage = (user) => {
     if (user.image) {
-      return `http://localhost:5000/uploads/profile_images/${user.image}`;
+      // ✅ UPDATED IMAGE URL
+      return `${API_BASE}/uploads/profile_images/${user.image}`;
     }
     return null;
   };
@@ -119,8 +125,9 @@ const Tenants = () => {
     if (!selectedUser) return;
 
     try {
+      // ✅ UPDATED API ENDPOINT
       const response = await fetch(
-        `http://localhost:5000/api/tenants/approve/${selectedUser.applicationid}`,
+        `${API_BASE}/api/tenants/approve/${selectedUser.applicationid}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -158,8 +165,9 @@ const Tenants = () => {
     if (!selectedUser) return;
 
     try {
+      // ✅ UPDATED API ENDPOINT
       const response = await fetch(
-        `http://localhost:5000/api/tenants/reject/${selectedUser.applicationid}`,
+        `${API_BASE}/api/tenants/reject/${selectedUser.applicationid}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -428,7 +436,7 @@ const Tenants = () => {
                           className="Owner-Tenant-document-btn"
                           onClick={() =>
                             window.open(
-                              `http://localhost:5000/uploads/valid_ids/${selectedUser.valid_id}`,
+                              `${API_BASE}/uploads/valid_ids/${selectedUser.valid_id}`,
                               "_blank"
                             )
                           }
@@ -442,7 +450,7 @@ const Tenants = () => {
                           className="Owner-Tenant-document-btn"
                           onClick={() =>
                             window.open(
-                              `http://localhost:5000/uploads/brgy_clearances/${selectedUser.brgy_clearance}`,
+                              `${API_BASE}/uploads/brgy_clearances/${selectedUser.brgy_clearance}`,
                               "_blank"
                             )
                           }
@@ -456,7 +464,7 @@ const Tenants = () => {
                           className="Owner-Tenant-document-btn"
                           onClick={() =>
                             window.open(
-                              `http://localhost:5000/uploads/proof_of_income/${selectedUser.proof_of_income}`,
+                              `${API_BASE}/uploads/proof_of_income/${selectedUser.proof_of_income}`,
                               "_blank"
                             )
                           }

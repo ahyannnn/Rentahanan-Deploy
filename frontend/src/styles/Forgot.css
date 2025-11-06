@@ -229,120 +229,205 @@
 /* ===== MOBILE STYLES ===== */
 @media (max-width: 768px) {
     .forgot-container-Forgot {
-        background: linear-gradient(135deg, #061a53, #0b3c91) !important;
+        background: linear-gradient(135deg, #061a53, #0b3c91);
         padding: 1rem;
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
     }
 
     .forgot-wrapper-Forgot {
         flex-direction: column;
-        background: transparent !important;
-        box-shadow: none !important;
+        background: transparent;
+        box-shadow: none;
         width: 100%;
         max-width: 400px;
+        margin-top: 2rem;
     }
 
     .forgot-left-Forgot {
-        display: none !important;
+        display: none;
     }
 
     .forgot-right-Forgot {
-        background: transparent !important;
-        padding: 0 !important;
+        background: transparent;
+        padding: 0;
+        width: 100%;
     }
 
     .forgot-card-Forgot {
-        background: transparent !important;
+        background: transparent;
         padding: 2rem 1.5rem;
+        width: 100%;
     }
 
-    /* Force white text for all text elements */
+    /* White text for all text elements */
     .forgot-title-Forgot,
     .forgot-instruction-Forgot,
     .forgot-success-message-Forgot,
     .forgot-label-Forgot,
-    .forgot-bottom-text-Forgot,
-    .forgot-link-Forgot {
-        color: white !important;
+    .forgot-bottom-text-Forgot {
+        color: white;
+    }
+
+    .forgot-link-Forgot,
+    .resend-link-Forgot {
+        color: white;
+        font-weight: 600;
     }
 
     /* Input styling */
     .forgot-input-Forgot {
-        background: rgba(255, 255, 255, 0.15) !important;
-        border: 1px solid rgba(255, 255, 255, 0.4) !important;
-        color: white !important;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white;
+        backdrop-filter: blur(10px);
     }
 
-    /* Placeholder styling */
     .forgot-input-Forgot::placeholder {
-        color: rgba(255, 255, 255, 0.7) !important;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .forgot-input-Forgot:focus {
+        border-color: white;
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
     }
 
     /* Toggle password button */
     .toggle-password-Forgot {
-        color: white !important;
-        background: rgba(255, 255, 255, 0.3) !important;
-        font-weight: 700 !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        color: white;
+        background: rgba(255, 255, 255, 0.3);
+        font-weight: 700;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(5px);
     }
 
+    /* Button styling */
     .forgot-btn-Forgot {
-        background: white !important;
-        color: #061a53 !important;
-        font-weight: 600 !important;
+        background: white;
+        color: #061a53;
+        font-weight: 600;
+        border: 2px solid white;
     }
 
-    .resend-link-Forgot {
-        color: white !important;
+    .forgot-btn-Forgot:hover {
+        background: rgba(255, 255, 255, 0.9);
     }
 
+    .forgot-btn-Forgot:disabled {
+        background: rgba(255, 255, 255, 0.5);
+        color: rgba(6, 26, 83, 0.5);
+    }
+
+    /* Error text */
     .error-text-Forgot {
-        color: #ff9999 !important;
-    }
-
-    /* Code input styling for mobile */
-    .code-input-Forgot {
-        background: rgba(255, 255, 255, 0.15) !important;
-        border: 1px solid rgba(255, 255, 255, 0.4) !important;
-        color: white !important;
-    }
-
-    .code-input-Forgot:focus {
-        border-color: white !important;
-        box-shadow: 0 0 6px rgba(255, 255, 255, 0.4) !important;
-    }
-}
-
-/* Additional mobile breakpoint to match Login component */
-@media (max-width: 850px) {
-    .forgot-container-Forgot {
-        background: linear-gradient(135deg, #061a53, #0b3c91) !important;
-    }
-
-    /* Input fields: Apply the dark, high-contrast style from Login */
-    .forgot-input-Forgot {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-        color: white !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        box-shadow: none !important;
-    }
-
-    /* Placeholder text styling */
-    .forgot-input-Forgot::placeholder {
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-    
-    .forgot-input-Forgot:focus {
-        border-color: white !important;
+        color: #ff9999;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 500;
     }
 
     /* Code input styling */
+    .code-input-group-Forgot {
+        gap: 8px;
+        margin-bottom: 2rem;
+    }
+
     .code-input-Forgot {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        color: white !important;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: white;
+        font-size: 1.3rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
     }
 
     .code-input-Forgot:focus {
-        border-color: white !important;
+        border-color: white;
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+        transform: scale(1.05);
+    }
+
+    /* Success message */
+    .forgot-success-Forgot {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .forgot-container-Forgot {
+        padding: 0.5rem;
+        align-items: flex-start;
+        padding-top: 1rem;
+    }
+
+    .forgot-card-Forgot {
+        padding: 1.5rem 1rem;
+    }
+
+    .forgot-title-Forgot {
+        font-size: 1.7rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .forgot-instruction-Forgot {
+        font-size: 0.9rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .code-input-group-Forgot {
+        gap: 6px;
+    }
+
+    .code-input-Forgot {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+
+    .forgot-btn-Forgot {
+        padding: 0.7rem;
+        font-size: 0.95rem;
+    }
+
+    .forgot-bottom-text-Forgot {
+        font-size: 0.85rem;
+    }
+}
+
+/* Very small devices */
+@media (max-width: 360px) {
+    .forgot-card-Forgot {
+        padding: 1rem 0.8rem;
+    }
+
+    .code-input-Forgot {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+
+    .forgot-title-Forgot {
+        font-size: 1.5rem;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .forgot-wrapper-Forgot {
+        width: 90%;
+        max-width: 800px;
+    }
+
+    .forgot-right-Forgot {
+        padding: 2rem;
     }
 }

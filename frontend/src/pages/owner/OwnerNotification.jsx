@@ -37,6 +37,9 @@ const OwnerNotifications = () => {
   const [tenants, setTenants] = useState([]);
   const [sending, setSending] = useState(false);
 
+  // ✅ ADD API BASE
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
   // Fetch notifications from API
   const fetchNotifications = async () => {
     try {
@@ -47,7 +50,8 @@ const OwnerNotifications = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${userId}`);
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -67,7 +71,8 @@ const OwnerNotifications = () => {
   // Fetch tenants for sending specific notifications
   const fetchTenants = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/tenants/active");
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/tenants/active`);
       const data = await response.json();
 
       if (Array.isArray(data)) {
@@ -85,7 +90,8 @@ const OwnerNotifications = () => {
   // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${notificationId}/read`, {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
         method: "PUT",
       });
 
@@ -115,7 +121,8 @@ const OwnerNotifications = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${userId}/mark-all-read`, {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}/mark-all-read`, {
         method: "PUT",
       });
 
@@ -135,7 +142,8 @@ const OwnerNotifications = () => {
   // Delete notification
   const deleteNotification = async (notificationId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/notifications/${notificationId}`, {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/notifications/${notificationId}`, {
         method: "DELETE",
       });
 
@@ -191,7 +199,8 @@ const OwnerNotifications = () => {
         }
       }
 
-      const response = await fetch("http://127.0.0.1:5000/api/notifications/send", {
+      // ✅ UPDATED API ENDPOINT
+      const response = await fetch(`${API_BASE}/api/notifications/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
