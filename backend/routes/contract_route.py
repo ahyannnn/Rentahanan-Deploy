@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from datetime import datetime
 from extensions import db
 from models.contracts_model import Contract
@@ -7,13 +7,13 @@ from models.units_model import House as Unit
 from models.applications_model import Application
 from models.users_model import User
 from models.notifications_model import Notification
+from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 import os, traceback
-import requests
+import io
 from PyPDF2 import PdfReader, PdfWriter
 import base64
-import io
 from reportlab.lib.utils import ImageReader
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -22,30 +22,6 @@ from reportlab.lib.units import inch
 from PIL import Image
 
 contract_bp = Blueprint("contract_bp", __name__)
-
-def upload_to_cloudinary(file, folder_name):
-    """Upload file to Cloudinary and return the URL"""
-    if not file:
-        return None
-        
-    try:
-        # Make request to our own upload endpoint
-        upload_response = requests.post(
-            f"{request.url_root}api/upload",
-            files={'file': file},
-            data={'folder': folder_name}
-        )
-        
-        if upload_response.status_code == 200:
-            data = upload_response.json()
-            return data['url']  # Return Cloudinary URL
-        else:
-            print(f"Upload failed: {upload_response.json()}")
-            return None
-            
-    except Exception as e:
-        print(f"Cloudinary upload error: {e}")
-        return None
 
 # ✅ Fetch existing contracts
 @contract_bp.route("/contracts/tenants", methods=["GET"])
@@ -382,28 +358,22 @@ def generate_contract_pdf():
             except Exception as sig_error:
                 print(f"Signature addition failed, but PDF was generated: {sig_error}")
 
-        # ✅ Upload PDF to Cloudinary
+        # ✅ Upload PDF to Cloudinary using shared utility
         pdf_buffer.seek(0)
         
-        # Create a file-like object for upload
-        files = {'file': (f'contract_{tenant_id}_{datetime.now().strftime("%Y%m%d%H%M%S")}.pdf', pdf_buffer, 'application/pdf')}
-        
-        upload_response = requests.post(
-            f"{request.url_root}api/upload",
-            files=files,
-            data={'folder': 'contracts'}
+        # Upload to Cloudinary using shared utility
+        pdf_url = upload_to_cloudinary(
+            pdf_buffer, 
+            "contracts/generated", 
+            "auto"
         )
         
-        if upload_response.status_code != 200:
+        if not pdf_url:
             return jsonify({"error": "Failed to upload contract to Cloudinary"}), 500
-        
-        cloudinary_data = upload_response.json()
-        pdf_url = cloudinary_data['url']
 
         return jsonify({
             "message": "Professional contract PDF generated successfully!",
             "pdf_url": pdf_url,
-            "filename": cloudinary_data['public_id'],
             "contract_id": f"RT-{int(tenant_id):06d}"
         })
 
@@ -529,8 +499,8 @@ def sign_contract():
         if not contract:
             return jsonify({"error": "Contract not found"}), 404
 
-        # ✅ Upload signed contract directly to Cloudinary
-        signed_contract_url = upload_to_cloudinary(file, "signed_contracts")
+        # ✅ Upload signed contract to Cloudinary using shared utility
+        signed_contract_url = upload_to_cloudinary(file, "contracts/signed", "auto")
         if not signed_contract_url:
             return jsonify({"error": "Failed to upload signed contract"}), 500
 

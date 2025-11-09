@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 from extensions import db
 from models.tenants_model import Tenant
 from models.users_model import User
@@ -7,8 +7,7 @@ from models.units_model import House as Unit
 from models.contracts_model import Contract
 from models.bills_model import Bill
 from models.notifications_model import Notification
-import requests
-import os
+from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 import logging
 
 bill_bp = Blueprint("bill_bp", __name__)
@@ -39,30 +38,6 @@ def safe_strftime(date_obj, format_str="%Y-%m-%d"):
         return date_obj.strftime(format_str)
     # If it's already a string, return as-is
     return str(date_obj)
-
-def upload_to_cloudinary(file, folder_name):
-    """Upload file to Cloudinary and return the URL"""
-    if not file:
-        return None
-        
-    try:
-        # Make request to our own upload endpoint
-        upload_response = requests.post(
-            f"{request.url_root}api/upload",
-            files={'file': file},
-            data={'folder': folder_name}
-        )
-        
-        if upload_response.status_code == 200:
-            data = upload_response.json()
-            return data['url']  # Return Cloudinary URL
-        else:
-            print(f"Upload failed: {upload_response.json()}")
-            return None
-            
-    except Exception as e:
-        print(f"Cloudinary upload error: {e}")
-        return None
 
 # -------------------------------
 # 📘 Get all bills (for admin)
@@ -432,8 +407,8 @@ def pay_bill(bill_id):
             bill.gcash_ref = gcash_ref
 
             if file and allowed_file(file.filename):
-                # Upload to Cloudinary instead of local storage
-                receipt_url = upload_to_cloudinary(file, "gcash_receipts")
+                # Upload to Cloudinary using shared utility
+                receipt_url = upload_to_cloudinary(file, "billing/gcash_receipts", "auto")
                 
                 if receipt_url:
                     bill.gcash_receipt = receipt_url

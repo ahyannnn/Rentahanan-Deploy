@@ -2,8 +2,7 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models.concerns_model import Concern
 from models.notifications_model import Notification
-import requests
-import os
+from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 from datetime import datetime
 from models.users_model import User
 from models.units_model import House
@@ -16,30 +15,6 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf"}
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def upload_to_cloudinary(file, folder_name):
-    """Upload file to Cloudinary and return the URL"""
-    if not file:
-        return None
-        
-    try:
-        # Make request to our own upload endpoint
-        upload_response = requests.post(
-            f"{request.url_root}api/upload",
-            files={'file': file},
-            data={'folder': folder_name}
-        )
-        
-        if upload_response.status_code == 200:
-            data = upload_response.json()
-            return data['url']  # Return Cloudinary URL
-        else:
-            print(f"Upload failed: {upload_response.json()}")
-            return None
-            
-    except Exception as e:
-        print(f"Cloudinary upload error: {e}")
-        return None
 
 # ✅ Memory storage for deleted concerns (NO DATABASE CHANGES)
 deleted_concerns_tracker = {
@@ -60,12 +35,12 @@ def add_concern():
         if not tenantid or not concerntype or not subject or not description:
             return jsonify({"error": "All required fields must be provided"}), 400
 
-        # Handle tenant image upload with Cloudinary
+        # Handle tenant image upload with Cloudinary using shared utility
         tenantimage_url = None
         if "tenantimage" in request.files:
             file = request.files["tenantimage"]
             if file and allowed_file(file.filename):
-                tenantimage_url = upload_to_cloudinary(file, "concern_images")
+                tenantimage_url = upload_to_cloudinary(file, "concerns/tenant_images", "image")
                 if not tenantimage_url:
                     return jsonify({"error": "Failed to upload concern image"}), 500
 
@@ -220,7 +195,7 @@ def update_concern(concernid):
         if "landlordimage" in request.files:
             file = request.files["landlordimage"]
             if file and allowed_file(file.filename):
-                landlordimage_url = upload_to_cloudinary(file, "concern_images")
+                landlordimage_url = upload_to_cloudinary(file, "concerns/landlord_images", "image")
                 if not landlordimage_url:
                     return jsonify({"error": "Failed to upload fix image"}), 500
 
@@ -457,3 +432,99 @@ def get_concern_details(concernid):
     except Exception as e:
         print("Error fetching concern details:", e)
         return jsonify({"error": "Failed to fetch concern details"}), 500
+
+# ✅ Get concern statistics
+@concern_bp.route("/concerns/statistics", methods=["GET"])
+def get_concern_statistics():
+    try:
+        # Total concerns count
+        total_concerns = Concern.query.count()
+        
+        # Concerns by status
+        status_counts = db.session.query(
+            Concern.status, 
+            db.func.count(Concern.concernid)
+        ).group_by(Concern.status).all()
+        
+        # Concerns by type
+        type_counts = db.session.query(
+            Concern.concerntype, 
+            db.func.count(Concern.concernid)
+        ).group_by(Concern.concerntype).all()
+
+        # Monthly concerns (current year)
+        current_year = datetime.now().year
+        monthly_concerns = db.session.query(
+            db.func.extract('month', Concern.creationdate).label('month'),
+            db.func.count(Concern.concernid).label('count')
+        ).filter(
+            db.func.extract('year', Concern.creationdate) == current_year
+        ).group_by('month').all()
+
+        statistics = {
+            "total_concerns": total_concerns,
+            "status_breakdown": {status: count for status, count in status_counts},
+            "type_breakdown": {concerntype: count for concerntype, count in type_counts},
+            "monthly_concerns": {int(month): int(count) for month, count in monthly_concerns},
+            "current_year": current_year
+        }
+
+        return jsonify(statistics), 200
+
+    except Exception as e:
+        print("Error fetching concern statistics:", e)
+        return jsonify({"error": "Failed to fetch concern statistics"}), 500
+
+# ✅ Search concerns with filters
+@concern_bp.route("/concerns/search", methods=["GET"])
+def search_concerns():
+    try:
+        # Get query parameters
+        tenant_id = request.args.get('tenant_id', type=int)
+        status = request.args.get('status')
+        concern_type = request.args.get('concern_type')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        # Build query
+        query = Concern.query
+        
+        if tenant_id:
+            query = query.filter(Concern.tenantid == tenant_id)
+        if status:
+            query = query.filter(Concern.status == status)
+        if concern_type:
+            query = query.filter(Concern.concerntype == concern_type)
+        if start_date:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            query = query.filter(Concern.creationdate >= start_date)
+        if end_date:
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            query = query.filter(Concern.creationdate <= end_date)
+
+        concerns = query.order_by(Concern.creationdate.desc()).all()
+
+        result = []
+        for concern in concerns:
+            # Check if concern is deleted from landlord view
+            if concern.concernid in deleted_concerns_tracker['landlord']:
+                continue
+
+            result.append({
+                "concernid": concern.concernid,
+                "tenantid": concern.tenantid,
+                "concerntype": concern.concerntype,
+                "subject": concern.subject,
+                "description": concern.description,
+                "status": concern.status,
+                "creationdate": concern.creationdate.isoformat() if concern.creationdate else None,
+                "resolutiondate": concern.resolutiondate.isoformat() if concern.resolutiondate else None
+            })
+
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+    except Exception as e:
+        print("Error searching concerns:", e)
+        return jsonify({"error": "Failed to search concerns"}), 500

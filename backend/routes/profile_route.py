@@ -1,10 +1,9 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from extensions import db
 from models.users_model import User
 from models.applications_model import Application
 from models.tenants_model import Tenant
-import requests
-import os
+from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 from datetime import datetime
 
 profile_bp = Blueprint("profile_bp", __name__)
@@ -15,30 +14,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def upload_to_cloudinary(file, folder_name):
-    """Upload file to Cloudinary and return the URL"""
-    if not file:
-        return None
-        
-    try:
-        # Make request to our own upload endpoint
-        upload_response = requests.post(
-            f"{request.url_root}api/upload",
-            files={'file': file},
-            data={'folder': folder_name}
-        )
-        
-        if upload_response.status_code == 200:
-            data = upload_response.json()
-            return data['url']  # Return Cloudinary URL
-        else:
-            print(f"Upload failed: {upload_response.json()}")
-            return None
-            
-    except Exception as e:
-        print(f"Cloudinary upload error: {e}")
-        return None
 
 @profile_bp.route("/profile/<int:user_id>", methods=["PUT"])
 def update_user_profile(user_id):
@@ -66,13 +41,13 @@ def update_user_profile(user_id):
 
         image_url = None
 
-        # Handle image upload with Cloudinary
+        # Handle image upload with Cloudinary using shared utility
         if image_file and image_file.filename:
             if not allowed_file(image_file.filename):
                 return jsonify({"success": False, "message": "Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, BMP, WEBP"}), 400
 
             # Upload new image to Cloudinary
-            image_url = upload_to_cloudinary(image_file, "profile_images")
+            image_url = upload_to_cloudinary(image_file, "profiles/images", "image")
             if not image_url:
                 return jsonify({"success": False, "message": "Failed to upload profile image"}), 500
 
@@ -183,8 +158,8 @@ def upload_profile_image(user_id):
         if not allowed_file(image_file.filename):
             return jsonify({"success": False, "message": "Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, BMP, WEBP"}), 400
 
-        # Upload image to Cloudinary
-        image_url = upload_to_cloudinary(image_file, "profile_images")
+        # Upload image to Cloudinary using shared utility
+        image_url = upload_to_cloudinary(image_file, "profiles/images", "image")
         if not image_url:
             return jsonify({"success": False, "message": "Failed to upload profile image"}), 500
 
@@ -309,3 +284,150 @@ def update_user_address(user_id):
         db.session.rollback()
         print("Error updating address:", str(e))
         return jsonify({"success": False, "message": f"Failed to update address: {str(e)}"}), 500
+
+# ✅ Update user personal information
+@profile_bp.route("/profile/<int:user_id>/personal", methods=["PUT"])
+def update_user_personal_info(user_id):
+    try:
+        # Find user
+        user = User.query.filter_by(userid=user_id).first()
+        if not user:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        data = request.get_json()
+        
+        # Update personal information fields
+        if 'firstname' in data:
+            user.firstname = data['firstname']
+        if 'middlename' in data:
+            user.middlename = data['middlename']
+        if 'lastname' in data:
+            user.lastname = data['lastname']
+        if 'dateofbirth' in data and data['dateofbirth']:
+            user.dateofbirth = datetime.strptime(data['dateofbirth'], "%Y-%m-%d").date()
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True, 
+            "message": "Personal information updated successfully",
+            "personal_info": {
+                "firstname": user.firstname,
+                "middlename": user.middlename,
+                "lastname": user.lastname,
+                "dateofbirth": user.dateofbirth.isoformat() if user.dateofbirth else None
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error updating personal information:", str(e))
+        return jsonify({"success": False, "message": f"Failed to update personal information: {str(e)}"}), 500
+
+# ✅ Get user profile by email (for password reset, etc.)
+@profile_bp.route("/profile/email/<email>", methods=["GET"])
+def get_user_profile_by_email(email):
+    try:
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        profile = {
+            "userid": user.userid,
+            "firstname": user.firstname,
+            "middlename": user.middlename,
+            "lastname": user.lastname,
+            "email": user.email,
+            "phone": user.phone,
+            "role": user.role,
+            "image": user.image  # Cloudinary URL
+        }
+
+        return jsonify({"success": True, "profile": profile})
+
+    except Exception as e:
+        print("Error fetching user profile by email:", str(e))
+        return jsonify({"success": False, "message": f"Failed to fetch profile: {str(e)}"}), 500
+
+# ✅ Search users by name or email (for admin/landlord)
+@profile_bp.route("/profiles/search", methods=["GET"])
+def search_users():
+    try:
+        query = request.args.get('q', '')
+        role = request.args.get('role', '')
+        
+        if not query:
+            return jsonify({"success": False, "message": "Search query is required"}), 400
+
+        # Build query
+        search_query = User.query.filter(
+            (User.firstname.ilike(f'%{query}%')) |
+            (User.lastname.ilike(f'%{query}%')) |
+            (User.email.ilike(f'%{query}%'))
+        )
+
+        # Filter by role if provided
+        if role:
+            search_query = search_query.filter(User.role == role)
+
+        users = search_query.limit(20).all()
+
+        profiles = []
+        for user in users:
+            profile = {
+                "userid": user.userid,
+                "firstname": user.firstname,
+                "middlename": user.middlename,
+                "lastname": user.lastname,
+                "email": user.email,
+                "phone": user.phone,
+                "role": user.role,
+                "image": user.image,  # Cloudinary URL
+                "datecreated": user.datecreated.isoformat() if user.datecreated else None
+            }
+            profiles.append(profile)
+
+        return jsonify({"success": True, "profiles": profiles, "count": len(profiles)})
+
+    except Exception as e:
+        print("Error searching users:", str(e))
+        return jsonify({"success": False, "message": f"Failed to search users: {str(e)}"}), 500
+
+# ✅ Get user statistics (for dashboard)
+@profile_bp.route("/profile/<int:user_id>/statistics", methods=["GET"])
+def get_user_statistics(user_id):
+    try:
+        user = User.query.filter_by(userid=user_id).first()
+        if not user:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        # Get tenant information if exists
+        tenant = Tenant.query.filter_by(userid=user_id).first()
+        
+        # Get application information if exists
+        application = Application.query.filter_by(userid=user_id).first()
+
+        statistics = {
+            "user_info": {
+                "userid": user.userid,
+                "full_name": f"{user.firstname} {user.middlename + ' ' if user.middlename else ''}{user.lastname}".strip(),
+                "role": user.role,
+                "member_since": user.datecreated.strftime("%B %Y") if user.datecreated else "N/A"
+            },
+            "tenant_info": {
+                "is_tenant": tenant is not None,
+                "tenant_status": tenant.status if tenant else "Not a tenant",
+                "tenant_since": tenant.datecreated.strftime("%B %Y") if tenant and tenant.datecreated else "N/A"
+            },
+            "application_info": {
+                "has_application": application is not None,
+                "application_status": application.status if application else "No application",
+                "application_date": application.submissiondate.strftime("%B %d, %Y") if application and application.submissiondate else "N/A"
+            }
+        }
+
+        return jsonify({"success": True, "statistics": statistics})
+
+    except Exception as e:
+        print("Error fetching user statistics:", str(e))
+        return jsonify({"success": False, "message": f"Failed to fetch statistics: {str(e)}"}), 500

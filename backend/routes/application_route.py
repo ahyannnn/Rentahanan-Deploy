@@ -1,12 +1,11 @@
-from flask import Blueprint, request, jsonify, current_app
-import requests
-import os
+from flask import Blueprint, request, jsonify
 from datetime import datetime
 from extensions import db
 from models.applications_model import Application
 from models.users_model import User
 from models.units_model import House as Unit
 from models.notifications_model import Notification
+from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 
 application_bp = Blueprint("application_bp", __name__)
 
@@ -31,35 +30,12 @@ def apply_unit():
     # Get ALL landlords in the system
     all_landlords = User.query.filter_by(role='Owner').all()
 
-    def upload_to_cloudinary(file, folder_name, prefix):
-        """Upload file to Cloudinary and return the URL"""
-        if not file:
-            return None
-            
-        try:
-            # Make request to our own upload endpoint
-            upload_response = requests.post(
-                f"{request.url_root}api/upload",
-                files={'file': file},
-                data={'folder': folder_name}
-            )
-            
-            if upload_response.status_code == 200:
-                data = upload_response.json()
-                return data['url']  # Return Cloudinary URL
-            else:
-                print(f"Upload failed: {upload_response.json()}")
-                return None
-                
-        except Exception as e:
-            print(f"Cloudinary upload error: {e}")
-            return None
-
     try:
-        # Upload files to Cloudinary
-        valid_id_url = upload_to_cloudinary(valid_id_file, "valid_ids", "validid")
-        brgy_url = upload_to_cloudinary(brgy_file, "brgy_clearances", "brgy") if brgy_file else None
-        proof_url = upload_to_cloudinary(proof_file, "proof_of_income", "proof") if proof_file else None
+        # Upload files to Cloudinary using the shared utility
+        # Use "auto" resource_type to handle both images and PDFs
+        valid_id_url = upload_to_cloudinary(valid_id_file, "application_docs/valid_ids", "auto")
+        brgy_url = upload_to_cloudinary(brgy_file, "application_docs/brgy_clearances", "auto") if brgy_file else None
+        proof_url = upload_to_cloudinary(proof_file, "application_docs/proof_of_income", "auto") if proof_file else None
 
         if not valid_id_url:
             return jsonify({"error": "Failed to upload valid ID"}), 500
@@ -70,7 +46,7 @@ def apply_unit():
 
         if application:
             application.unitid = unit_id
-            application.valid_id = valid_id_url  # Now storing URL instead of filename
+            application.valid_id = valid_id_url
             application.brgy_clearance = brgy_url
             application.proof_of_income = proof_url
             application.status = "Pending"
@@ -80,7 +56,7 @@ def apply_unit():
             new_app = Application(
                 unitid=unit_id,
                 userid=user.userid,
-                valid_id=valid_id_url,  # Now storing URL instead of filename
+                valid_id=valid_id_url,
                 brgy_clearance=brgy_url,
                 proof_of_income=proof_url,
                 status="Pending",
@@ -118,7 +94,7 @@ def apply_unit():
 
     except Exception as e:
         db.session.rollback()
-        # No need to cleanup files since they're in Cloudinary
+        print(f"Error submitting application: {str(e)}")
         return jsonify({"error": f"Failed to submit application: {str(e)}"}), 500
 
 # ✅ Fetch application details
@@ -143,7 +119,7 @@ def get_application(tenant_id):
         "phone": user.phone,
         "status": application.status,
         "unitid": application.unitid,
-        "valid_id_url": application.valid_id,  # Now returns Cloudinary URL
+        "valid_id_url": application.valid_id,  # Cloudinary URL
         "brgy_clearance_url": application.brgy_clearance,
         "proof_of_income_url": application.proof_of_income
     })
@@ -224,3 +200,73 @@ def get_application_documents(tenant_id):
         documents["proof_of_income"] = application.proof_of_income
 
     return jsonify(documents)
+
+# ✅ Additional route to get all applications (for admin/landlord view)
+@application_bp.route("/applications", methods=["GET"])
+def get_all_applications():
+    try:
+        applications = (
+            db.session.query(
+                Application,
+                User,
+                Unit
+            )
+            .join(User, User.userid == Application.userid)
+            .join(Unit, Unit.unitid == Application.unitid)
+            .all()
+        )
+
+        result = []
+        for application, user, unit in applications:
+            result.append({
+                "application_id": application.applicationid,
+                "user_id": user.userid,
+                "full_name": f"{user.firstname} {user.middlename or ''} {user.lastname}".strip(),
+                "email": user.email,
+                "phone": user.phone,
+                "unit_id": unit.unitid,
+                "unit_name": unit.name,
+                "unit_price": float(unit.price) if unit.price else 0,
+                "status": application.status,
+                "submission_date": application.submissiondate.isoformat() if application.submissiondate else None,
+                "valid_id_url": application.valid_id,
+                "brgy_clearance_url": application.brgy_clearance,
+                "proof_of_income_url": application.proof_of_income
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print("Error fetching all applications:", e)
+        return jsonify({"error": "Failed to fetch applications"}), 500
+
+# ✅ Route to update application status
+@application_bp.route("/application/<int:application_id>/status", methods=["PUT"])
+def update_application_status(application_id):
+    try:
+        data = request.get_json()
+        new_status = data.get("status")
+        
+        if not new_status:
+            return jsonify({"error": "Status is required"}), 400
+
+        application = Application.query.get(application_id)
+        if not application:
+            return jsonify({"error": "Application not found"}), 404
+
+        # Update status
+        application.status = new_status
+        db.session.commit()
+
+        return jsonify({
+            "message": "Application status updated successfully!",
+            "application": {
+                "application_id": application.applicationid,
+                "status": application.status
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error updating application status:", e)
+        return jsonify({"error": "Failed to update application status"}), 500

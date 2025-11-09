@@ -1,31 +1,9 @@
 from flask import Blueprint, request, jsonify
-import os
 from extensions import db
 from models.units_model import House
-import requests
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 
 houses_bp = Blueprint("houses_bp", __name__)
-
-def upload_to_cloudinary(file, folder_name):
-    """Upload file to Cloudinary and return the URL"""
-    if not file:
-        return None
-        
-    try:
-        # Upload directly to Cloudinary
-        result = cloudinary.uploader.upload(
-            file,
-            folder=f"house-rental/{folder_name}",
-            resource_type="image"
-        )
-        return result['secure_url']
-            
-    except Exception as e:
-        print(f"Cloudinary upload error: {e}")
-        return None
 
 @houses_bp.route("/add-houses", methods=["POST"])
 def add_house():
@@ -44,8 +22,8 @@ def add_house():
         if not image:
             return jsonify({"error": "Image is required"}), 400
 
-        # Upload image to Cloudinary
-        image_url = upload_to_cloudinary(image, "house_images")
+        # Upload image to Cloudinary using shared utility
+        image_url = upload_to_cloudinary(image, "house_images", "image")
         if not image_url:
             return jsonify({"error": "Failed to upload house image to Cloudinary"}), 500
 
@@ -103,8 +81,8 @@ def update_house(house_id):
 
         # Handle image upload if a new image is provided
         if image:
-            # Upload new image to Cloudinary
-            image_url = upload_to_cloudinary(image, "house_images")
+            # Upload new image to Cloudinary using shared utility
+            image_url = upload_to_cloudinary(image, "house_images", "image")
             if not image_url:
                 return jsonify({"error": "Failed to upload house image"}), 500
             
@@ -114,7 +92,7 @@ def update_house(house_id):
         # Update house record
         house.name = name
         house.description = description
-        house.price = price
+        house.price = float(price)
         house.status = status
 
         db.session.commit()
