@@ -34,6 +34,10 @@ html, body {
     display: flex;
     align-items: center;
     gap: 8px;
+    /* Center the brand */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .logo-Layout {
@@ -51,6 +55,7 @@ html, body {
 .nav-links-Layout.desktop-nav-Layout {
     display: flex;
     gap: 1rem;
+    margin-left: auto; /* Push to right */
 }
 
 .nav-btn-Layout {
@@ -89,6 +94,7 @@ html, body {
     padding: 8px;
     border-radius: 4px;
     transition: background-color 0.3s;
+    order: -1; /* Position on left */
 }
 
 .mobile-menu-toggle-Layout:hover {
@@ -99,22 +105,45 @@ html, body {
 .mobile-nav-sidebar-Layout {
     position: fixed;
     top: 0;
-    right: -300px;
+    left: -300px; /* Changed from right to left */
     width: 280px;
     height: 100vh;
     background: #061A53;
     z-index: 1001;
-    transition: right 0.3s ease-in-out;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    transition: left 0.3s ease-in-out; /* Changed from right to left */
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3); /* Adjusted shadow direction */
 }
 
 .mobile-nav-open-Layout {
-    right: 0;
+    left: 0; /* Changed from right to left */
 }
 
 .mobile-nav-header-Layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-nav-brand-container-Layout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mobile-close-btn-Layout {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.mobile-close-btn-Layout:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .mobile-nav-links-Layout {
@@ -645,10 +674,17 @@ html, body {
 @media (max-width: 768px) {
     .navbar-Layout {
         padding: 1rem 1.5rem;
+        justify-content: space-between;
     }
     
     .mobile-menu-toggle-Layout {
         display: block;
+    }
+    
+    .nav-brand-container-Layout {
+        position: static;
+        transform: none;
+        margin: 0 auto;
     }
     
     .nav-links-Layout.desktop-nav-Layout {
@@ -858,11 +894,11 @@ html, body {
     
     .mobile-nav-sidebar-Layout {
         width: 100%;
-        right: -100%;
+        left: -100%;
     }
     
     .mobile-nav-open-Layout {
-        right: 0;
+        left: 0;
     }
 }
 
