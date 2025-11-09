@@ -58,12 +58,6 @@ function LandingPage() {
     <div className="landing-container-Layout">
       {/* Navbar */}
       <nav className="navbar-Layout">
-        {/* Mobile Hamburger Menu - LEFT SIDE */}
-        <div className="mobile-menu-toggle-Layout" onClick={toggleMobileMenu}>
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </div>
-
-        {/* Brand - Centered */}
         <div className="nav-brand-container-Layout">
           <img
             src="/logo.png"
@@ -76,13 +70,18 @@ function LandingPage() {
           <div className="nav-brand-text-Layout">RenTahanan</div>
         </div>
         
-        {/* Desktop Navigation - RIGHT SIDE */}
+        {/* Desktop Navigation */}
         <div className="nav-links-Layout desktop-nav-Layout">
           <Link to="/login" className="nav-btn-Layout login-btn-Layout">Login</Link>
           <Link to="/register" className="nav-btn-Layout register-btn-Layout">Register</Link>
         </div>
 
-        {/* Mobile Sidebar Navigation - LEFT SIDE */}
+        {/* Mobile Hamburger Menu */}
+        <div className="mobile-menu-toggle-Layout" onClick={toggleMobileMenu}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </div>
+
+        {/* Mobile Sidebar Navigation */}
         <div className={`mobile-nav-sidebar-Layout ${isMobileMenuOpen ? 'mobile-nav-open-Layout' : ''}`}>
           <div className="mobile-nav-header-Layout">
             <div className="nav-brand-container-Layout">
@@ -96,9 +95,6 @@ function LandingPage() {
               />
               <div className="nav-brand-text-Layout">RenTahanan</div>
             </div>
-            <button className="mobile-close-btn-Layout" onClick={closeMobileMenu}>
-              <X size={24} />
-            </button>
           </div>
           <div className="mobile-nav-links-Layout">
             <Link to="/login" className="mobile-nav-btn-Layout mobile-login-btn-Layout" onClick={closeMobileMenu}>
@@ -116,7 +112,7 @@ function LandingPage() {
         )}
       </nav>
 
-      {/* Rest of your components remain the same */}
+      {/* Rest of your existing JSX remains the same */}
       <section className="hero-section-Layout">
         <div className="hero-overlay-Layout"></div>
         <div className="hero-content-Layout">
@@ -231,7 +227,7 @@ function LandingPage() {
             <div className="contact-details-Layout">
               <div className="contact-item-Layout">
                 <MapPin className="contact-icon-Layout" />
-                <div className="contact-text-Layout">
+                <div>
                   <h3>Location</h3>
                   <p>Abangan Sur Marilao</p>
                   <p>Bulacan Philippines</p>
@@ -239,7 +235,7 @@ function LandingPage() {
               </div>
               <div className="contact-item-Layout">
                 <Phone className="contact-icon-Layout" />
-                <div className="contact-text-Layout">
+                <div>
                   <h3>Phone Number</h3>
                   <p>+63 (2) 8123-4567</p>
                   <p>+63 912 345 6789 (Globe)</p>
@@ -248,7 +244,7 @@ function LandingPage() {
               </div>
               <div className="contact-item-Layout">
                 <Mail className="contact-icon-Layout" />
-                <div className="contact-text-Layout">
+                <div>
                   <h3>Email Address</h3>
                   <p>info@rentahanan.com</p>
                   <p>support@rentahanan.com</p>
@@ -256,7 +252,7 @@ function LandingPage() {
               </div>
               <div className="contact-item-Layout">
                 <Clock className="contact-icon-Layout" />
-                <div className="contact-text-Layout">
+                <div>
                   <h3>Business Hours</h3>
                   <p>Monday - Friday: 8:00 AM - 6:00 PM</p>
                   <p>Saturday: 9:00 AM - 3:00 PM</p>
@@ -267,7 +263,7 @@ function LandingPage() {
           </div>
           
           <div className="map-section-Layout">
-            <h3 className="map-title-Layout">Find Us Here</h3>
+            <h3>Find Us Here</h3>
             <div className="map-image-container-Layout">
               <img 
                 src="/images/map-location.jpg" 
