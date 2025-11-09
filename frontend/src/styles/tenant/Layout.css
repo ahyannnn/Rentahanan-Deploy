@@ -1317,3 +1317,26 @@ body {
     border-top-color: #3498db;
   }
 }
+
+/* 🔧 UPDATE: Always show badge with number on both desktop & mobile */
+.notif-badge-Layout {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #ff4757;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex !important; /* 🔥 FORCE DISPLAY */
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+/* 🔧 UPDATE: Hide dots indicator since we have number badge */
+.notif-dots-indicator-Layout {
+  display: none; /* Hide dots, use number badge instead */
+}
