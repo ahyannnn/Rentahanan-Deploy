@@ -8,6 +8,7 @@ from models.notifications_model import Notification
 from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 from datetime import datetime
 import io
+import traceback
 
 transaction_bp = Blueprint("transactions", __name__)
 
@@ -215,16 +216,20 @@ For any inquiries, please contact our administration office."""
         # Build PDF
         doc.build(story)
 
-        # ✅ Upload PDF to Cloudinary using shared utility
+        # ✅ Upload PDF to Cloudinary using RAW resource type
         pdf_buffer.seek(0)
         receipt_url = upload_to_cloudinary(
             pdf_buffer, 
             "transactions/receipts", 
-            "auto"
+            "raw"  # Explicitly use "raw" for PDFs
         )
         
         if not receipt_url:
             return jsonify({"error": "Failed to upload receipt to Cloudinary"}), 500
+
+        # Verify the URL contains "/raw/upload/" which indicates successful PDF upload
+        if "/raw/upload/" not in receipt_url:
+            print(f"⚠️ Warning: Receipt URL doesn't contain '/raw/upload/': {receipt_url}")
 
         # ✅ Update Bill status to Paid
         bill.status = "Paid"
@@ -274,6 +279,7 @@ For any inquiries, please contact our administration office."""
         })
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Error in issue_receipt: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to issue receipt: {str(e)}"}), 500
 
 
@@ -348,6 +354,7 @@ def reject_payment(billid):
 
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Error in reject_payment: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to reject payment: {str(e)}"}), 500
 
 
@@ -369,6 +376,7 @@ def get_receipt(billid):
         })
         
     except Exception as e:
+        print(f"❌ Error in get_receipt: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to fetch receipt: {str(e)}"}), 500
 
 
@@ -388,6 +396,7 @@ def download_receipt(billid):
         })
         
     except Exception as e:
+        print(f"❌ Error in download_receipt: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to get receipt download URL: {str(e)}"}), 500
 
 
@@ -430,6 +439,7 @@ def get_all_transactions():
         return jsonify(result), 200
 
     except Exception as e:
+        print(f"❌ Error in get_all_transactions: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to fetch transactions: {str(e)}"}), 500
 
 
@@ -468,6 +478,7 @@ def get_tenant_transactions(tenant_id):
         return jsonify(result), 200
 
     except Exception as e:
+        print(f"❌ Error in get_tenant_transactions: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to fetch tenant transactions: {str(e)}"}), 500
 
 
@@ -529,6 +540,7 @@ def get_transaction_statistics():
         return jsonify(statistics), 200
 
     except Exception as e:
+        print(f"❌ Error in get_transaction_statistics: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to fetch transaction statistics: {str(e)}"}), 500
 
 
@@ -588,6 +600,7 @@ def search_transactions():
     except ValueError as e:
         return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
     except Exception as e:
+        print(f"❌ Error in search_transactions: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to search transactions: {str(e)}"}), 500
 
 
@@ -639,4 +652,71 @@ def get_transaction_by_id(transaction_id):
         return jsonify(result), 200
 
     except Exception as e:
+        print(f"❌ Error in get_transaction_by_id: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to fetch transaction: {str(e)}"}), 500
+
+
+# ✅ Diagnostic route to check receipt PDF files
+@transaction_bp.route("/transactions/diagnose-receipt/<int:billid>", methods=["GET"])
+def diagnose_receipt(billid):
+    try:
+        transaction = db.session.query(Transaction).filter(Transaction.billid == billid).first()
+        if not transaction:
+            return jsonify({"error": "Transaction not found"}), 404
+        
+        import requests
+        
+        def check_pdf(url, label):
+            if not url:
+                return {"error": "No URL provided"}
+            
+            try:
+                # Download the file
+                response = requests.get(url, timeout=30)
+                result = {
+                    "url": url,
+                    "status_code": response.status_code,
+                    "content_length": len(response.content),
+                    "headers": dict(response.headers)
+                }
+                
+                if response.status_code != 200:
+                    result["error"] = f"HTTP {response.status_code}"
+                    return result
+                
+                # Check if it starts with PDF header
+                is_pdf = response.content.startswith(b'%PDF')
+                result["is_valid_pdf_header"] = is_pdf
+                
+                # Check first few bytes
+                result["first_10_bytes"] = response.content[:10].hex()
+                
+                # Try to parse as PDF
+                try:
+                    pdf_buffer = io.BytesIO(response.content)
+                    from PyPDF2 import PdfReader
+                    pdf_reader = PdfReader(pdf_buffer)
+                    result["pdf_page_count"] = len(pdf_reader.pages)
+                    result["pdf_is_encrypted"] = pdf_reader.is_encrypted
+                    result["pdf_valid"] = True
+                except Exception as e:
+                    result["pdf_valid"] = False
+                    result["pdf_error"] = str(e)
+                
+                return result
+                
+            except Exception as e:
+                return {"error": str(e)}
+        
+        results = {}
+        if transaction.receipt:
+            results["receipt"] = check_pdf(transaction.receipt, "Receipt")
+        
+        return jsonify({
+            "billid": billid,
+            "transaction_id": transaction.transactionid,
+            "diagnosis": results
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"Diagnosis failed: {str(e)}"}), 500

@@ -358,18 +358,22 @@ def generate_contract_pdf():
             except Exception as sig_error:
                 print(f"Signature addition failed, but PDF was generated: {sig_error}")
 
-        # ✅ Upload PDF to Cloudinary using shared utility
+        # ✅ Upload PDF to Cloudinary using RAW resource type
         pdf_buffer.seek(0)
         
-        # Upload to Cloudinary using shared utility
+        # Upload to Cloudinary with explicit raw type for PDFs
         pdf_url = upload_to_cloudinary(
             pdf_buffer, 
             "contracts/generated", 
-            "auto"
+            "raw"  # Explicitly use "raw" for PDFs
         )
         
         if not pdf_url:
             return jsonify({"error": "Failed to upload contract to Cloudinary"}), 500
+
+        # Verify the URL contains "/raw/upload/" which indicates successful PDF upload
+        if "/raw/upload/" not in pdf_url:
+            print(f"⚠️ Warning: PDF URL doesn't contain '/raw/upload/': {pdf_url}")
 
         return jsonify({
             "message": "Professional contract PDF generated successfully!",
@@ -481,56 +485,178 @@ def get_contracts_by_tenant(tenant_id):
 
     return jsonify(result)
 
-# ✅ Tenant sign contract (upload signed PDF) - UPDATED FOR CLOUDINARY
+# ✅ Tenant sign contract (attach signature to existing generated PDF) - FIXED VERSION
 @contract_bp.route("/contracts/sign", methods=["POST"])
 def sign_contract():
     try:
         if "signed_contract" not in request.files:
             return jsonify({"error": "No signature file provided"}), 400
 
-        file = request.files["signed_contract"]
+        signature_file = request.files["signed_contract"]
         contract_id = request.form.get("contractid")
 
-        if not contract_id or file.filename == "":
+        if not contract_id or signature_file.filename == "":
             return jsonify({"error": "Missing contract ID or file"}), 400
+
+        print(f"🔍 Starting sign process for contract {contract_id}")
 
         # ✅ Find contract in DB
         contract = Contract.query.filter_by(contractid=contract_id).first()
         if not contract:
             return jsonify({"error": "Contract not found"}), 404
 
-        # ✅ Upload signed contract to Cloudinary using shared utility
-        signed_contract_url = upload_to_cloudinary(file, "contracts/signed", "auto")
-        if not signed_contract_url:
-            return jsonify({"error": "Failed to upload signed contract"}), 500
+        if not contract.generated_contract:
+            return jsonify({"error": "No generated contract found to sign"}), 400
 
-        # ✅ Update DB with Cloudinary URL
+        print(f"📄 Generated contract URL: {contract.generated_contract}")
+
+        # ✅ Download the existing generated PDF from Cloudinary
+        import requests
+        
+        # Use the Cloudinary URL directly
+        pdf_url = contract.generated_contract
+        
+        # Fix URL if it's using image upload instead of raw
+        if "/image/upload/" in pdf_url:
+            # Convert to raw URL format
+            pdf_url = pdf_url.replace("/image/upload/", "/raw/upload/")
+            print(f"🔄 Fixed URL to use raw upload: {pdf_url}")
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        
+        print(f"📥 Downloading PDF from: {pdf_url}")
+        response = requests.get(pdf_url, headers=headers, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to download PDF. Status: {response.status_code}")
+            # Try the original URL as fallback
+            response = requests.get(contract.generated_contract, headers=headers, timeout=30)
+            if response.status_code != 200:
+                return jsonify({"error": f"Cannot download contract PDF. Status: {response.status_code}"}), 500
+
+        # Check if we got a PDF
+        if not response.content.startswith(b'%PDF'):
+            print(f"❌ Downloaded content is not a PDF")
+            print(f"❌ First bytes: {response.content[:10]}")
+            return jsonify({"error": "Downloaded file is not a valid PDF"}), 500
+
+        print(f"✅ Successfully downloaded PDF ({len(response.content)} bytes)")
+
+        existing_pdf_buffer = io.BytesIO(response.content)
+        
+        # Verify it's a valid PDF
+        try:
+            pdf_reader = PdfReader(existing_pdf_buffer)
+            print(f"✅ Valid PDF with {len(pdf_reader.pages)} pages")
+            existing_pdf_buffer.seek(0)
+        except Exception as e:
+            print(f"❌ Invalid PDF: {e}")
+            return jsonify({"error": "Downloaded file is not a valid PDF"}), 500
+
+        # ✅ Process the tenant signature
+        img_data = signature_file.read()
+        if not img_data:
+            return jsonify({"error": "Signature file is empty"}), 400
+            
+        signature_file.seek(0)  # Reset file pointer for potential re-use
+        
+        sig_image = Image.open(io.BytesIO(img_data))
+
+        # Fix transparency to white background
+        if sig_image.mode == "RGBA":
+            white_bg = Image.new("RGB", sig_image.size, (255, 255, 255))
+            white_bg.paste(sig_image, mask=sig_image.split()[3])
+            sig_image = white_bg
+
+        # Resize signature
+        max_width, max_height = 120, 40
+        sig_image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+
+        # ✅ Create signature overlay PDF
+        packet = io.BytesIO()
+        can = canvas.Canvas(packet, pagesize=A4)
+        
+        # Save processed signature to buffer
+        img_buffer = io.BytesIO()
+        sig_image.save(img_buffer, format="PNG", optimize=True)
+        img_buffer.seek(0)
+        signature_reader = ImageReader(img_buffer)
+
+        # Position for tenant signature (left side)
+        can.drawImage(signature_reader, 100, 65, width=120, height=40, mask='auto')
+        
+        # Add signature labels
+        can.setFont("Helvetica-Bold", 10)
+        can.drawString(100, 50, "Tenant Signature")
+        can.drawString(430, 50, "Landlord Signature")
+        
+        # Add signing date
+        can.setFont("Helvetica", 9)
+        can.drawString(100, 35, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+        
+        can.save()
+
+        # ✅ Merge the signature overlay with the existing PDF
+        packet.seek(0)
+        new_pdf = PdfReader(packet)
+        existing_pdf = PdfReader(existing_pdf_buffer)
+        output = PdfWriter()
+
+        # Merge signatures onto the first page
+        page = existing_pdf.pages[0]
+        page.merge_page(new_pdf.pages[0])
+        output.add_page(page)
+
+        # Add remaining pages if any
+        for i in range(1, len(existing_pdf.pages)):
+            output.add_page(existing_pdf.pages[i])
+
+        # ✅ Save the final signed PDF
+        final_pdf_buffer = io.BytesIO()
+        output.write(final_pdf_buffer)
+        final_pdf_buffer.seek(0)
+
+        print(f"📤 Uploading signed PDF to Cloudinary...")
+        
+        # ✅ Upload final signed PDF to Cloudinary with RAW resource type
+        signed_contract_url = upload_to_cloudinary(
+            final_pdf_buffer, 
+            "contracts/signed", 
+            "raw"  # Explicitly use "raw" for PDFs
+        )
+        
+        if not signed_contract_url:
+            return jsonify({"error": "Failed to upload signed contract to Cloudinary"}), 500
+
+        print(f"✅ Signed PDF uploaded to: {signed_contract_url}")
+
+        # ✅ Update DB with signed PDF URL
         contract.signed_contract = signed_contract_url
         contract.status = "Signed"
         
-        # ✅ Get tenant info for notification
+        # ✅ Create notifications
         tenant = Tenant.query.filter_by(tenantid=contract.tenantid).first()
         unit = Unit.query.filter_by(unitid=contract.unitid).first()
 
         if tenant:
-            # ✅ Create UNIFIED notification for tenant
             tenant_notification = Notification(
                 title='Contract Signed',
                 message=f'You have successfully signed the rental contract for {unit.name if unit else "your unit"}.',
-                targetuserid=tenant.userid,  # Specific to this tenant
+                targetuserid=tenant.userid,
                 isgroupnotification=False,
                 recipientcount=1,
                 createdbyuserid=tenant.userid
             )
             db.session.add(tenant_notification)
 
-            # ✅ Create UNIFIED notification for ALL landlords
             all_landlords = User.query.filter_by(role='Owner').all()
             if all_landlords:
                 landlord_notification = Notification(
                     title='Contract Signed by Tenant',
                     message=f'Tenant has signed the rental contract for {unit.name if unit else "a unit"}. Contract ID: {contract.contractid}',
-                    targetuserrole='Owner',  # Target all landlords
+                    targetuserrole='Owner',
                     isgroupnotification=True,
                     recipientcount=len(all_landlords),
                     createdbyuserid=tenant.userid
@@ -539,14 +665,17 @@ def sign_contract():
 
         db.session.commit()
 
+        print(f"✅ Contract {contract_id} signed successfully!")
+
         return jsonify({
             "message": "Contract signed successfully!",
-            "signed_contract_url": signed_contract_url
+            "signed_contract_url": signed_contract_url,
+            "contract_id": contract.contractid
         })
 
     except Exception as e:
         db.session.rollback()
-        print(traceback.format_exc())
+        print(f"❌ Error in sign_contract: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to sign contract: {str(e)}"}), 500
 
 # ✅ Download contract file (now returns Cloudinary URL)
@@ -916,3 +1045,72 @@ def reject_termination():
             'success': False,
             'message': f'Error rejecting termination: {str(e)}'
         }), 500
+
+# ✅ Diagnostic route to check PDF files
+@contract_bp.route("/contracts/diagnose-pdf/<int:contract_id>", methods=["GET"])
+def diagnose_pdf(contract_id):
+    try:
+        contract = Contract.query.filter_by(contractid=contract_id).first()
+        if not contract:
+            return jsonify({"error": "Contract not found"}), 404
+        
+        import requests
+        
+        results = {}
+        
+        def check_pdf(url, label):
+            if not url:
+                return {"error": "No URL provided"}
+            
+            try:
+                # Download the file
+                response = requests.get(url, timeout=30)
+                result = {
+                    "url": url,
+                    "status_code": response.status_code,
+                    "content_length": len(response.content),
+                    "headers": dict(response.headers)
+                }
+                
+                if response.status_code != 200:
+                    result["error"] = f"HTTP {response.status_code}"
+                    return result
+                
+                # Check if it starts with PDF header
+                is_pdf = response.content.startswith(b'%PDF')
+                result["is_valid_pdf_header"] = is_pdf
+                
+                # Check first few bytes
+                result["first_10_bytes"] = response.content[:10].hex()
+                
+                # Try to parse as PDF
+                try:
+                    pdf_buffer = io.BytesIO(response.content)
+                    pdf_reader = PdfReader(pdf_buffer)
+                    result["pdf_page_count"] = len(pdf_reader.pages)
+                    result["pdf_is_encrypted"] = pdf_reader.is_encrypted
+                    result["pdf_valid"] = True
+                except Exception as e:
+                    result["pdf_valid"] = False
+                    result["pdf_error"] = str(e)
+                
+                return result
+                
+            except Exception as e:
+                return {"error": str(e)}
+        
+        # Check generated contract
+        if contract.generated_contract:
+            results["generated_contract"] = check_pdf(contract.generated_contract, "Generated")
+        
+        # Check signed contract
+        if contract.signed_contract:
+            results["signed_contract"] = check_pdf(contract.signed_contract, "Signed")
+        
+        return jsonify({
+            "contract_id": contract_id,
+            "diagnosis": results
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"Diagnosis failed: {str(e)}"}), 500
