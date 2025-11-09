@@ -66,6 +66,40 @@ const Layout = () => {
     return `${API_BASE}/uploads/${folder}/${imagePath}`;
   };
 
+  // 🔥 AUTO-REFRESH: 1-second interval for notifications
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchNotifications();
+    }, 1000); // 1 SECOND
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // 🔥 AUTO-REFRESH: When tab becomes active
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchNotifications();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // 🔥 AUTO-REFRESH: When page gets focus
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchNotifications();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   useEffect(() => {
     // If current path is /tenant and user is Registered tenant, redirect to browse-units
     if (location.pathname === '/tenant' &&
@@ -127,17 +161,17 @@ const Layout = () => {
     }
   };
 
-  // Fetch notifications from API - ✅ UPDATED API BASE
+  // Fetch notifications from API - ✅ UPDATED API BASE with cache busting
   const fetchNotifications = async () => {
     try {
-      setNotificationsLoading(true);
       const storedUserRaw = localStorage.getItem("user");
       if (!storedUserRaw) return;
 
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`${API_BASE}/api/notifications/${userId}`);
+      // 🔥 CACHE BUSTING: Add timestamp to prevent caching
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}?t=${Date.now()}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -146,16 +180,16 @@ const Layout = () => {
       const data = await response.json();
 
       if (data.success) {
-        setNotifications(data.notifications || []);
+        const newNotifications = data.notifications || [];
+        
+        // Only update if notifications actually changed
+        if (JSON.stringify(newNotifications) !== JSON.stringify(notifications)) {
+          setNotifications(newNotifications);
 
-        // Calculate unread count
-        const unread = data.notifications.filter(notif => !notif.is_read).length;
-        setUnreadCount(unread);
-
-        // Log notification types for debugging
-        const groupNotifications = data.notifications.filter(notif => notif.isgroupnotification);
-        const individualNotifications = data.notifications.filter(notif => !notif.isgroupnotification);
-
+          // Calculate unread count - treat all as unread since no is_read field yet
+          const unread = newNotifications.length;
+          setUnreadCount(unread);
+        }
       } else {
         console.error("Failed to fetch notifications:", data.message);
         setNotifications([]);
@@ -787,17 +821,7 @@ const Layout = () => {
               onClick={handleNotificationsToggle}
             >
               <Bell size={20} color="white" />
-              {/* Three dots indicator for desktop hover */}
-              <div className="notif-dots-indicator-Layout">
-                {unreadCount > 0 && (
-                  <>
-                    <span className="dot-Layout"></span>
-                    <span className="dot-Layout"></span>
-                    <span className="dot-Layout"></span>
-                  </>
-                )}
-              </div>
-              {/* Badge for mobile */}
+              {/* Number badge - ALWAYS SHOW IF THERE ARE NOTIFICATIONS */}
               {unreadCount > 0 && (
                 <div className="notif-badge-Layout">{unreadCount}</div>
               )}

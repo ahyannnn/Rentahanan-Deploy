@@ -1141,3 +1141,202 @@ body {
 .delete-menu-item-Layout:hover {
   background: #f8d7da;
 }
+
+/* ===== Loading Component Media Queries ===== */
+
+/* Loading container for layout */
+.loading-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20vh;
+  padding: 20px;
+}
+
+.loading-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.loading-logo {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+
+.loading-brand-text {
+  font-size: 4rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.loading-spinner {
+  width: 70px;
+  height: 70px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Tablet screens */
+@media (max-width: 1024px) {
+  .loading-logo-container {
+    margin-top: 15vh;
+  }
+  
+  .loading-logo {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .loading-brand-text {
+    font-size: 3rem;
+  }
+  
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border-width: 3px;
+  }
+}
+
+/* Mobile screens */
+@media (max-width: 768px) {
+  .loading-logo-container {
+    margin-top: 10vh;
+    padding: 15px;
+  }
+  
+  .loading-brand {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .loading-logo {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .loading-brand-text {
+    font-size: 2.5rem;
+    text-align: center;
+  }
+  
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border-width: 3px;
+  }
+}
+
+/* Small mobile screens */
+@media (max-width: 480px) {
+  .loading-logo-container {
+    margin-top: 5vh;
+    padding: 10px;
+  }
+  
+  .loading-logo {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .loading-brand-text {
+    font-size: 2rem;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 2px;
+  }
+}
+
+/* Landscape orientation for mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .loading-logo-container {
+    margin-top: 5vh;
+    flex-direction: row;
+    gap: 2rem;
+  }
+  
+  .loading-brand {
+    margin-bottom: 0;
+    flex-direction: row;
+  }
+  
+  .loading-logo {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .loading-brand-text {
+    font-size: 2rem;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .loading-logo {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: spin 2s linear infinite;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .loading-brand-text {
+    color: #f0f0f0;
+  }
+  
+  .loading-spinner {
+    border-color: #444;
+    border-top-color: #3498db;
+  }
+}
+
+/* 🔧 UPDATE: Always show badge with number on both desktop & mobile */
+.notif-badge-Layout {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #ff4757;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex !important; /* 🔥 FORCE DISPLAY */
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+/* 🔧 UPDATE: Hide dots indicator since we have number badge */
+.notif-dots-indicator-Layout {
+  display: none; /* Hide dots, use number badge instead */
+}
