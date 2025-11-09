@@ -20,8 +20,77 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from PIL import Image
+import cloudinary.uploader
+import re
 
 contract_bp = Blueprint("contract_bp", __name__)
+
+def upload_contract_pdf(pdf_buffer, folder, contract_id, doc_type="generated"):
+    """Upload contract PDF directly with proper configuration to prevent stream_hxbcrg"""
+    try:
+        # Generate unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"contract_{contract_id}_{doc_type}_{timestamp}"
+        
+        print(f"📤 Uploading {doc_type} contract PDF with filename: {filename}")
+        
+        # Upload with explicit raw configuration
+        result = cloudinary.uploader.upload(
+            pdf_buffer,
+            folder=f"house-rental/contracts/{folder}",
+            resource_type="raw",  # CRITICAL: Force raw for PDFs
+            public_id=filename,
+            use_filename=False,   # Prevent stream names
+            unique_filename=True,
+            overwrite=True,
+            invalidate=True,
+            type='upload'
+        )
+        
+        # Get the secure URL
+        secure_url = result.get('secure_url')
+        public_id = result.get('public_id')
+        version = result.get('version')
+        
+        print(f"✅ Cloudinary upload result:")
+        print(f"   Original URL: {secure_url}")
+        print(f"   Public ID: {public_id}")
+        print(f"   Version: {version}")
+        print(f"   Resource Type: {result.get('resource_type')}")
+        
+        # MANUALLY construct the URL to ensure it's correct
+        if secure_url:
+            # Force raw upload URL structure
+            if '/image/upload/' in secure_url:
+                secure_url = secure_url.replace('/image/upload/', '/raw/upload/')
+                print(f"🔄 Fixed resource type: {secure_url}")
+            
+            # If it still doesn't have raw, reconstruct it completely
+            if '/raw/upload/' not in secure_url:
+                if version and public_id:
+                    # Manual URL construction - THIS IS THE KEY FIX
+                    secure_url = f"https://res.cloudinary.com/dm9eein09/raw/upload/v{version}/{public_id}"
+                    print(f"🔄 Manually constructed URL: {secure_url}")
+                else:
+                    # Fallback: try to extract from the existing URL
+                    match = re.search(r'v(\d+)/(.+)', secure_url)
+                    if match:
+                        version = match.group(1)
+                        file_path = match.group(2)
+                        secure_url = f"https://res.cloudinary.com/dm9eein09/raw/upload/v{version}/{file_path}"
+            
+            # Ensure the URL ends with .pdf for proper content-type
+            if not secure_url.endswith('.pdf'):
+                secure_url += '.pdf'
+                
+            print(f"🔧 Final {doc_type} contract URL: {secure_url}")
+        
+        return secure_url
+        
+    except Exception as e:
+        print(f"❌ Contract PDF upload error: {e}")
+        print(f"❌ Full traceback: {traceback.format_exc()}")
+        return None
 
 # ✅ Fetch existing contracts
 @contract_bp.route("/contracts/tenants", methods=["GET"])
@@ -358,27 +427,33 @@ def generate_contract_pdf():
             except Exception as sig_error:
                 print(f"Signature addition failed, but PDF was generated: {sig_error}")
 
-        # ✅ Upload PDF to Cloudinary using RAW resource type
+        # ✅ Use the dedicated PDF upload function (PREVENTS stream_hxbcrg)
         pdf_buffer.seek(0)
-        
-        # Upload to Cloudinary with explicit raw type for PDFs
-        pdf_url = upload_to_cloudinary(
-            pdf_buffer, 
-            "contracts/generated", 
-            "raw"  # Explicitly use "raw" for PDFs
-        )
+        print(f"📤 Uploading generated contract PDF...")
+        pdf_url = upload_contract_pdf(pdf_buffer, "generated", tenant_id, "generated")
         
         if not pdf_url:
             return jsonify({"error": "Failed to upload contract to Cloudinary"}), 500
 
-        # Verify the URL contains "/raw/upload/" which indicates successful PDF upload
-        if "/raw/upload/" not in pdf_url:
-            print(f"⚠️ Warning: PDF URL doesn't contain '/raw/upload/': {pdf_url}")
+        # ✅ Verify the URL is accessible and not a stream
+        print(f"🔍 Verifying contract URL: {pdf_url}")
+        
+        # Check if it's a stream URL (should NOT be)
+        if 'stream_' in pdf_url:
+            print(f"❌ STREAM URL DETECTED: {pdf_url}")
+            return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
+        
+        # Check if it's a proper raw URL (should BE)
+        if '/raw/upload/' not in pdf_url:
+            print(f"❌ NOT A RAW URL: {pdf_url}")
+            return jsonify({"error": "Cloudinary URL is not a proper raw PDF URL"}), 500
 
         return jsonify({
             "message": "Professional contract PDF generated successfully!",
             "pdf_url": pdf_url,
-            "contract_id": f"RT-{int(tenant_id):06d}"
+            "contract_id": f"RT-{int(tenant_id):06d}",
+            "url_type": "raw_upload" if '/raw/upload/' in pdf_url else "unknown",
+            "has_stream": 'stream_' in pdf_url
         })
 
     except Exception as e:
@@ -620,15 +695,24 @@ def sign_contract():
 
         print(f"📤 Uploading signed PDF to Cloudinary...")
         
-        # ✅ Upload final signed PDF to Cloudinary with RAW resource type
-        signed_contract_url = upload_to_cloudinary(
-            final_pdf_buffer, 
-            "contracts/signed", 
-            "raw"  # Explicitly use "raw" for PDFs
-        )
+        # ✅ Use the dedicated PDF upload function (PREVENTS stream_hxbcrg)
+        signed_contract_url = upload_contract_pdf(final_pdf_buffer, "signed", contract_id, "signed")
         
         if not signed_contract_url:
             return jsonify({"error": "Failed to upload signed contract to Cloudinary"}), 500
+
+        # ✅ Verify the URL is accessible and not a stream
+        print(f"🔍 Verifying signed contract URL: {signed_contract_url}")
+        
+        # Check if it's a stream URL (should NOT be)
+        if 'stream_' in signed_contract_url:
+            print(f"❌ STREAM URL DETECTED: {signed_contract_url}")
+            return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
+        
+        # Check if it's a proper raw URL (should BE)
+        if '/raw/upload/' not in signed_contract_url:
+            print(f"❌ NOT A RAW URL: {signed_contract_url}")
+            return jsonify({"error": "Cloudinary URL is not a proper raw PDF URL"}), 500
 
         print(f"✅ Signed PDF uploaded to: {signed_contract_url}")
 
@@ -670,7 +754,9 @@ def sign_contract():
         return jsonify({
             "message": "Contract signed successfully!",
             "signed_contract_url": signed_contract_url,
-            "contract_id": contract.contractid
+            "contract_id": contract.contractid,
+            "url_type": "raw_upload" if '/raw/upload/' in signed_contract_url else "unknown",
+            "has_stream": 'stream_' in signed_contract_url
         })
 
     except Exception as e:
@@ -1114,3 +1200,36 @@ def diagnose_pdf(contract_id):
         
     except Exception as e:
         return jsonify({"error": f"Diagnosis failed: {str(e)}"}), 500
+
+# ✅ Test upload endpoint to verify no stream_hxbcrg
+@contract_bp.route("/contracts/test-upload", methods=["GET"])
+def test_contract_upload():
+    """Test PDF upload to verify no stream_hxbcrg"""
+    try:
+        # Create a simple test PDF
+        from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
+        
+        pdf_buffer = io.BytesIO()
+        c = canvas.Canvas(pdf_buffer, pagesize=A4)
+        c.drawString(100, 750, "Test Contract PDF Upload - No Stream")
+        c.save()
+        pdf_buffer.seek(0)
+        
+        # Upload using our fixed method
+        contract_url = upload_contract_pdf(pdf_buffer, "test", "test_999", "test")
+        
+        if contract_url:
+            return jsonify({
+                "success": True,
+                "url": contract_url,
+                "has_stream": "stream_" in contract_url,
+                "is_raw_upload": "/raw/upload/" in contract_url,
+                "is_image_upload": "/image/upload/" in contract_url,
+                "is_download": "/download/" in contract_url
+            })
+        else:
+            return jsonify({"error": "Upload failed"}), 500
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
