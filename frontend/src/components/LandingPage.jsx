@@ -58,6 +58,12 @@ function LandingPage() {
     <div className="landing-container-Layout">
       {/* Navbar */}
       <nav className="navbar-Layout">
+        {/* Mobile Hamburger Menu - NASA LEFT */}
+        <div className="mobile-menu-toggle-Layout" onClick={toggleMobileMenu}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </div>
+        
+        {/* Brand - NASA GITNA */}
         <div className="nav-brand-container-Layout">
           <img
             src="/logo.png"
@@ -70,21 +76,16 @@ function LandingPage() {
           <div className="nav-brand-text-Layout">RenTahanan</div>
         </div>
         
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation - NASA RIGHT */}
         <div className="nav-links-Layout desktop-nav-Layout">
           <Link to="/login" className="nav-btn-Layout login-btn-Layout">Login</Link>
           <Link to="/register" className="nav-btn-Layout register-btn-Layout">Register</Link>
         </div>
 
-        {/* Mobile Hamburger Menu */}
-        <div className="mobile-menu-toggle-Layout" onClick={toggleMobileMenu}>
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </div>
-
-        {/* Mobile Sidebar Navigation */}
+        {/* Mobile Sidebar Navigation - NASA LEFT */}
         <div className={`mobile-nav-sidebar-Layout ${isMobileMenuOpen ? 'mobile-nav-open-Layout' : ''}`}>
           <div className="mobile-nav-header-Layout">
-            <div className="nav-brand-container-Layout">
+            <div className="mobile-nav-brand-container-Layout">
               <img
                 src="/logo.png"
                 alt="RenTahanan Logo"
@@ -95,6 +96,9 @@ function LandingPage() {
               />
               <div className="nav-brand-text-Layout">RenTahanan</div>
             </div>
+            <button className="mobile-close-btn-Layout" onClick={closeMobileMenu}>
+              <X size={24} />
+            </button>
           </div>
           <div className="mobile-nav-links-Layout">
             <Link to="/login" className="mobile-nav-btn-Layout mobile-login-btn-Layout" onClick={closeMobileMenu}>
@@ -112,7 +116,7 @@ function LandingPage() {
         )}
       </nav>
 
-      {/* Rest of your existing JSX remains the same */}
+      {/* Hero Section */}
       <section className="hero-section-Layout">
         <div className="hero-overlay-Layout"></div>
         <div className="hero-content-Layout">
