@@ -1202,47 +1202,46 @@
 }
 
 /* ===== Media Queries ===== */
-/* ===== Media Queries for Tabs and Search Box ===== */
-
-/* Large screens (default - current styles) */
-.filter-tabs-Tenant-Bills {
-    display: flex;
-    gap: 8px;
-    background: #f8faff;
-    padding: 8px;
-    border-radius: 16px;
-    border: 1px solid #e8edff;
-}
-
-.search-container-Tenant-Bills {
-    position: relative;
-    flex: 1;
-    min-width: 320px;
-}
-
-/* Tablets and small laptops */
 @media (max-width: 1024px) {
-    .bills-controls-Tenant-Bills {
+    .bills-invoice-container-Tenant-Bills {
+        padding: 20px;
+    }
+    
+    .bills-header-Tenant-Bills {
+        flex-direction: column;
         gap: 20px;
     }
     
-    .search-container-Tenant-Bills {
-        min-width: 280px;
+    .header-stats-Tenant-Bills {
+        width: 100%;
+        justify-content: space-between;
     }
     
-    .filter-tabs-Tenant-Bills {
-        gap: 6px;
-        padding: 6px;
-    }
-    
-    .filter-btn-Tenant-Bills {
-        padding: 10px 16px;
-        font-size: 0.85rem;
+    .stat-card-Tenant-Bills {
+        flex: 1;
+        min-width: auto;
     }
 }
 
-/* Tablets */
+/* Mobile devices - Switch to card view */
 @media (max-width: 768px) {
+    .bills-table-wrapper-Tenant-Bills {
+        display: none;
+    }
+    
+    .mobile-bills-container-Tenant-Bills {
+        display: flex;
+    }
+    
+    .bills-invoice-container-Tenant-Bills {
+        padding: 15px;
+        border-radius: 12px;
+    }
+    
+    .page-title-Tenant-Bills {
+        font-size: 1.6rem;
+    }
+    
     .bills-controls-Tenant-Bills {
         flex-direction: column;
         align-items: stretch;
@@ -1251,120 +1250,144 @@
     
     .search-container-Tenant-Bills {
         min-width: auto;
-        width: 100%;
     }
     
     .filter-tabs-Tenant-Bills {
         justify-content: center;
-        flex-wrap: nowrap; /* Ensure tabs stay in one row */
-        overflow-x: auto; /* Add horizontal scroll if needed */
-        gap: 4px;
-        padding: 6px;
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        flex-wrap: wrap;
     }
     
-    .filter-btn-Tenant-Bills {
-        padding: 8px 12px;
-        font-size: 0.8rem;
-        white-space: nowrap;
-        flex-shrink: 0; /* Prevent tabs from shrinking */
+    .payment-summary-Tenant-Bills {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
     }
     
-    .filter-count-Tenant-Bills {
-        padding: 1px 6px;
-        font-size: 0.75rem;
+    .proceed-btn-Tenant-Bills {
+        align-self: stretch;
+    }
+
+    .modal-overlay-Tenant-Bills {
+        padding: 10px;
+        align-items: flex-end;
+    }
+
+    .payments-modal-Tenant-Bills {
+        max-height: 85vh;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .modal-header-Tenant-Bills,
+    .modal-content-Tenant-Bills,
+    .modal-footer-Tenant-Bills {
+        padding: 20px;
+    }
+
+    .success-modal-Tenant-Bills {
+        width: 95%;
+        margin: 20px;
+    }
+
+    .success-modal-content-Tenant-Bills {
+        padding: 30px 20px 20px;
+    }
+
+    .success-checkmark-Tenant-Bills {
+        width: 100px;
+        height: 100px;
+    }
+
+    .check-icon-Tenant-Bills {
+        size: 60px;
+    }
+
+    .success-title-Tenant-Bills {
+        font-size: 1.5rem;
+    }
+
+    .success-message-Tenant-Bills {
+        font-size: 1rem;
+    }
+
+    .success-details-Tenant-Bills {
+        padding: 20px;
+    }
+
+    .success-close-btn-Tenant-Bills {
+        padding: 14px 32px;
+        font-size: 1rem;
     }
 }
 
-/* Mobile phones */
+/* Small mobile devices */
 @media (max-width: 480px) {
-    .bills-controls-Tenant-Bills {
+    .bills-invoice-container-Tenant-Bills {
+        padding: 12px;
+    }
+    
+    .page-title-Tenant-Bills {
+        font-size: 1.4rem;
+    }
+    
+    .header-stats-Tenant-Bills {
+        flex-direction: column;
+    }
+    
+    .stat-card-Tenant-Bills {
+        width: 100%;
+    }
+    
+    .mobile-bill-details-Tenant-Bills {
+        grid-template-columns: 1fr;
+    }
+    
+    .mobile-bill-detail-Tenant-Bills {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .payments-modal-Tenant-Bills {
+        max-width: 95%;
+    }
+
+    .payment-method-card-Tenant-Bills {
+        padding: 20px;
+    }
+
+    .method-header-Tenant-Bills {
         gap: 12px;
     }
-    
-    .search-input-Tenant-Bills {
-        padding: 14px 16px 14px 45px;
+
+    .success-modal-content-Tenant-Bills {
+        padding: 25px 15px 15px;
+    }
+
+    .success-checkmark-Tenant-Bills {
+        width: 80px;
+        height: 80px;
+    }
+
+    .check-icon-Tenant-Bills {
+        size: 50px;
+    }
+
+    .success-title-Tenant-Bills {
+        font-size: 1.3rem;
+    }
+
+    .success-message-Tenant-Bills {
         font-size: 0.95rem;
     }
-    
-    .search-icon-Tenant-Bills {
-        left: 15px;
-    }
-    
-    .filter-tabs-Tenant-Bills {
-        gap: 3px;
-        padding: 4px;
-        border-radius: 12px;
-    }
-    
-    .filter-btn-Tenant-Bills {
-        padding: 6px 10px;
-        font-size: 0.75rem;
-        border-radius: 8px;
-    }
-    
-    .filter-count-Tenant-Bills {
-        padding: 1px 4px;
-        font-size: 0.7rem;
-    }
-}
 
-/* Very small mobile devices */
-@media (max-width: 360px) {
-    .filter-tabs-Tenant-Bills {
-        gap: 2px;
-        padding: 3px;
+    .success-details-Tenant-Bills {
+        padding: 16px;
     }
-    
-    .filter-btn-Tenant-Bills {
-        padding: 5px 8px;
-        font-size: 0.7rem;
-    }
-    
-    .search-input-Tenant-Bills {
-        padding: 12px 14px 12px 40px;
-        font-size: 0.9rem;
-    }
-    
-    .search-icon-Tenant-Bills {
-        left: 12px;
-    }
-}
 
-/* Landscape orientation for mobile */
-@media (max-height: 500px) and (orientation: landscape) {
-    .bills-controls-Tenant-Bills {
-        flex-direction: row;
-        gap: 15px;
-    }
-    
-    .search-container-Tenant-Bills {
-        min-width: 200px;
-    }
-    
-    .filter-tabs-Tenant-Bills {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-    }
-}
-
-/* Prevent horizontal scrolling on very wide screens */
-@media (min-width: 1400px) {
-    .bills-controls-Tenant-Bills {
-        max-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-}
-
-/* High DPI screens */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .filter-tabs-Tenant-Bills {
-        border-width: 1.5px;
-    }
-    
-    .search-input-Tenant-Bills {
-        border-width: 2.5px;
+    .success-detail-item-Tenant-Bills {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
     }
 }
 
