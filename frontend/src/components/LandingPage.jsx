@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "../styles/LandingPage.css";
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Clock, Home } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Home, Menu, X } from "lucide-react";
 
 function LandingPage() {
   const [houses, setHouses] = useState([]);
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Use environment variable or fallback to Render URL
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
@@ -45,6 +46,14 @@ function LandingPage() {
     return `${API_BASE}/uploads/houseimages/${imagePath}`;
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="landing-container-Layout">
       {/* Navbar */}
@@ -60,13 +69,50 @@ function LandingPage() {
           />
           <div className="nav-brand-text-Layout">RenTahanan</div>
         </div>
-        <div className="nav-links-Layout">
+        
+        {/* Desktop Navigation */}
+        <div className="nav-links-Layout desktop-nav-Layout">
           <Link to="/login" className="nav-btn-Layout login-btn-Layout">Login</Link>
           <Link to="/register" className="nav-btn-Layout register-btn-Layout">Register</Link>
         </div>
+
+        {/* Mobile Hamburger Menu */}
+        <div className="mobile-menu-toggle-Layout" onClick={toggleMobileMenu}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </div>
+
+        {/* Mobile Sidebar Navigation */}
+        <div className={`mobile-nav-sidebar-Layout ${isMobileMenuOpen ? 'mobile-nav-open-Layout' : ''}`}>
+          <div className="mobile-nav-header-Layout">
+            <div className="nav-brand-container-Layout">
+              <img
+                src="/logo.png"
+                alt="RenTahanan Logo"
+                className="logo-Layout"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/50x50/4A5568/FFFFFF?text=R";
+                }}
+              />
+              <div className="nav-brand-text-Layout">RenTahanan</div>
+            </div>
+          </div>
+          <div className="mobile-nav-links-Layout">
+            <Link to="/login" className="mobile-nav-btn-Layout mobile-login-btn-Layout" onClick={closeMobileMenu}>
+              Login
+            </Link>
+            <Link to="/register" className="mobile-nav-btn-Layout mobile-register-btn-Layout" onClick={closeMobileMenu}>
+              Register
+            </Link>
+          </div>
+        </div>
+
+        {/* Mobile Overlay */}
+        {isMobileMenuOpen && (
+          <div className="mobile-nav-overlay-Layout" onClick={closeMobileMenu}></div>
+        )}
       </nav>
 
-      {/* Hero Section */}
+      {/* Rest of your existing JSX remains the same */}
       <section className="hero-section-Layout">
         <div className="hero-overlay-Layout"></div>
         <div className="hero-content-Layout">
