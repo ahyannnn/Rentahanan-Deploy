@@ -223,3 +223,4 @@ def delete_from_cloudinary(public_id):
     except Exception as e:
         print(f"❌ Cloudinary delete error: {e}")
         return None
+    
