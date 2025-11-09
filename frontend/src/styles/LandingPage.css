@@ -34,6 +34,9 @@ html, body {
     display: flex;
     align-items: center;
     gap: 8px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .logo-Layout {
@@ -51,6 +54,7 @@ html, body {
 .nav-links-Layout.desktop-nav-Layout {
     display: flex;
     gap: 1rem;
+    margin-left: auto;
 }
 
 .nav-btn-Layout {
@@ -59,6 +63,7 @@ html, body {
     padding: 0.6rem 1.3rem;
     border-radius: 8px;
     transition: 0.3s;
+    white-space: nowrap;
 }
 
 .login-btn-Layout {
@@ -79,7 +84,7 @@ html, body {
     background-color: #e1b739;
 }
 
-/* Mobile Hamburger Menu */
+/* Mobile Hamburger Menu - LEFT SIDE */
 .mobile-menu-toggle-Layout {
     display: none;
     background: none;
@@ -89,32 +94,52 @@ html, body {
     padding: 8px;
     border-radius: 4px;
     transition: background-color 0.3s;
+    z-index: 1002;
 }
 
 .mobile-menu-toggle-Layout:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Mobile Sidebar Navigation */
+/* Mobile Sidebar Navigation - LEFT SIDE */
 .mobile-nav-sidebar-Layout {
     position: fixed;
     top: 0;
-    right: -300px;
+    left: -300px;
     width: 280px;
     height: 100vh;
     background: #061A53;
     z-index: 1001;
-    transition: right 0.3s ease-in-out;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    transition: left 0.3s ease-in-out;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
 }
 
 .mobile-nav-open-Layout {
-    right: 0;
+    left: 0;
 }
 
 .mobile-nav-header-Layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-close-btn-Layout {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.mobile-close-btn-Layout:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .mobile-nav-links-Layout {
@@ -122,6 +147,7 @@ html, body {
     flex-direction: column;
     padding: 1.5rem;
     gap: 1rem;
+    flex: 1;
 }
 
 .mobile-nav-btn-Layout {
@@ -166,7 +192,7 @@ html, body {
 /* --- Hero Section --- */
 .hero-section-Layout {
     position: relative;
-    width: 100vw;
+    width: 100%;
     height: 60vh;
     background-image: url("/images/hero.png");
     background-size: cover;
@@ -192,17 +218,22 @@ html, body {
     position: relative;
     text-align: center;
     z-index: 1;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 2rem;
 }
 
 .hero-title-Layout {
     font-size: 3rem;
     color: #F5C542;
     margin-bottom: 1rem;
+    text-align: center;
 }
 
 .hero-subtitle-Layout {
     font-size: 1.2rem;
     margin-bottom: 2rem;
+    text-align: center;
 }
 
 /* --- Houses Section --- */
@@ -211,13 +242,17 @@ html, body {
     text-align: center;
     padding: 3rem 2rem;
     background-color: #E8ECF3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .section-title-Layout {
     font-size: 2rem;
     margin-bottom: 2rem;
     color: #061A53;
-    position: relative;
+    text-align: center;
+    width: 100%;
 }
 
 .section-title-Layout::after {
@@ -236,6 +271,8 @@ html, body {
     flex-wrap: wrap;
     gap: 1.5rem;
     margin-top: 1rem;
+    width: 100%;
+    max-width: 1200px;
 }
 
 .house-card-Layout {
@@ -294,6 +331,14 @@ html, body {
     color: orange;
 }
 
+.loading-message-Layout,
+.error-message-Layout,
+.no-properties-Layout {
+    text-align: center;
+    padding: 2rem;
+    width: 100%;
+}
+
 /* --- Modal --- */
 .modal-overlay-Layout {
     position: fixed;
@@ -310,6 +355,7 @@ html, body {
     padding: 2rem;
     border-radius: 10px;
     width: 400px;
+    max-width: 90vw;
     text-align: center;
     animation: fadeIn-Layout 0.3s ease-in-out;
 }
@@ -371,6 +417,9 @@ html, body {
     background: #f9fafb;
     padding: 100px 20px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .features-container-Layout {
@@ -379,6 +428,7 @@ html, body {
     gap: 35px;
     max-width: 1100px;
     margin: 0 auto;
+    width: 100%;
 }
 
 .feature-card-Layout {
@@ -389,6 +439,7 @@ html, body {
     transition: all 0.3s ease;
     transform: translateY(0);
     cursor: pointer;
+    text-align: center;
 }
 
 .feature-card-Layout:hover {
@@ -416,6 +467,9 @@ html, body {
     color: #fff;
     padding: 100px 20px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .about-section-Layout .section-title-Layout {
@@ -434,17 +488,20 @@ html, body {
     color: #f2f2f2;
     letter-spacing: 0.3px;
     font-weight: 400;
+    text-align: center;
 }
 
 /* --- Contact Section --- */
 .contact-section-Layout {
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     padding: 80px 20px;
+    display: flex;
+    justify-content: center;
 }
 
 .contact-container-Layout {
     max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 60px;
@@ -456,6 +513,7 @@ html, body {
     background: white;
     border-radius: 20px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    text-align: left;
 }
 
 .contact-details-Layout {
@@ -475,15 +533,20 @@ html, body {
     color: #0a2d8d;
     min-width: 24px;
     margin-top: 4px;
+    flex-shrink: 0;
 }
 
-.contact-item-Layout h3 {
+.contact-text-Layout {
+    flex: 1;
+}
+
+.contact-text-Layout h3 {
     color: #061a53;
     margin-bottom: 8px;
     font-size: 1.1rem;
 }
 
-.contact-item-Layout p {
+.contact-text-Layout p {
     color: #666;
     margin: 4px 0;
     line-height: 1.5;
@@ -498,10 +561,11 @@ html, body {
     text-align: center;
 }
 
-.map-section-Layout h3 {
+.map-title-Layout {
     color: #061a53;
     margin-bottom: 30px;
     font-size: 1.5rem;
+    text-align: center;
 }
 
 .map-image-container-Layout {
@@ -535,11 +599,13 @@ html, body {
 .location-details-Layout h4 {
     color: #061a53;
     margin-bottom: 15px;
+    text-align: left;
 }
 
 .location-details-Layout ul {
     list-style: none;
     padding: 0;
+    text-align: left;
 }
 
 .location-details-Layout li {
@@ -556,19 +622,26 @@ html, body {
 .footer-Layout {
     background-color: #061A53;
     color: white;
-    text-align: center;
     padding: 1rem 0;
     margin-top: auto;
     font-size: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .footer-content-Layout {
     max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr;
     gap: 40px;
     padding: 60px 20px;
+}
+
+.footer-section-Layout {
+    text-align: left;
 }
 
 .footer-section-Layout h3,
@@ -611,7 +684,9 @@ html, body {
     justify-content: center;
     align-items: center;
     max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
+    text-align: center;
 }
 
 /* --- Enhanced Media Queries --- */
@@ -645,6 +720,13 @@ html, body {
 @media (max-width: 768px) {
     .navbar-Layout {
         padding: 1rem 1.5rem;
+        justify-content: space-between;
+    }
+    
+    .nav-brand-container-Layout {
+        position: static;
+        transform: none;
+        margin: 0 auto;
     }
     
     .mobile-menu-toggle-Layout {
@@ -701,6 +783,10 @@ html, body {
         grid-template-columns: 1fr;
         text-align: center;
         gap: 30px;
+    }
+    
+    .footer-section-Layout {
+        text-align: center;
     }
     
     .footer-contact-Layout p {
@@ -797,6 +883,10 @@ html, body {
         gap: 10px;
     }
     
+    .contact-text-Layout {
+        text-align: center;
+    }
+    
     .map-image-Layout {
         height: 200px;
     }
@@ -808,6 +898,7 @@ html, body {
     .about-description-Layout {
         font-size: 0.95rem;
         line-height: 1.7;
+        padding: 0 1rem;
     }
     
     .footer-content-Layout {
@@ -858,11 +949,20 @@ html, body {
     
     .mobile-nav-sidebar-Layout {
         width: 100%;
-        right: -100%;
+        left: -100%;
     }
     
     .mobile-nav-open-Layout {
-        right: 0;
+        left: 0;
+    }
+    
+    .contact-container-Layout {
+        gap: 20px;
+    }
+    
+    .contact-info-Layout,
+    .map-section-Layout {
+        padding: 15px 10px;
     }
 }
 
@@ -886,6 +986,14 @@ html, body {
     .contact-container-Layout,
     .features-container-Layout,
     .footer-content-Layout {
+        max-width: 1300px;
+    }
+    
+    .hero-content-Layout {
+        max-width: 1300px;
+    }
+    
+    .houses-container-Layout {
         max-width: 1300px;
     }
 }
