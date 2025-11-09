@@ -1,43 +1,15 @@
-from flask import Blueprint, jsonify, request,current_app
+from flask import Blueprint, jsonify, request
 from extensions import db
 from models.bills_model import Bill
 from models.tenants_model import Tenant
 from models.transaction_model import Transaction
 from models.users_model import User
 from models.notifications_model import Notification
+from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
 from datetime import datetime
-import requests
-import os
 import io
 
 transaction_bp = Blueprint("transactions", __name__)
-
-def upload_to_cloudinary(file_bytes, filename, folder_name):
-    """Upload file bytes to Cloudinary and return the URL"""
-    if not file_bytes:
-        return None
-        
-    try:
-        # Create a file-like object from bytes
-        files = {'file': (filename, file_bytes, 'application/pdf')}
-        
-        # Make request to our own upload endpoint
-        upload_response = requests.post(
-            f"{request.url_root}api/upload",
-            files=files,
-            data={'folder': folder_name}
-        )
-        
-        if upload_response.status_code == 200:
-            data = upload_response.json()
-            return data['url']  # Return Cloudinary URL
-        else:
-            print(f"Upload failed: {upload_response.json()}")
-            return None
-            
-    except Exception as e:
-        print(f"Cloudinary upload error: {e}")
-        return None
 
 @transaction_bp.route("/transactions/issue-receipt/<int:billid>", methods=["POST"])
 def issue_receipt(billid):
@@ -243,10 +215,13 @@ For any inquiries, please contact our administration office."""
         # Build PDF
         doc.build(story)
 
-        # ✅ Upload PDF to Cloudinary
+        # ✅ Upload PDF to Cloudinary using shared utility
         pdf_buffer.seek(0)
-        receipt_filename = f"receipt_{bill.billid}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        receipt_url = upload_to_cloudinary(pdf_buffer, receipt_filename, "receipts")
+        receipt_url = upload_to_cloudinary(
+            pdf_buffer, 
+            "transactions/receipts", 
+            "auto"
+        )
         
         if not receipt_url:
             return jsonify({"error": "Failed to upload receipt to Cloudinary"}), 500
@@ -555,3 +530,113 @@ def get_transaction_statistics():
 
     except Exception as e:
         return jsonify({"error": f"Failed to fetch transaction statistics: {str(e)}"}), 500
+
+
+# ✅ Search transactions with filters
+@transaction_bp.route("/transactions/search", methods=["GET"])
+def search_transactions():
+    try:
+        # Get query parameters
+        tenant_id = request.args.get('tenant_id', type=int)
+        bill_type = request.args.get('bill_type')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        # Build query
+        query = db.session.query(
+            Transaction.transactionid,
+            Transaction.billid,
+            Transaction.tenantid,
+            Transaction.paymentdate,
+            Transaction.amountpaid,
+            Transaction.receipt,
+            User.firstname,
+            User.lastname,
+            Bill.billtype
+        ).join(Bill, Transaction.billid == Bill.billid)\
+         .join(Tenant, Transaction.tenantid == Tenant.tenantid)\
+         .join(User, Tenant.userid == User.userid)
+
+        if tenant_id:
+            query = query.filter(Transaction.tenantid == tenant_id)
+        if bill_type:
+            query = query.filter(Bill.billtype == bill_type)
+        if start_date:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            query = query.filter(Transaction.paymentdate >= start_date)
+        if end_date:
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            query = query.filter(Transaction.paymentdate <= end_date)
+
+        transactions = query.order_by(Transaction.paymentdate.desc()).all()
+
+        result = []
+        for t in transactions:
+            result.append({
+                "transactionid": t.transactionid,
+                "billid": t.billid,
+                "tenantid": t.tenantid,
+                "tenant_name": f"{t.firstname} {t.lastname}",
+                "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
+                "amount_paid": float(t.amountpaid),
+                "receipt_url": t.receipt,  # Cloudinary URL
+                "bill_type": t.billtype
+            })
+
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Failed to search transactions: {str(e)}"}), 500
+
+
+# ✅ Get transaction by ID
+@transaction_bp.route("/transactions/<int:transaction_id>", methods=["GET"])
+def get_transaction_by_id(transaction_id):
+    try:
+        transaction = (
+            db.session.query(
+                Transaction.transactionid,
+                Transaction.billid,
+                Transaction.tenantid,
+                Transaction.paymentdate,
+                Transaction.amountpaid,
+                Transaction.receipt,
+                User.firstname,
+                User.lastname,
+                User.email,
+                User.phone,
+                Bill.billtype,
+                Bill.description,
+                Bill.issuedate
+            )
+            .join(Bill, Transaction.billid == Bill.billid)
+            .join(Tenant, Transaction.tenantid == Tenant.tenantid)
+            .join(User, Tenant.userid == User.userid)
+            .filter(Transaction.transactionid == transaction_id)
+            .first()
+        )
+
+        if not transaction:
+            return jsonify({"error": "Transaction not found"}), 404
+
+        result = {
+            "transactionid": transaction.transactionid,
+            "billid": transaction.billid,
+            "tenantid": transaction.tenantid,
+            "tenant_name": f"{transaction.firstname} {transaction.lastname}",
+            "tenant_email": transaction.email,
+            "tenant_phone": transaction.phone,
+            "payment_date": transaction.paymentdate.strftime("%Y-%m-%d") if transaction.paymentdate else None,
+            "amount_paid": float(transaction.amountpaid),
+            "receipt_url": transaction.receipt,  # Cloudinary URL
+            "bill_type": transaction.billtype,
+            "bill_description": transaction.description,
+            "bill_issue_date": transaction.issuedate.strftime("%Y-%m-%d") if transaction.issuedate else None
+        }
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch transaction: {str(e)}"}), 500
