@@ -5,80 +5,12 @@ from models.tenants_model import Tenant
 from models.transaction_model import Transaction
 from models.users_model import User
 from models.notifications_model import Notification
-from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
+from utils.cloudinary_utils import upload_pdf_as_image  # Import the PDF to image function
 from datetime import datetime
 import io
 import traceback
-import cloudinary.uploader
-import re
 
 transaction_bp = Blueprint("transactions", __name__)
-
-def upload_receipt_pdf(pdf_buffer, bill_id):
-    """Upload receipt PDF directly with proper configuration to prevent stream_hxbcrg"""
-    try:
-        # Generate unique filename
-        filename = f"receipt_{bill_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        
-        print(f"📤 Uploading receipt PDF with filename: {filename}")
-        
-        # Upload with explicit raw configuration
-        result = cloudinary.uploader.upload(
-            pdf_buffer,
-            folder="house-rental/transactions/receipts",
-            resource_type="raw",  # CRITICAL: Force raw for PDFs
-            public_id=filename,
-            use_filename=False,   # Prevent stream names
-            unique_filename=True,
-            overwrite=True,
-            invalidate=True,
-            type='upload'
-        )
-        
-        # Get the secure URL
-        secure_url = result.get('secure_url')
-        public_id = result.get('public_id')
-        version = result.get('version')
-        
-        print(f"✅ Cloudinary upload result:")
-        print(f"   Original URL: {secure_url}")
-        print(f"   Public ID: {public_id}")
-        print(f"   Version: {version}")
-        print(f"   Resource Type: {result.get('resource_type')}")
-        
-        # MANUALLY construct the URL to ensure it's correct
-        if secure_url:
-            # Force raw upload URL structure
-            if '/image/upload/' in secure_url:
-                secure_url = secure_url.replace('/image/upload/', '/raw/upload/')
-                print(f"🔄 Fixed resource type: {secure_url}")
-            
-            # If it still doesn't have raw, reconstruct it completely
-            if '/raw/upload/' not in secure_url:
-                if version and public_id:
-                    # Manual URL construction - THIS IS THE KEY FIX
-                    secure_url = f"https://res.cloudinary.com/dm9eein09/raw/upload/v{version}/{public_id}"
-                    print(f"🔄 Manually constructed URL: {secure_url}")
-                else:
-                    # Fallback: try to extract from the existing URL
-                    match = re.search(r'v(\d+)/(.+)', secure_url)
-                    if match:
-                        version = match.group(1)
-                        file_path = match.group(2)
-                        secure_url = f"https://res.cloudinary.com/dm9eein09/raw/upload/v{version}/{file_path}"
-            
-            # Ensure the URL ends with .pdf for proper content-type
-            if not secure_url.endswith('.pdf'):
-                secure_url += '.pdf'
-                
-            print(f"🔧 Final receipt URL: {secure_url}")
-        
-        return secure_url
-        
-    except Exception as e:
-        print(f"❌ Receipt PDF upload error: {e}")
-        print(f"❌ Full traceback: {traceback.format_exc()}")
-        return None
 
 @transaction_bp.route("/transactions/issue-receipt/<int:billid>", methods=["POST"])
 def issue_receipt(billid):
@@ -277,34 +209,29 @@ For any inquiries, please contact our administration office."""
         doc.build(story)
         pdf_buffer.seek(0)
 
-        # ✅ Use the dedicated PDF upload function (PREVENTS stream_hxbcrg)
-        print(f"📤 Uploading receipt for bill {billid}...")
-        receipt_url = upload_receipt_pdf(pdf_buffer, billid)
+        # ✅ SIMPLE FIX: Use upload_pdf_as_image to convert PDF to image and upload
+        print(f"📤 Converting PDF to image and uploading to Cloudinary for bill {billid}...")
+        receipt_url = upload_pdf_as_image(
+            pdf_buffer,
+            'transactions/receipts',
+            filename_prefix=f'receipt_{billid}'
+        )
         
         if not receipt_url:
-            return jsonify({"error": "Failed to upload receipt to Cloudinary"}), 500
+            return jsonify({"error": "Failed to upload receipt image to Cloudinary"}), 500
 
-        # ✅ Verify the URL is accessible and not a stream
+        # ✅ Verify it's an image URL (not raw)
         print(f"🔍 Verifying receipt URL: {receipt_url}")
+        
+        # Check if it's using image resource type (should BE)
+        if '/image/upload/' not in receipt_url:
+            print(f"⚠️  Not an image URL: {receipt_url}")
+            # Don't fail, just log warning
         
         # Check if it's a stream URL (should NOT be)
         if 'stream_' in receipt_url:
             print(f"❌ STREAM URL DETECTED: {receipt_url}")
             return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
-        
-        # Check if it's a proper raw URL (should BE)
-        if '/raw/upload/' not in receipt_url:
-            print(f"❌ NOT A RAW URL: {receipt_url}")
-            return jsonify({"error": "Cloudinary URL is not a proper raw PDF URL"}), 500
-
-        try:
-            import requests
-            response = requests.head(receipt_url, timeout=10)
-            if response.status_code != 200:
-                print(f"⚠️ URL verification failed: HTTP {response.status_code}")
-                # Don't fail here, just log the warning
-        except Exception as e:
-            print(f"⚠️ URL verification error: {e}")
 
         # ✅ Update Bill status to Paid
         bill.status = "Paid"
@@ -316,7 +243,7 @@ For any inquiries, please contact our administration office."""
             tenantid=bill.tenantid,
             paymentdate=datetime.now().strftime("%Y-%m-%d"),
             amountpaid=bill.amount,
-            receipt=receipt_url
+            receipt=receipt_url  # This is now an IMAGE URL, not PDF
         )
         db.session.add(transaction)
 
@@ -351,7 +278,7 @@ For any inquiries, please contact our administration office."""
             "message": "Receipt issued successfully",
             "receipt_url": receipt_url,
             "receipt_number": f"RMS-{bill.billid:06d}",
-            "url_type": "raw_upload" if '/raw/upload/' in receipt_url else "unknown",
+            "url_type": "image_upload" if '/image/upload/' in receipt_url else "unknown",
             "has_stream": 'stream_' in receipt_url
         })
         
@@ -446,7 +373,7 @@ def get_receipt(billid):
         if not transaction.receipt:
             return jsonify({"error": "No receipt available for this transaction"}), 404
         
-        # Return the Cloudinary URL
+        # Return the Cloudinary URL (now an image URL)
         return jsonify({
             "receipt_url": transaction.receipt
         })
@@ -465,7 +392,7 @@ def download_receipt(billid):
         if not transaction or not transaction.receipt:
             return jsonify({"error": "Receipt not found"}), 404
         
-        # Return the Cloudinary URL for download
+        # Return the Cloudinary URL for download (now an image URL)
         return jsonify({
             "download_url": transaction.receipt
         })
@@ -506,7 +433,7 @@ def get_all_transactions():
                 "tenant_name": f"{t.firstname} {t.lastname}",
                 "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
                 "amount_paid": float(t.amountpaid),
-                "receipt_url": t.receipt,  # Cloudinary URL
+                "receipt_url": t.receipt,  # Cloudinary URL (now image)
                 "bill_type": t.billtype
             })
 
@@ -543,7 +470,7 @@ def get_tenant_transactions(tenant_id):
                 "billid": t.billid,
                 "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
                 "amount_paid": float(t.amountpaid),
-                "receipt_url": t.receipt,  # Cloudinary URL
+                "receipt_url": t.receipt,  # Cloudinary URL (now image)
                 "bill_type": t.billtype,
                 "description": t.description
             })
@@ -662,7 +589,7 @@ def search_transactions():
                 "tenant_name": f"{t.firstname} {t.lastname}",
                 "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
                 "amount_paid": float(t.amountpaid),
-                "receipt_url": t.receipt,  # Cloudinary URL
+                "receipt_url": t.receipt,  # Cloudinary URL (now image)
                 "bill_type": t.billtype
             })
 
@@ -713,7 +640,7 @@ def get_transaction_by_id(transaction_id):
             "tenant_phone": transaction.phone,
             "payment_date": transaction.paymentdate.strftime("%Y-%m-%d") if transaction.paymentdate else None,
             "amount_paid": float(transaction.amountpaid),
-            "receipt_url": transaction.receipt,  # Cloudinary URL
+            "receipt_url": transaction.receipt,  # Cloudinary URL (now image)
             "bill_type": transaction.billtype,
             "bill_description": transaction.description,
             "bill_issue_date": transaction.issuedate.strftime("%Y-%m-%d") if transaction.issuedate else None
@@ -725,75 +652,10 @@ def get_transaction_by_id(transaction_id):
         print(f"❌ Error in get_transaction_by_id: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to fetch transaction: {str(e)}"}), 500
 
-# ✅ Diagnostic route to check receipt PDF files
-@transaction_bp.route("/transactions/diagnose-receipt/<int:billid>", methods=["GET"])
-def diagnose_receipt(billid):
-    try:
-        transaction = db.session.query(Transaction).filter(Transaction.billid == billid).first()
-        if not transaction:
-            return jsonify({"error": "Transaction not found"}), 404
-        
-        import requests
-        
-        def check_pdf(url, label):
-            if not url:
-                return {"error": "No URL provided"}
-            
-            try:
-                # Download the file
-                response = requests.get(url, timeout=30)
-                result = {
-                    "url": url,
-                    "status_code": response.status_code,
-                    "content_length": len(response.content),
-                    "headers": dict(response.headers)
-                }
-                
-                if response.status_code != 200:
-                    result["error"] = f"HTTP {response.status_code}"
-                    return result
-                
-                # Check if it starts with PDF header
-                is_pdf = response.content.startswith(b'%PDF')
-                result["is_valid_pdf_header"] = is_pdf
-                
-                # Check first few bytes
-                result["first_10_bytes"] = response.content[:10].hex()
-                
-                # Try to parse as PDF
-                try:
-                    pdf_buffer = io.BytesIO(response.content)
-                    from PyPDF2 import PdfReader
-                    pdf_reader = PdfReader(pdf_buffer)
-                    result["pdf_page_count"] = len(pdf_reader.pages)
-                    result["pdf_is_encrypted"] = pdf_reader.is_encrypted
-                    result["pdf_valid"] = True
-                except Exception as e:
-                    result["pdf_valid"] = False
-                    result["pdf_error"] = str(e)
-                
-                return result
-                
-            except Exception as e:
-                return {"error": str(e)}
-        
-        results = {}
-        if transaction.receipt:
-            results["receipt"] = check_pdf(transaction.receipt, "Receipt")
-        
-        return jsonify({
-            "billid": billid,
-            "transaction_id": transaction.transactionid,
-            "diagnosis": results
-        })
-        
-    except Exception as e:
-        return jsonify({"error": f"Diagnosis failed: {str(e)}"}), 500
-
-# ✅ Test upload endpoint to verify no stream_hxbcrg
-@transaction_bp.route("/transactions/test-upload", methods=["GET"])
-def test_upload():
-    """Test PDF upload to verify no stream_hxbcrg"""
+# ✅ Test upload endpoint to verify PDF to image conversion
+@transaction_bp.route("/transactions/test-image-upload", methods=["GET"])
+def test_image_upload():
+    """Test PDF to image upload functionality"""
     try:
         # Create a simple test PDF
         from reportlab.lib.pagesizes import A4
@@ -801,24 +663,28 @@ def test_upload():
         
         pdf_buffer = io.BytesIO()
         c = canvas.Canvas(pdf_buffer, pagesize=A4)
-        c.drawString(100, 750, "Test PDF Upload - No Stream")
+        c.drawString(100, 750, "Test PDF to Image Upload")
+        c.drawString(100, 730, "This should upload as an IMAGE to Cloudinary")
         c.save()
         pdf_buffer.seek(0)
         
-        # Upload using our fixed method
-        receipt_url = upload_receipt_pdf(pdf_buffer, "test_999")
+        # Upload using the PDF to image function
+        receipt_url = upload_pdf_as_image(
+            pdf_buffer,
+            'test/receipts',
+            filename_prefix='test_receipt'
+        )
         
         if receipt_url:
             return jsonify({
                 "success": True,
-                "url": receipt_url,
+                "image_url": receipt_url,
                 "has_stream": "stream_" in receipt_url,
-                "is_raw_upload": "/raw/upload/" in receipt_url,
                 "is_image_upload": "/image/upload/" in receipt_url,
-                "is_download": "/download/" in receipt_url
+                "is_raw_upload": "/raw/upload/" in receipt_url
             })
         else:
-            return jsonify({"error": "Upload failed"}), 500
+            return jsonify({"error": "Image upload failed"}), 500
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500

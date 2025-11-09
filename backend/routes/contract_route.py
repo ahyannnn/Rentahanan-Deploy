@@ -7,7 +7,7 @@ from models.units_model import House as Unit
 from models.applications_model import Application
 from models.users_model import User
 from models.notifications_model import Notification
-from utils.cloudinary_utils import upload_to_cloudinary  # Import the shared utility
+from utils.cloudinary_utils import upload_pdf_as_image  # Import the PDF to image function
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 import os, traceback
@@ -25,74 +25,6 @@ import re
 
 contract_bp = Blueprint("contract_bp", __name__)
 
-def upload_contract_pdf(pdf_buffer, folder, contract_id, doc_type="generated"):
-    """Upload contract PDF directly with proper configuration to prevent stream_hxbcrg"""
-    try:
-        # Generate unique filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"contract_{contract_id}_{doc_type}_{timestamp}"
-        
-        print(f"📤 Uploading {doc_type} contract PDF with filename: {filename}")
-        
-        # Upload with explicit raw configuration
-        result = cloudinary.uploader.upload(
-            pdf_buffer,
-            folder=f"house-rental/contracts/{folder}",
-            resource_type="raw",  # CRITICAL: Force raw for PDFs
-            public_id=filename,
-            use_filename=False,   # Prevent stream names
-            unique_filename=True,
-            overwrite=True,
-            invalidate=True,
-            type='upload'
-        )
-        
-        # Get the secure URL
-        secure_url = result.get('secure_url')
-        public_id = result.get('public_id')
-        version = result.get('version')
-        
-        print(f"✅ Cloudinary upload result:")
-        print(f"   Original URL: {secure_url}")
-        print(f"   Public ID: {public_id}")
-        print(f"   Version: {version}")
-        print(f"   Resource Type: {result.get('resource_type')}")
-        
-        # MANUALLY construct the URL to ensure it's correct
-        if secure_url:
-            # Force raw upload URL structure
-            if '/image/upload/' in secure_url:
-                secure_url = secure_url.replace('/image/upload/', '/raw/upload/')
-                print(f"🔄 Fixed resource type: {secure_url}")
-            
-            # If it still doesn't have raw, reconstruct it completely
-            if '/raw/upload/' not in secure_url:
-                if version and public_id:
-                    # Manual URL construction - THIS IS THE KEY FIX
-                    secure_url = f"https://res.cloudinary.com/dm9eein09/raw/upload/v{version}/{public_id}"
-                    print(f"🔄 Manually constructed URL: {secure_url}")
-                else:
-                    # Fallback: try to extract from the existing URL
-                    match = re.search(r'v(\d+)/(.+)', secure_url)
-                    if match:
-                        version = match.group(1)
-                        file_path = match.group(2)
-                        secure_url = f"https://res.cloudinary.com/dm9eein09/raw/upload/v{version}/{file_path}"
-            
-            # Ensure the URL ends with .pdf for proper content-type
-            if not secure_url.endswith('.pdf'):
-                secure_url += '.pdf'
-                
-            print(f"🔧 Final {doc_type} contract URL: {secure_url}")
-        
-        return secure_url
-        
-    except Exception as e:
-        print(f"❌ Contract PDF upload error: {e}")
-        print(f"❌ Full traceback: {traceback.format_exc()}")
-        return None
-
-# ✅ Fetch existing contracts
 @contract_bp.route("/contracts/tenants", methods=["GET"])
 def get_tenant_contracts():
     contracts = (
@@ -427,32 +359,36 @@ def generate_contract_pdf():
             except Exception as sig_error:
                 print(f"Signature addition failed, but PDF was generated: {sig_error}")
 
-        # ✅ Use the dedicated PDF upload function (PREVENTS stream_hxbcrg)
+        # ✅ SIMPLE FIX: Use upload_pdf_as_image to convert PDF to image and upload
         pdf_buffer.seek(0)
-        print(f"📤 Uploading generated contract PDF...")
-        pdf_url = upload_contract_pdf(pdf_buffer, "generated", tenant_id, "generated")
+        print(f"📤 Converting contract PDF to image and uploading to Cloudinary...")
+        pdf_url = upload_pdf_as_image(
+            pdf_buffer,
+            'contracts/generated',
+            filename_prefix=f'contract_{tenant_id}'
+        )
         
         if not pdf_url:
-            return jsonify({"error": "Failed to upload contract to Cloudinary"}), 500
+            return jsonify({"error": "Failed to upload contract image to Cloudinary"}), 500
 
-        # ✅ Verify the URL is accessible and not a stream
+        # ✅ Verify it's an image URL (not raw)
         print(f"🔍 Verifying contract URL: {pdf_url}")
+        
+        # Check if it's using image resource type (should BE)
+        if '/image/upload/' not in pdf_url:
+            print(f"⚠️  Not an image URL: {pdf_url}")
+            # Don't fail, just log warning
         
         # Check if it's a stream URL (should NOT be)
         if 'stream_' in pdf_url:
             print(f"❌ STREAM URL DETECTED: {pdf_url}")
             return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
-        
-        # Check if it's a proper raw URL (should BE)
-        if '/raw/upload/' not in pdf_url:
-            print(f"❌ NOT A RAW URL: {pdf_url}")
-            return jsonify({"error": "Cloudinary URL is not a proper raw PDF URL"}), 500
 
         return jsonify({
             "message": "Professional contract PDF generated successfully!",
             "pdf_url": pdf_url,
             "contract_id": f"RT-{int(tenant_id):06d}",
-            "url_type": "raw_upload" if '/raw/upload/' in pdf_url else "unknown",
+            "url_type": "image_upload" if '/image/upload/' in pdf_url else "unknown",
             "has_stream": 'stream_' in pdf_url
         })
 
@@ -552,8 +488,8 @@ def get_contracts_by_tenant(tenant_id):
             "start_date": start_date.strftime("%Y-%m-%d"),
             "end_date": end_date.strftime("%Y-%m-%d") if end_date else None,
             "status": status,
-            "generated_contract": generated_contract,  # Cloudinary URL
-            "signed_contract": signed_contract  # Cloudinary URL
+            "generated_contract": generated_contract,  # Cloudinary URL (now image)
+            "signed_contract": signed_contract  # Cloudinary URL (now image)
         }
         for contractid, unit_name, unit_price, start_date, end_date, status, generated_contract, signed_contract in contracts
     ]
@@ -693,26 +629,30 @@ def sign_contract():
         output.write(final_pdf_buffer)
         final_pdf_buffer.seek(0)
 
-        print(f"📤 Uploading signed PDF to Cloudinary...")
+        print(f"📤 Converting signed PDF to image and uploading to Cloudinary...")
         
-        # ✅ Use the dedicated PDF upload function (PREVENTS stream_hxbcrg)
-        signed_contract_url = upload_contract_pdf(final_pdf_buffer, "signed", contract_id, "signed")
+        # ✅ SIMPLE FIX: Use upload_pdf_as_image to convert signed PDF to image
+        signed_contract_url = upload_pdf_as_image(
+            final_pdf_buffer,
+            'contracts/signed',
+            filename_prefix=f'signed_contract_{contract_id}'
+        )
         
         if not signed_contract_url:
-            return jsonify({"error": "Failed to upload signed contract to Cloudinary"}), 500
+            return jsonify({"error": "Failed to upload signed contract image to Cloudinary"}), 500
 
-        # ✅ Verify the URL is accessible and not a stream
+        # ✅ Verify it's an image URL (not raw)
         print(f"🔍 Verifying signed contract URL: {signed_contract_url}")
+        
+        # Check if it's using image resource type (should BE)
+        if '/image/upload/' not in signed_contract_url:
+            print(f"⚠️  Not an image URL: {signed_contract_url}")
+            # Don't fail, just log warning
         
         # Check if it's a stream URL (should NOT be)
         if 'stream_' in signed_contract_url:
             print(f"❌ STREAM URL DETECTED: {signed_contract_url}")
             return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
-        
-        # Check if it's a proper raw URL (should BE)
-        if '/raw/upload/' not in signed_contract_url:
-            print(f"❌ NOT A RAW URL: {signed_contract_url}")
-            return jsonify({"error": "Cloudinary URL is not a proper raw PDF URL"}), 500
 
         print(f"✅ Signed PDF uploaded to: {signed_contract_url}")
 
@@ -755,7 +695,7 @@ def sign_contract():
             "message": "Contract signed successfully!",
             "signed_contract_url": signed_contract_url,
             "contract_id": contract.contractid,
-            "url_type": "raw_upload" if '/raw/upload/' in signed_contract_url else "unknown",
+            "url_type": "image_upload" if '/image/upload/' in signed_contract_url else "unknown",
             "has_stream": 'stream_' in signed_contract_url
         })
 
@@ -1132,79 +1072,10 @@ def reject_termination():
             'message': f'Error rejecting termination: {str(e)}'
         }), 500
 
-# ✅ Diagnostic route to check PDF files
-@contract_bp.route("/contracts/diagnose-pdf/<int:contract_id>", methods=["GET"])
-def diagnose_pdf(contract_id):
-    try:
-        contract = Contract.query.filter_by(contractid=contract_id).first()
-        if not contract:
-            return jsonify({"error": "Contract not found"}), 404
-        
-        import requests
-        
-        results = {}
-        
-        def check_pdf(url, label):
-            if not url:
-                return {"error": "No URL provided"}
-            
-            try:
-                # Download the file
-                response = requests.get(url, timeout=30)
-                result = {
-                    "url": url,
-                    "status_code": response.status_code,
-                    "content_length": len(response.content),
-                    "headers": dict(response.headers)
-                }
-                
-                if response.status_code != 200:
-                    result["error"] = f"HTTP {response.status_code}"
-                    return result
-                
-                # Check if it starts with PDF header
-                is_pdf = response.content.startswith(b'%PDF')
-                result["is_valid_pdf_header"] = is_pdf
-                
-                # Check first few bytes
-                result["first_10_bytes"] = response.content[:10].hex()
-                
-                # Try to parse as PDF
-                try:
-                    pdf_buffer = io.BytesIO(response.content)
-                    pdf_reader = PdfReader(pdf_buffer)
-                    result["pdf_page_count"] = len(pdf_reader.pages)
-                    result["pdf_is_encrypted"] = pdf_reader.is_encrypted
-                    result["pdf_valid"] = True
-                except Exception as e:
-                    result["pdf_valid"] = False
-                    result["pdf_error"] = str(e)
-                
-                return result
-                
-            except Exception as e:
-                return {"error": str(e)}
-        
-        # Check generated contract
-        if contract.generated_contract:
-            results["generated_contract"] = check_pdf(contract.generated_contract, "Generated")
-        
-        # Check signed contract
-        if contract.signed_contract:
-            results["signed_contract"] = check_pdf(contract.signed_contract, "Signed")
-        
-        return jsonify({
-            "contract_id": contract_id,
-            "diagnosis": results
-        })
-        
-    except Exception as e:
-        return jsonify({"error": f"Diagnosis failed: {str(e)}"}), 500
-
-# ✅ Test upload endpoint to verify no stream_hxbcrg
-@contract_bp.route("/contracts/test-upload", methods=["GET"])
-def test_contract_upload():
-    """Test PDF upload to verify no stream_hxbcrg"""
+# ✅ Test PDF to image upload for contracts
+@contract_bp.route("/contracts/test-image-upload", methods=["GET"])
+def test_contract_image_upload():
+    """Test PDF to image upload functionality for contracts"""
     try:
         # Create a simple test PDF
         from reportlab.lib.pagesizes import A4
@@ -1212,24 +1083,28 @@ def test_contract_upload():
         
         pdf_buffer = io.BytesIO()
         c = canvas.Canvas(pdf_buffer, pagesize=A4)
-        c.drawString(100, 750, "Test Contract PDF Upload - No Stream")
+        c.drawString(100, 750, "Test Contract PDF to Image Upload")
+        c.drawString(100, 730, "This should upload as an IMAGE to Cloudinary")
         c.save()
         pdf_buffer.seek(0)
         
-        # Upload using our fixed method
-        contract_url = upload_contract_pdf(pdf_buffer, "test", "test_999", "test")
+        # Upload using the PDF to image function
+        contract_url = upload_pdf_as_image(
+            pdf_buffer,
+            'test/contracts',
+            filename_prefix='test_contract'
+        )
         
         if contract_url:
             return jsonify({
                 "success": True,
-                "url": contract_url,
+                "image_url": contract_url,
                 "has_stream": "stream_" in contract_url,
-                "is_raw_upload": "/raw/upload/" in contract_url,
                 "is_image_upload": "/image/upload/" in contract_url,
-                "is_download": "/download/" in contract_url
+                "is_raw_upload": "/raw/upload/" in contract_url
             })
         else:
-            return jsonify({"error": "Upload failed"}), 500
+            return jsonify({"error": "Contract image upload failed"}), 500
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
