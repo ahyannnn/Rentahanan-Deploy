@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CreditCard, DollarSign, Upload, CheckCircle, Clock, AlertCircle, ChevronLeft, Search, X, FileText, Receipt, Loader} from "lucide-react";
+import { CreditCard, DollarSign, Upload, CheckCircle, Clock, AlertCircle, ChevronLeft, Search, X, FileText, Receipt, Loader, Eye} from "lucide-react";
 import "../../styles/tenant/MyBills.css";
 
 const MyBills = () => {
@@ -23,19 +23,6 @@ const MyBills = () => {
 
   // ✅ ADD API BASE - same as other components
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
-
-  // ✅ ADD: Get image URL function (same as other components)
-  const getImageUrl = (filename, folder = 'receipts') => {
-    if (!filename) return null;
-    
-    // If it's already a full URL (Cloudinary), use it directly
-    if (filename.startsWith('http')) {
-      return filename;
-    }
-    
-    // Otherwise, construct the local path
-    return `${API_BASE}/uploads/${folder}/${filename}`;
-  };
 
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const tenantId = storedUser.tenantid || storedUser.userid || null;
@@ -175,22 +162,32 @@ const MyBills = () => {
     setGcashReceipt(null);
   };
 
-  // ✅ FIXED: UPDATED API ENDPOINT for receipt viewing with proper URL handling
+  // ✅ UPDATED: Consistent receipt viewing like Payment component
   const handleViewReceipt = async (billId) => {
     try {
+      // ✅ UPDATED API ENDPOINT - Same as Payment component
       const response = await fetch(`${API_BASE}/api/transactions/receipt/${billId}`);
       const receiptData = await response.json();
 
-      if (response.ok && receiptData.receiptUrl) {
-        // ✅ FIXED: Use the helper function to get correct receipt URL
-        const receiptFullUrl = getImageUrl(receiptData.receiptUrl, 'receipts');
-        window.open(receiptFullUrl, '_blank');
+      if (response.ok && receiptData.receipt_url) {
+        // ✅ Use receipt_url directly like Payment component
+        window.open(receiptData.receipt_url, '_blank');
       } else {
-        alert(receiptData.error || `No receipt available for bill ${billId}`);
+        // Fallback: Show payment details if no receipt
+        const bill = bills.find(b => b.billid === billId);
+        if (bill) {
+          alert(`Bill Details:\n- ID: #${bill.billid}\n- Amount: ₱${bill.amount}\n- Type: ${bill.billtype}\n- Status: ${bill.status}\n\nNo digital receipt available.`);
+        } else {
+          alert(`No receipt available for this bill.`);
+        }
       }
     } catch (error) {
       console.error('Error fetching receipt:', error);
-      alert('Error loading receipt. Please try again.');
+      // Fallback to showing basic bill info
+      const bill = bills.find(b => b.billid === billId);
+      if (bill) {
+        alert(`Bill Details:\n- ID: #${bill.billid}\n- Amount: ₱${bill.amount}\n- Type: ${bill.billtype}\n- Status: ${bill.status}\n\nReceipt is not available.`);
+      }
     }
   };
 
@@ -207,6 +204,7 @@ const MyBills = () => {
     }
   };
 
+  // ✅ UPDATED: Remove dollar sign from currency format
   const formatCurrency = (amount) => {
     return `₱${parseFloat(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -341,7 +339,7 @@ const MyBills = () => {
                       {isUnpaid ? (
                         <button 
                           className="action-btn-Tenant-Bills pay-now-btn-Tenant-Bills"
-                          onClick={() => handlePayNow(bill.billid)} // ✅ UPDATED: Added onClick handler
+                          onClick={() => handlePayNow(bill.billid)}
                         >
                           Pay Now
                         </button>
@@ -354,8 +352,9 @@ const MyBills = () => {
                         <button
                           className="action-btn-Tenant-Bills receipt-btn-Tenant-Bills"
                           onClick={() => handleViewReceipt(bill.billid)}
+                          title="View payment receipt" // ✅ ADDED: Tooltip like Payment component
                         >
-                          <Receipt size={14} />
+                          <Eye size={14} /> {/* ✅ UPDATED: Changed from Receipt to Eye icon */}
                           View Receipt
                         </button>
                       )}
@@ -434,7 +433,7 @@ const MyBills = () => {
                   {isUnpaid ? (
                     <button 
                       className="mobile-action-btn-Tenant-Bills pay-now-btn-Tenant-Bills"
-                      onClick={() => handlePayNow(bill.billid)} // ✅ UPDATED: Added onClick handler
+                      onClick={() => handlePayNow(bill.billid)}
                     >
                       <CreditCard size={16} />
                       Pay Now
@@ -448,8 +447,9 @@ const MyBills = () => {
                     <button
                       className="mobile-action-btn-Tenant-Bills mobile-receipt-btn-Tenant-Bills"
                       onClick={() => handleViewReceipt(bill.billid)}
+                      title="View payment receipt" // ✅ ADDED: Tooltip like Payment component
                     >
-                      <Receipt size={16} />
+                      <Eye size={16} /> {/* ✅ UPDATED: Changed from Receipt to Eye icon */}
                       View Receipt
                     </button>
                   )}
