@@ -505,24 +505,7 @@ const Contract = () => {
         )}
       </div>
 
-      {/* Contract Details */}
-      <div className="contract-details-Contract">
-        <h3 className="details-title-Contract">Contract Details</h3>
-        <div className="details-grid-Contract">
-          <div className="detail-item-Contract">
-            <span className="detail-label-Contract">Contract ID:</span>
-            <span className="detail-value-Contract">{contract.contractid}</span>
-          </div>
-          <div className="detail-item-Contract">
-            <span className="detail-label-Contract">Created Date:</span>
-            <span className="detail-value-Contract">{contract.created_date || "N/A"}</span>
-          </div>
-          <div className="detail-item-Contract">
-            <span className="detail-label-Contract">Last Updated:</span>
-            <span className="detail-value-Contract">{contract.updated_date || "N/A"}</span>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Termination Modal */}
       {showTerminateModal && contract && (
