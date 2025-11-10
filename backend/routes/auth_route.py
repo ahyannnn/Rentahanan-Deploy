@@ -7,9 +7,31 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token
 
-
 auth_bp = Blueprint("auth_bp", __name__)
 
+# ==============================
+# CHECK EMAIL AVAILABILITY
+# ==============================
+@auth_bp.route("/check-email", methods=["POST"])
+def check_email():
+    data = request.get_json()
+    if not data:
+        return jsonify({"message": "No JSON received"}), 400
+
+    email = data.get("email")
+    if not email:
+        return jsonify({"message": "Email is required"}), 400
+
+    # Check if email exists
+    user = User.query.filter_by(email=email).first()
+    
+    return jsonify({
+        "exists": user is not None
+    }), 200
+
+# ==============================
+# REGISTER
+# ==============================
 @auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
@@ -97,7 +119,6 @@ def register():
         db.session.rollback()
         print("Registration error:", str(e))
         return jsonify({"message": f"Registration failed: {str(e)}"}), 500
-
 
 # ==============================
 # LOGIN

@@ -23,7 +23,16 @@ body {
   width: 100%;
   background-color: #E8ECF3;
 }
+.loading-text-Register {
+  color: #666;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
 
+.error-email-Register {
+  min-height: 20px;
+}
 /* --- Layout --- */
 .auth-page-Register {
   display: flex;
