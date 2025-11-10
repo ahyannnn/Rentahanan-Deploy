@@ -5,7 +5,7 @@ import "../../styles/tenant/BrowseUnits.css";
 const BrowseUnits = () => {
   const [units, setUnits] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("Available"); // ✅ CHANGED: Default to "Available"
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState({});
@@ -19,7 +19,8 @@ const BrowseUnits = () => {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const tenantId = storedUser.userid;
 
-  const statusOptions = ["All", "Available", "Occupied", "Pending"];
+  // ✅ CHANGED: Only show "Available" status option
+  const statusOptions = ["Available"];
 
   const getImageUrl = (imagepath) => {
     if (!imagepath) return null;
@@ -96,12 +97,10 @@ const BrowseUnits = () => {
     fetchTenantDetails();
   }, [tenantId]);
 
+  // ✅ CHANGED: Only show available units
   const filteredUnits = useMemo(() => {
     const statusMap = {
-      "All": () => true,
       "Available": (unit) => unit.status === "Available",
-      "Occupied": (unit) => unit.status === "Occupied",
-      "Pending": (unit) => unit.status === "Pending",
     };
 
     return units.filter((unit) => {
@@ -203,22 +202,11 @@ const BrowseUnits = () => {
           </div>
         </div>
 
+        {/* ✅ CHANGED: Remove status filters since we only show available units */}
         <div className="status-filters-container-Browse">
-          <div className="status-filters-Browse">
-            {statusOptions.map((status) => (
-              <button
-                key={status}
-                className={`filter-btn-Browse ${filterStatus === status ? "filter-btn-active-Browse" : ""}`}
-                onClick={() => setFilterStatus(status)}
-              >
-                {status}
-                {status !== "All" && (
-                  <span className="filter-count-Browse">
-                    {units.filter(unit => unit.status === status).length}
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="available-badge-Browse">
+            <CheckCircle size={16} />
+            <span>Showing Available Units Only</span>
           </div>
         </div>
       </div>
@@ -286,8 +274,13 @@ const BrowseUnits = () => {
           ) : (
             <div className="no-results-container-Browse">
               <div className="no-results-icon-Browse">🔍</div>
-              <h3 className="no-results-title-Browse">No units found</h3>
-              <p className="no-results-Browse">Try adjusting your search criteria or filters</p>
+              <h3 className="no-results-title-Browse">No available units found</h3>
+              <p className="no-results-Browse">
+                {searchTerm 
+                  ? "Try adjusting your search criteria" 
+                  : "There are currently no available units. Please check back later."
+                }
+              </p>
             </div>
           )}
         </div>
