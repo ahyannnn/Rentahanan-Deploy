@@ -66,8 +66,6 @@ const Layout = () => {
     return `${API_BASE}/uploads/${folder}/${imagePath}`;
   };
 
-  // ✅ REMOVED: All auto-refresh intervals and event listeners
-
   useEffect(() => {
     // If current path is /tenant and user is Registered tenant, redirect to browse-units
     if (location.pathname === '/tenant' &&
@@ -119,9 +117,6 @@ const Layout = () => {
 
         localStorage.setItem("user", JSON.stringify(data.profile));
         localStorage.setItem("tenantStatus", mappedStatus);
-        
-        // ✅ Fetch notifications after profile is loaded
-        fetchNotifications();
       } else {
         console.error("Failed to fetch profile:", data.message);
       }
@@ -135,6 +130,7 @@ const Layout = () => {
   // Fetch notifications from API - ✅ UPDATED API BASE
   const fetchNotifications = async () => {
     try {
+      setNotificationsLoading(true);
       const storedUserRaw = localStorage.getItem("user");
       if (!storedUserRaw) return;
 
@@ -150,12 +146,16 @@ const Layout = () => {
       const data = await response.json();
 
       if (data.success) {
-        const newNotifications = data.notifications || [];
-        setNotifications(newNotifications);
+        setNotifications(data.notifications || []);
 
-        // ✅ FIXED: Calculate unread count based on is_read field
-        const unread = newNotifications.filter(notif => !notif.is_read).length;
+        // Calculate unread count
+        const unread = data.notifications.filter(notif => !notif.is_read).length;
         setUnreadCount(unread);
+
+        // Log notification types for debugging
+        const groupNotifications = data.notifications.filter(notif => notif.isgroupnotification);
+        const individualNotifications = data.notifications.filter(notif => !notif.isgroupnotification);
+
       } else {
         console.error("Failed to fetch notifications:", data.message);
         setNotifications([]);
@@ -195,10 +195,8 @@ const Layout = () => {
     setShowNotifications(false);
     setShowAllNotifications(false);
 
-    // Mark as read only if unread
-    if (!notification.is_read) {
-      markNotificationAsRead(notification.notificationid);
-    }
+    // Mark as read
+    markNotificationAsRead(notification.notificationid);
 
     navigateBasedOnNotification(notification);
   };
@@ -224,10 +222,8 @@ const Layout = () => {
       if (data.success) {
         // Remove from local state
         setNotifications(prev => prev.filter(notif => notif.notificationid !== notification.notificationid));
-        // Update unread count - only subtract if it was unread
-        if (!notification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
       } else {
         console.error('Failed to delete notification:', data.message);
         alert('Failed to delete notification');
@@ -246,7 +242,7 @@ const Layout = () => {
       });
 
       if (response.ok) {
-        // Update local state immediately
+        // Update local state
         setNotifications(prev =>
           prev.map(notif =>
             notif.notificationid === notificationId
@@ -272,10 +268,8 @@ const Layout = () => {
     setShowAllNotifications(false);
     setActiveNotificationMenu(null);
 
-    // Mark as read only if unread
-    if (!notification.is_read) {
-      markNotificationAsRead(notification.notificationid);
-    }
+    // Mark as read
+    markNotificationAsRead(notification.notificationid);
 
     navigateBasedOnNotification(notification);
   };
@@ -369,9 +363,6 @@ const Layout = () => {
             const mappedStatus = statusMapping[storedUser.application_status] || 'Registered';
             setTenantStatus(mappedStatus);
           }
-          
-          // Fetch notifications for existing user data
-          fetchNotifications();
         }
       } catch (error) {
         console.error("Error loading user:", error);
@@ -796,7 +787,17 @@ const Layout = () => {
               onClick={handleNotificationsToggle}
             >
               <Bell size={20} color="white" />
-              {/* Number badge - ALWAYS SHOW IF THERE ARE NOTIFICATIONS */}
+              {/* Three dots indicator for desktop hover */}
+              <div className="notif-dots-indicator-Layout">
+                {unreadCount > 0 && (
+                  <>
+                    <span className="dot-Layout"></span>
+                    <span className="dot-Layout"></span>
+                    <span className="dot-Layout"></span>
+                  </>
+                )}
+              </div>
+              {/* Badge for mobile */}
               {unreadCount > 0 && (
                 <div className="notif-badge-Layout">{unreadCount}</div>
               )}
