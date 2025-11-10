@@ -66,7 +66,39 @@ const Layout = () => {
     return `${API_BASE}/uploads/${folder}/${imagePath}`;
   };
 
-  // ✅ REMOVED: All auto-refresh intervals and event listeners
+  // 🔥 AUTO-REFRESH: 1-second interval for notifications
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchNotifications();
+    }, 1000); // 1 SECOND
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // 🔥 AUTO-REFRESH: When tab becomes active
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchNotifications();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // 🔥 AUTO-REFRESH: When page gets focus
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchNotifications();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   useEffect(() => {
     // If current path is /tenant and user is Registered tenant, redirect to browse-units
@@ -119,9 +151,6 @@ const Layout = () => {
 
         localStorage.setItem("user", JSON.stringify(data.profile));
         localStorage.setItem("tenantStatus", mappedStatus);
-        
-        // ✅ Fetch notifications after profile is loaded
-        fetchNotifications();
       } else {
         console.error("Failed to fetch profile:", data.message);
       }
@@ -132,7 +161,7 @@ const Layout = () => {
     }
   };
 
-  // Fetch notifications from API - ✅ UPDATED API BASE
+  // Fetch notifications from API - ✅ UPDATED API BASE with cache busting
   const fetchNotifications = async () => {
     try {
       const storedUserRaw = localStorage.getItem("user");
@@ -141,7 +170,8 @@ const Layout = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`${API_BASE}/api/notifications/${userId}`);
+      // 🔥 CACHE BUSTING: Add timestamp to prevent caching
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}?t=${Date.now()}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -151,11 +181,15 @@ const Layout = () => {
 
       if (data.success) {
         const newNotifications = data.notifications || [];
-        setNotifications(newNotifications);
+        
+        // Only update if notifications actually changed
+        if (JSON.stringify(newNotifications) !== JSON.stringify(notifications)) {
+          setNotifications(newNotifications);
 
-        // ✅ FIXED: Calculate unread count based on is_read field
-        const unread = newNotifications.filter(notif => !notif.is_read).length;
-        setUnreadCount(unread);
+          // Calculate unread count - treat all as unread since no is_read field yet
+          const unread = newNotifications.length;
+          setUnreadCount(unread);
+        }
       } else {
         console.error("Failed to fetch notifications:", data.message);
         setNotifications([]);
@@ -195,10 +229,8 @@ const Layout = () => {
     setShowNotifications(false);
     setShowAllNotifications(false);
 
-    // Mark as read only if unread
-    if (!notification.is_read) {
-      markNotificationAsRead(notification.notificationid);
-    }
+    // Mark as read
+    markNotificationAsRead(notification.notificationid);
 
     navigateBasedOnNotification(notification);
   };
@@ -224,10 +256,8 @@ const Layout = () => {
       if (data.success) {
         // Remove from local state
         setNotifications(prev => prev.filter(notif => notif.notificationid !== notification.notificationid));
-        // Update unread count - only subtract if it was unread
-        if (!notification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
       } else {
         console.error('Failed to delete notification:', data.message);
         alert('Failed to delete notification');
@@ -246,7 +276,7 @@ const Layout = () => {
       });
 
       if (response.ok) {
-        // Update local state immediately
+        // Update local state
         setNotifications(prev =>
           prev.map(notif =>
             notif.notificationid === notificationId
@@ -272,10 +302,8 @@ const Layout = () => {
     setShowAllNotifications(false);
     setActiveNotificationMenu(null);
 
-    // Mark as read only if unread
-    if (!notification.is_read) {
-      markNotificationAsRead(notification.notificationid);
-    }
+    // Mark as read
+    markNotificationAsRead(notification.notificationid);
 
     navigateBasedOnNotification(notification);
   };
@@ -369,9 +397,6 @@ const Layout = () => {
             const mappedStatus = statusMapping[storedUser.application_status] || 'Registered';
             setTenantStatus(mappedStatus);
           }
-          
-          // Fetch notifications for existing user data
-          fetchNotifications();
         }
       } catch (error) {
         console.error("Error loading user:", error);
