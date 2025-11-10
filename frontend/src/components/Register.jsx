@@ -73,6 +73,12 @@ const Register = () => {
     }
   };
 
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched({ ...touched, [name]: true });
+    validateField(name, value);
+  };
+
   // Real-time field validation
   const validateField = (fieldName, value) => {
     let fieldError = "";
@@ -169,28 +175,6 @@ const Register = () => {
       const newErrors = { ...errors };
       delete newErrors[fieldName];
       setErrors(newErrors);
-    }
-  };
-
-  // Check if email already exists
-  const checkEmailExists = async (email) => {
-    if (!validateEmail(email)) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/check-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.exists) {
-          setErrors({ ...errors, email: "This email is already registered. Please use a different email." });
-        }
-      }
-    } catch (error) {
-      console.error("Error checking email:", error);
     }
   };
 
@@ -429,6 +413,7 @@ const Register = () => {
                   <button
                     className="btn-Register"
                     onClick={() => navigate("/login")}
+                    title="Proceed to login page"
                   >
                     Go to Login
                   </button>
@@ -438,7 +423,10 @@ const Register = () => {
               <form onSubmit={handleSubmit} className="form-Register">
                 {/* General error message */}
                 {errors.general && (
-                  <div className="error-general-Register">
+                  <div 
+                    className="error-general-Register"
+                    title="Registration error - please fix the issues below"
+                  >
                     {errors.general}
                   </div>
                 )}
@@ -454,6 +442,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="Enter First Name"
+                        title="Your legal first name as it appears on official documents"
                       />
                       {errors.firstname && <p className="error-text-Register">{errors.firstname}</p>}
                     </div>
@@ -466,6 +455,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="Enter Middle Name"
+                        title="Your middle name (optional but recommended for identification)"
                       />
                       {errors.middlename && <p className="error-text-Register">{errors.middlename}</p>} 
                     </div>
@@ -478,6 +468,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="e.g. Dela Cruz"
+                        title="Your family name or surname"
                       />
                       {errors.lastname && <p className="error-text-Register">{errors.lastname}</p>}
                     </div>
@@ -491,6 +482,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         max={new Date().toISOString().split('T')[0]}
+                        title="You must be at least 18 years old to register"
                       />
                       {errors.dob && <p className="error-text-Register">{errors.dob}</p>}
                     </div>
@@ -511,6 +503,7 @@ const Register = () => {
                         onBlur={handleBlur}
                         placeholder="e.g. juan.delacruz@gmail.com"
                         disabled={isLoading || checkingEmail}
+                        title="Your active email address for account verification and communication"
                       />
                       <div className="error-email-Register">
                         {checkingEmail && <p className="loading-text-Register">Checking email availability...</p>}
@@ -529,6 +522,7 @@ const Register = () => {
                         onBlur={handleBlur}
                         placeholder="e.g. 09171234567"
                         maxLength="11"
+                        title="Philippine mobile number format: 09XXXXXXXXX (11 digits)"
                       />
                       {errors.phone && <p className="error-text-Register">{errors.phone}</p>}
                     </div>
@@ -543,6 +537,7 @@ const Register = () => {
                         onBlur={handleBlur}
                         placeholder="e.g. 1200"
                         maxLength="4"
+                        title="4-digit Philippine zip code for your area"
                       />
                       {errors.zipcode && <p className="error-text-Register">{errors.zipcode}</p>}
                     </div>
@@ -557,6 +552,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="e.g. Blk 1 Lot 2 Pinas St."
+                        title="Your complete street address including house/unit number"
                       />
                       {errors.street && <p className="error-text-Register">{errors.street}</p>}
                     </div>
@@ -570,6 +566,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="e.g. San Jose"
+                        title="The barangay or district where you reside"
                       />
                       {errors.barangay && <p className="error-text-Register">{errors.barangay}</p>}
                     </div>
@@ -583,6 +580,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="e.g. Makati"
+                        title="City or municipality of your residence"
                       />
                       {errors.city && <p className="error-text-Register">{errors.city}</p>}
                     </div>
@@ -596,6 +594,7 @@ const Register = () => {
                         onChange={handleChange}
                         onBlur={handleBlur}
                         placeholder="e.g. Metro Manila"
+                        title="Province or region where you live"
                       />
                       {errors.province && <p className="error-text-Register">{errors.province}</p>}
                     </div>
@@ -615,12 +614,14 @@ const Register = () => {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           placeholder="Enter your password"
+                          title="Minimum 8 characters with at least one uppercase letter, one lowercase letter, and one number"
                         />
                         <button
                           type="button"
                           className="show-btn-Register"
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? "Hide password" : "Show password"}
+                          title={showPassword ? "Hide password text" : "Show password text"}
                         >
                           {showPassword ? "Hide" : "Show"}
                         </button>
@@ -638,12 +639,14 @@ const Register = () => {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           placeholder="Re-enter your password"
+                          title="Re-enter your password exactly as above to confirm"
                         />
                         <button
                           type="button"
                           className="show-btn-Register"
                           onClick={() => setShowConfirm(!showConfirm)}
                           aria-label={showConfirm ? "Hide password" : "Show password"}
+                          title={showConfirm ? "Hide password text" : "Show password text"}
                         >
                           {showConfirm ? "Hide" : "Show"}
                         </button>
@@ -661,6 +664,7 @@ const Register = () => {
                         onClick={handlePrev}
                         className="btn-Register secondary-Register"
                         disabled={isLoading || checkingEmail}
+                        title="Go back to previous step"
                       >
                         Back
                       </button>
@@ -671,6 +675,7 @@ const Register = () => {
                         onClick={handleNext} 
                         className="btn-Register"
                         disabled={isLoading || checkingEmail}
+                        title="Continue to next step"
                       >
                         {isLoading ? "Checking..." : "Next"}
                       </button>
@@ -680,6 +685,7 @@ const Register = () => {
                         type="submit" 
                         className="btn-Register"
                         disabled={isLoading || hasStepErrors()}
+                        title={hasStepErrors() ? "Please fix errors before submitting" : "Create your RenTahanan account"}
                       >
                         {isLoading ? "Creating Account..." : "Create Account"}
                       </button>
@@ -689,7 +695,7 @@ const Register = () => {
 
                 {step < 4 && (
                   <p className="bottom-text-Register">
-                    Already have an account? <Link to="/login">Login</Link>
+                    Already have an account? <Link to="/login" title="Sign in to your existing account">Login</Link>
                   </p>
                 )}
               </form>
