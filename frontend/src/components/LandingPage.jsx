@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../styles/LandingPage.css";
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Clock, Home, Menu, X } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Home, Menu, X, Wrench, Hammer, PaintBucket, Drill } from "lucide-react";
 
 function LandingPage() {
   const [houses, setHouses] = useState([]);
@@ -118,13 +118,6 @@ function LandingPage() {
               />
               <div className="nav-brand-text-Layout">RenTahanan</div>
             </div>
-            <button 
-              className="mobile-close-btn-Layout" 
-              onClick={closeMobileMenu}
-              title="Close menu"
-            >
-              <X size={24} />
-            </button>
           </div>
           <div className="mobile-nav-links-Layout">
             <Link 
@@ -175,11 +168,17 @@ function LandingPage() {
         <h2 className="section-title-Layout">Properties</h2>
         
         {loading && (
-          <div 
-            className="loading-message-Layout"
-            title="Fetching available properties..."
-          >
-            <p>Loading properties...</p>
+          <div className="loading-container-Layout">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="skeleton-card-Layout">
+                <div className="skeleton-image-Layout"></div>
+                <div className="skeleton-content-Layout">
+                  <div className="skeleton-line-Layout skeleton-title-Layout"></div>
+                  <div className="skeleton-line-Layout skeleton-price-Layout"></div>
+                  <div className="skeleton-line-Layout skeleton-status-Layout"></div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
         
@@ -204,6 +203,7 @@ function LandingPage() {
                 src={getImageUrl(house.imagepath)}
                 alt={house.name}
                 className="house-image-Layout"
+                loading="lazy"
                 onError={(e) => {
                   e.target.src = "https://via.placeholder.com/400x300/4A5568/FFFFFF?text=No+Image+Available";
                 }}
@@ -249,6 +249,7 @@ function LandingPage() {
                 src={getImageUrl(selectedHouse.imagepath)}
                 alt={selectedHouse.name}
                 className="modal-image-Layout"
+                loading="lazy"
                 onError={(e) => {
                   e.target.src = "https://via.placeholder.com/500x300/4A5568/FFFFFF?text=No+Image+Available";
                 }}
@@ -370,6 +371,7 @@ function LandingPage() {
                 src="/images/map-location.jpg" 
                 alt="RenTahanan Location - Abangan Sur Marilao, Bulacan"
                 className="map-image-Layout"
+                loading="lazy"
                 onError={(e) => {
                   e.target.src = "https://via.placeholder.com/600x400/2D3748/FFFFFF?text=Location+Map";
                 }}

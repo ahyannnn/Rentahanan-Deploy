@@ -323,6 +323,67 @@ html, body {
     color: orange;
 }
 
+/* Skeleton Loading Animation */
+.loading-container-Layout {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.skeleton-card-Layout {
+    width: 280px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    animation: skeleton-pulse-Layout 1.5s ease-in-out infinite alternate;
+}
+
+.skeleton-image-Layout {
+    width: 100%;
+    height: 180px;
+    background: #e0e0e0;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.skeleton-content-Layout {
+    padding: 1rem;
+}
+
+.skeleton-line-Layout {
+    height: 16px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.skeleton-title-Layout {
+    width: 80%;
+    height: 20px;
+}
+
+.skeleton-price-Layout {
+    width: 60%;
+    height: 18px;
+}
+
+.skeleton-status-Layout {
+    width: 40%;
+    height: 16px;
+}
+
+@keyframes skeleton-pulse-Layout {
+    0% {
+        opacity: 0.6;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
 /* --- Modal --- */
 .modal-overlay-Layout {
     position: fixed;
@@ -393,6 +454,59 @@ html, body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* --- Toolkit Section --- */
+.toolkit-section-Layout {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.toolkit-container-Layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.toolkit-card-Layout {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 25px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    transform: translateY(0);
+    cursor: pointer;
+    text-align: center;
+}
+
+.toolkit-card-Layout:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.toolkit-icon-Layout {
+    color: #F5C542;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.toolkit-title-Layout {
+    color: #061A53;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.toolkit-description-Layout {
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
 }
 
 /* --- Features Section --- */
@@ -668,6 +782,11 @@ html, body {
     .features-container-Layout {
         gap: 25px;
     }
+    
+    .toolkit-container-Layout {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+    }
 }
 
 /* Tablets */
@@ -716,9 +835,15 @@ html, body {
         max-width: 350px;
     }
     
+    .skeleton-card-Layout {
+        width: 100%;
+        max-width: 350px;
+    }
+    
     .features-section-Layout,
     .about-section-Layout,
-    .contact-section-Layout {
+    .contact-section-Layout,
+    .toolkit-section-Layout {
         padding: 60px 20px;
     }
     
@@ -745,6 +870,11 @@ html, body {
     
     .social-links-Layout {
         justify-content: center;
+    }
+    
+    .toolkit-container-Layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
 }
 
@@ -800,7 +930,16 @@ html, body {
         max-width: 300px;
     }
     
+    .skeleton-card-Layout {
+        width: 100%;
+        max-width: 300px;
+    }
+    
     .house-image-Layout {
+        height: 160px;
+    }
+    
+    .skeleton-image-Layout {
         height: 160px;
     }
     
@@ -864,6 +1003,14 @@ html, body {
         padding: 0.8rem 1.2rem;
         font-size: 1rem;
     }
+    
+    .toolkit-card-Layout {
+        padding: 30px 20px;
+    }
+    
+    .toolkit-title-Layout {
+        font-size: 1.2rem;
+    }
 }
 
 /* Small Mobile Phones */
@@ -900,6 +1047,10 @@ html, body {
     .mobile-nav-open-Layout {
         left: 0;
     }
+    
+    .toolkit-card-Layout {
+        padding: 25px 15px;
+    }
 }
 
 /* Landscape Orientation for Mobile */
@@ -921,7 +1072,8 @@ html, body {
 @media (min-width: 1400px) {
     .contact-container-Layout,
     .features-container-Layout,
-    .footer-content-Layout {
+    .footer-content-Layout,
+    .toolkit-container-Layout {
         max-width: 1300px;
     }
 }

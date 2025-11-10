@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./../styles/Register.css";
 
@@ -25,6 +25,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [touched, setTouched] = useState({});
   const navigate = useNavigate();
 
   // ✅ ADD API BASE
@@ -55,12 +56,141 @@ const Register = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
     }
     if (errors.general) {
       setErrors({ ...errors, general: "" });
+    }
+
+    // Auto-validate certain fields as user types
+    if (touched[name]) {
+      validateField(name, value);
+    }
+  };
+
+  // Real-time field validation
+  const validateField = (fieldName, value) => {
+    let fieldError = "";
+
+    switch (fieldName) {
+      case "firstname":
+      case "middlename":
+      case "lastname":
+        if (!value.trim()) {
+          fieldError = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required.`;
+        }
+        break;
+
+      case "dob":
+        if (!value) {
+          fieldError = "Date of Birth is required.";
+        } else {
+          const birthDate = new Date(value);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          
+          if (age < 18) {
+            fieldError = "You must be at least 18 years old.";
+          }
+        }
+        break;
+
+      case "email":
+        if (!value.trim()) {
+          fieldError = "Email address is required.";
+        } else if (!validateEmail(value)) {
+          fieldError = "Please enter a valid email address.";
+        } else {
+          // Check email existence in real-time
+          checkEmailExists(value);
+        }
+        break;
+
+      case "phone":
+        if (!value.trim()) {
+          fieldError = "Phone number is required.";
+        } else if (!validatePhone(value)) {
+          fieldError = "Please enter a valid Philippine mobile number (09XXXXXXXXX).";
+        }
+        break;
+
+      case "street":
+      case "barangay":
+      case "city":
+      case "province":
+        if (!value.trim()) {
+          fieldError = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required.`;
+        }
+        break;
+
+      case "zipcode":
+        if (!value.trim()) {
+          fieldError = "Zip Code is required.";
+        } else if (!validateZipCode(value)) {
+          fieldError = "Please enter a valid 4-digit zip code.";
+        }
+        break;
+
+      case "password":
+        if (!value) {
+          fieldError = "Password is required.";
+        } else if (value.length < 8) {
+          fieldError = "Password must be at least 8 characters.";
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+          fieldError = "Password must contain at least one uppercase letter, one lowercase letter, and one number.";
+        }
+        break;
+
+      case "confirm":
+        if (!value) {
+          fieldError = "Confirm password is required.";
+        } else if (formData.password !== value) {
+          fieldError = "Passwords do not match.";
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    if (fieldError) {
+      setErrors({ ...errors, [fieldName]: fieldError });
+    } else {
+      const newErrors = { ...errors };
+      delete newErrors[fieldName];
+      setErrors(newErrors);
+    }
+  };
+
+  // Check if email already exists
+  const checkEmailExists = async (email) => {
+    if (!validateEmail(email)) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.exists) {
+          setErrors({ ...errors, email: "This email is already registered. Please use a different email." });
+        }
+      }
+    } catch (error) {
+      console.error("Error checking email:", error);
     }
   };
 
@@ -243,6 +373,19 @@ const Register = () => {
     }
   };
 
+  // Check if current step has any errors
+  const hasStepErrors = () => {
+    if (step === 1) {
+      return errors.firstname || errors.middlename || errors.lastname || errors.dob;
+    } else if (step === 2) {
+      return errors.email || errors.phone || errors.street || errors.barangay || 
+             errors.city || errors.province || errors.zipcode;
+    } else if (step === 3) {
+      return errors.password || errors.confirm;
+    }
+    return false;
+  };
+
   // --- RENDER ---
   return (
     <div className="auth-wrapper-Register">
@@ -309,6 +452,7 @@ const Register = () => {
                         name="firstname"
                         value={formData.firstname}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="Enter First Name"
                       />
                       {errors.firstname && <p className="error-text-Register">{errors.firstname}</p>}
@@ -320,6 +464,7 @@ const Register = () => {
                         name="middlename"
                         value={formData.middlename}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="Enter Middle Name"
                       />
                       {errors.middlename && <p className="error-text-Register">{errors.middlename}</p>} 
@@ -331,6 +476,7 @@ const Register = () => {
                         name="lastname"
                         value={formData.lastname}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g. Dela Cruz"
                       />
                       {errors.lastname && <p className="error-text-Register">{errors.lastname}</p>}
@@ -343,6 +489,7 @@ const Register = () => {
                         name="dob"
                         value={formData.dob}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         max={new Date().toISOString().split('T')[0]}
                       />
                       {errors.dob && <p className="error-text-Register">{errors.dob}</p>}
@@ -352,7 +499,8 @@ const Register = () => {
 
                 {step === 2 && (
                   <div className="three-column-grid-Register">
-                    <div className="form-group-Register span-2-Register">
+                    {/* Email - Full Row */}
+                    <div className="form-group-Register span-full-Register">
                       <label className="label-Register">Email</label>
                       <input
                         className="input-Register"
@@ -360,6 +508,7 @@ const Register = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g. juan.delacruz@gmail.com"
                         disabled={isLoading || checkingEmail}
                       />
@@ -369,6 +518,7 @@ const Register = () => {
                       </div>
                     </div>
 
+                    {/* Phone and Zip Code side by side */}
                     <div className="form-group-Register">
                       <label className="label-Register">Phone</label>
                       <input
@@ -376,19 +526,36 @@ const Register = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g. 09171234567"
                         maxLength="11"
                       />
                       {errors.phone && <p className="error-text-Register">{errors.phone}</p>}
                     </div>
 
-                    <div className="form-group-Register span-3-Register">
+                    <div className="form-group-Register">
+                      <label className="label-Register">Zip Code</label>
+                      <input
+                        className="input-Register"
+                        name="zipcode"
+                        value={formData.zipcode}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        placeholder="e.g. 1200"
+                        maxLength="4"
+                      />
+                      {errors.zipcode && <p className="error-text-Register">{errors.zipcode}</p>}
+                    </div>
+
+                    {/* Address fields */}
+                    <div className="form-group-Register span-full-Register">
                       <label className="label-Register">Street Address</label>
                       <input
                         className="input-Register"
                         name="street"
                         value={formData.street}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g. Blk 1 Lot 2 Pinas St."
                       />
                       {errors.street && <p className="error-text-Register">{errors.street}</p>}
@@ -401,6 +568,7 @@ const Register = () => {
                         name="barangay"
                         value={formData.barangay}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g. San Jose"
                       />
                       {errors.barangay && <p className="error-text-Register">{errors.barangay}</p>}
@@ -413,6 +581,7 @@ const Register = () => {
                         name="city"
                         value={formData.city}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g. Makati"
                       />
                       {errors.city && <p className="error-text-Register">{errors.city}</p>}
@@ -425,22 +594,10 @@ const Register = () => {
                         name="province"
                         value={formData.province}
                         onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="e.g. Metro Manila"
                       />
                       {errors.province && <p className="error-text-Register">{errors.province}</p>}
-                    </div>
-
-                    <div className="form-group-Register">
-                      <label className="label-Register">Zip Code</label>
-                      <input
-                        className="input-Register"
-                        name="zipcode"
-                        value={formData.zipcode}
-                        onChange={handleChange}
-                        placeholder="e.g. 1200"
-                        maxLength="4"
-                      />
-                      {errors.zipcode && <p className="error-text-Register">{errors.zipcode}</p>}
                     </div>
                   </div>
                 )}
@@ -456,6 +613,7 @@ const Register = () => {
                           name="password"
                           value={formData.password}
                           onChange={handleChange}
+                          onBlur={handleBlur}
                           placeholder="Enter your password"
                         />
                         <button
@@ -478,6 +636,7 @@ const Register = () => {
                           name="confirm"
                           value={formData.confirm}
                           onChange={handleChange}
+                          onBlur={handleBlur}
                           placeholder="Re-enter your password"
                         />
                         <button
@@ -520,7 +679,7 @@ const Register = () => {
                       <button 
                         type="submit" 
                         className="btn-Register"
-                        disabled={isLoading}
+                        disabled={isLoading || hasStepErrors()}
                       >
                         {isLoading ? "Creating Account..." : "Create Account"}
                       </button>
