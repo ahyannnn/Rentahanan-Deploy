@@ -23,7 +23,11 @@ function LandingPage() {
         return res.json();
       })
       .then((data) => {
-        setHouses(data);
+        // Filter only available properties
+        const availableHouses = data.filter(house => 
+          house.status && house.status.toLowerCase() === 'available'
+        );
+        setHouses(availableHouses);
         setLoading(false);
       })
       .catch((err) => {
@@ -127,7 +131,7 @@ function LandingPage() {
 
       {/* Houses Section */}
       <section className="houses-section-Layout">
-        <h2 className="section-title-Layout">Available Properties</h2>
+        <h2 className="section-title-Layout">Properties</h2>
         
         {loading && (
           <div className="loading-message-Layout">
