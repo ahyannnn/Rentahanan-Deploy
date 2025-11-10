@@ -391,3 +391,33 @@ body {
     font-size: 1.25rem;
   }
 }
+
+/* Add this to your existing Register.css */
+
+/* --- NEW THREE-COLUMN GRID LAYOUT (STEP 2) --- */
+.three-column-grid-Register {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 1.5rem;
+  width: 100%;
+}
+
+.three-column-grid-Register .form-group-Register {
+  margin-bottom: 0;
+}
+
+.span-full-Register {
+  grid-column: 1 / -1;
+}
+
+/* Mobile responsive for the new layout */
+@media (max-width: 850px) {
+  .three-column-grid-Register {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .span-full-Register {
+    grid-column: 1;
+  }
+}
