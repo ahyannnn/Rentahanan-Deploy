@@ -1306,18 +1306,6 @@ body {
   }
 }
 
-/* Dark mode support for mobile only */
-@media (max-width: 768px) and (prefers-color-scheme: dark) {
-  .loading-brand-text {
-    color: #f0f0f0;
-  }
-  
-  .loading-spinner {
-    border-color: #444;
-    border-top-color: #3498db;
-  }
-}
-
 /* 🔧 UPDATE: Always show badge with number on both desktop & mobile */
 .notif-badge-Layout {
   position: absolute;
@@ -1339,4 +1327,16 @@ body {
 /* 🔧 UPDATE: Hide dots indicator since we have number badge */
 .notif-dots-indicator-Layout {
   display: none; /* Hide dots, use number badge instead */
+}
+
+/* ===== Dark Mode Support for Mobile Only ===== */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  .loading-brand-text {
+    color: #f0f0f0;
+  }
+  
+  .loading-spinner {
+    border-color: #444;
+    border-top-color: #3498db;
+  }
 }
