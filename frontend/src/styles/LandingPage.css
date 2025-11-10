@@ -925,3 +925,358 @@ html, body {
         max-width: 1300px;
     }
 }
+
+/* --- Enhanced Mobile Styles --- */
+
+/* Tooltip Styles */
+.tooltip-container-Layout {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-Layout {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 1000;
+  animation: fadeIn-Layout 0.2s ease-in-out;
+}
+
+.tooltip-arrow-Layout {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Swipe Hint */
+.swipe-hint-Layout {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+  animation: pulse-Layout 2s infinite;
+}
+
+@keyframes pulse-Layout {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Mobile Sidebar Improvements */
+.mobile-nav-sidebar-Layout {
+  position: fixed;
+  top: 0;
+  left: -100%;
+  width: 85%;
+  max-width: 300px;
+  height: 100vh;
+  background: #061A53;
+  z-index: 1001;
+  transition: left 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-nav-open-Layout {
+  left: 0;
+}
+
+.mobile-nav-swipe-hint-Layout {
+  padding: 1rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+/* House Card Improvements for Mobile */
+.house-image-container-Layout {
+  position: relative;
+  overflow: hidden;
+}
+
+.house-overlay-Layout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(6, 26, 83, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.house-card-Layout:active .house-overlay-Layout {
+  opacity: 1;
+}
+
+/* Loading Spinner */
+.loading-spinner-Layout {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #061A53;
+  border-radius: 50%;
+  animation: spin-Layout 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin-Layout {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Section Info Icon */
+.section-info-icon-Layout {
+  margin-left: 10px;
+  color: #F5C542;
+  cursor: pointer;
+}
+
+/* Modal Improvements */
+.modal-close-btn-Layout {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.modal-details-Layout {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+/* Feature Icons */
+.feature-icon-Layout {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Quick Links in Footer */
+.quick-links-Layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.quick-links-Layout a {
+  color: #cbd5e0;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.quick-links-Layout a:hover {
+  color: white;
+}
+
+/* Retry Button */
+.retry-btn-Layout {
+  background: #061A53;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.retry-btn-Layout:active {
+  background: #051442;
+}
+
+/* No Properties Styling */
+.no-properties-subtitle-Layout {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* --- Enhanced Mobile Media Queries --- */
+
+@media (max-width: 768px) {
+  .swipe-hint-Layout {
+    display: flex;
+  }
+  
+  .hero-title-Layout {
+    font-size: 1.8rem;
+  }
+  
+  .hero-subtitle-Layout {
+    font-size: 1rem;
+  }
+  
+  .house-card-Layout {
+    margin: 0.5rem;
+  }
+  
+  .features-container-Layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .feature-card-Layout {
+    padding: 1.5rem;
+    text-align: center;
+  }
+  
+  .contact-container-Layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .contact-item-Layout {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .contact-icon-Layout {
+    align-self: center;
+  }
+  
+  .modal-content-Layout {
+    width: 95%;
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .footer-content-Layout {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 2rem;
+  }
+  
+  .quick-links-Layout {
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-Layout {
+    padding: 0.8rem 1rem;
+  }
+  
+  .nav-brand-text-Layout {
+    font-size: 1.2rem;
+  }
+  
+  .logo-Layout {
+    height: 35px;
+  }
+  
+  .hero-section-Layout {
+    height: 50vh;
+  }
+  
+  .hero-title-Layout {
+    font-size: 1.5rem;
+  }
+  
+  .section-title-Layout {
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .houses-container-Layout {
+    gap: 1rem;
+    padding: 0 0.5rem;
+  }
+  
+  .house-card-Layout {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .mobile-nav-sidebar-Layout {
+    width: 80%;
+  }
+  
+  .mobile-nav-btn-Layout {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .tooltip-Layout {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .house-card-Layout:hover {
+    transform: none;
+  }
+  
+  .feature-card-Layout:hover {
+    transform: none;
+  }
+  
+  .nav-btn-Layout:hover,
+  .mobile-nav-btn-Layout:hover {
+    transform: scale(0.98);
+  }
+  
+  .house-card-Layout:active,
+  .feature-card-Layout:active {
+    transform: scale(0.98);
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .logo-Layout,
+  .house-image-Layout,
+  .map-image-Layout {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
