@@ -105,14 +105,13 @@ def mark_as_read(notification_id):
         if not notification:
             return jsonify({"success": False, "message": "Notification not found"}), 404
         
-        # Add your mark as read logic here
-        # You might want to add an 'is_read' field to your Notification model
-        # if notification.is_read is not None:
-        #     notification.is_read = True
-        #     db.session.commit()
+        # ✅ UPDATED: Mark notification as read
+        notification.is_read = True
+        db.session.commit()
         
         return jsonify({"success": True, "message": "Notification marked as read"})
     except Exception as e:
+        db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
 
 # GET notification statistics
@@ -132,21 +131,31 @@ def get_notification_stats(user_id):
                 (Notification.targetuserrole == 'Owner') | 
                 (Notification.targetuserid == user_id)
             ).count()
-        else:
-            total_count = Notification.query.filter_by(
-                targetuserid=user_id
+            
+            # Count unread notifications
+            unread_count = Notification.query.filter(
+                ((Notification.targetuserrole == 'Owner') | 
+                 (Notification.targetuserid == user_id)) &
+                (Notification.is_read == False)
             ).count()
-
-        # Count unread notifications (if you implement read status)
-        # unread_count = Notification.query.filter_by(
-        #     targetuserid=user_id, is_read=False
-        # ).count()
+        else:
+            total_count = Notification.query.filter(
+                (Notification.targetuserrole == 'Tenant') | 
+                (Notification.targetuserid == user_id)
+            ).count()
+            
+            # Count unread notifications
+            unread_count = Notification.query.filter(
+                ((Notification.targetuserrole == 'Tenant') | 
+                 (Notification.targetuserid == user_id)) &
+                (Notification.is_read == False)
+            ).count()
 
         return jsonify({
             'success': True,
             'stats': {
                 'total_notifications': total_count,
-                # 'unread_notifications': unread_count
+                'unread_notifications': unread_count
             }
         })
         
@@ -205,21 +214,21 @@ def mark_all_as_read(user_id):
         # Update all unread notifications for this user
         if user.role == 'Owner':
             # For landlords: update notifications targeted to them specifically
-            updated_count = Notification.query.filter_by(
-                targetuserid=user_id
-                # Add is_read condition when implemented: , is_read=False
+            updated_count = Notification.query.filter(
+                ((Notification.targetuserrole == 'Owner') | 
+                 (Notification.targetuserid == user_id)) &
+                (Notification.is_read == False)
             ).update({
-                # 'is_read': True
-                # Add update logic when is_read field is implemented
+                'is_read': True
             })
         else:
             # For tenants: update all their notifications
-            updated_count = Notification.query.filter_by(
-                targetuserid=user_id
-                # Add is_read condition when implemented: , is_read=False
+            updated_count = Notification.query.filter(
+                ((Notification.targetuserrole == 'Tenant') | 
+                 (Notification.targetuserid == user_id)) &
+                (Notification.is_read == False)
             ).update({
-                # 'is_read': True
-                # Add update logic when is_read field is implemented
+                'is_read': True
             })
         
         db.session.commit()
@@ -278,8 +287,8 @@ def send_notification():
                 targetuserid=None,  # No specific user for group notifications
                 isgroupnotification=True,
                 recipientcount=recipient_count,
-                createdbyuserid=created_by_user_id
-                # ✅ creationdate is automatically handled by the model
+                createdbyuserid=created_by_user_id,
+                is_read=False  # ✅ NEW: Default to unread
             )
             
             db.session.add(new_notification)
@@ -309,8 +318,8 @@ def send_notification():
                 targetuserid=target_user_id,
                 isgroupnotification=False,
                 recipientcount=1,
-                createdbyuserid=created_by_user_id
-                # ✅ creationdate is automatically handled by the model
+                createdbyuserid=created_by_user_id,
+                is_read=False  # ✅ NEW: Default to unread
             )
             
             db.session.add(new_notification)
@@ -382,7 +391,9 @@ def get_notification_types_stats():
             'group_notifications': Notification.query.filter_by(isgroupnotification=True).count(),
             'individual_notifications': Notification.query.filter_by(isgroupnotification=False).count(),
             'tenant_notifications': Notification.query.filter_by(targetuserrole='Tenant').count(),
-            'owner_notifications': Notification.query.filter_by(targetuserrole='Owner').count()
+            'owner_notifications': Notification.query.filter_by(targetuserrole='Owner').count(),
+            'unread_notifications': Notification.query.filter_by(is_read=False).count(),  # ✅ NEW
+            'read_notifications': Notification.query.filter_by(is_read=True).count()  # ✅ NEW
         }
         
         return jsonify({
@@ -440,8 +451,8 @@ def bulk_send_notifications():
                             targetuserid=user.userid,
                             isgroupnotification=False,
                             recipientcount=1,
-                            createdbyuserid=created_by_user_id
-                            # ✅ creationdate is automatically handled by the model
+                            createdbyuserid=created_by_user_id,
+                            is_read=False  # ✅ NEW: Default to unread
                         )
                         db.session.add(new_notification)
                         successful_sends += 1

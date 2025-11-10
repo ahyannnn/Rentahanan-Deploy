@@ -17,7 +17,9 @@ class Notification(db.Model):
     isgroupnotification = db.Column(db.Boolean, default=False)
     recipientcount = db.Column(db.Integer, default=1)
     createdbyuserid = db.Column(db.Integer, nullable=True)
-    creationdate = db.Column(db.DateTime, default=get_ph_time)  # ✅ Use our PH time function
+    creationdate = db.Column(db.DateTime, default=get_ph_time)
+    # ✅ ADD THIS NEW FIELD
+    is_read = db.Column(db.Boolean, default=False)  # False = unread, True = read
 
     def to_dict(self):
         return {
@@ -29,5 +31,7 @@ class Notification(db.Model):
             "isgroupnotification": self.isgroupnotification,
             "recipientcount": self.recipientcount,
             "createdbyuserid": self.createdbyuserid,
-            "creationdate": self.creationdate.isoformat() if self.creationdate else None
+            "creationdate": self.creationdate.isoformat() if self.creationdate else None,
+            # ✅ ADD THIS TO THE DICTIONARY
+            "is_read": self.is_read
         }
