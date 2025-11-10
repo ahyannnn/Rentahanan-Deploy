@@ -1306,8 +1306,8 @@ body {
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
+/* Dark mode support for mobile only */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
   .loading-brand-text {
     color: #f0f0f0;
   }
