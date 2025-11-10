@@ -63,6 +63,14 @@ const MyBills = () => {
     fetchBills();
   }, [tenantId]);
 
+  // ✅ NEW: Function to handle Pay Now button click
+  const handlePayNow = (billId) => {
+    // Clear any previously selected bills
+    setSelectedBills([billId]);
+    // Open the payment modal
+    setIsModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="loading-container-Tenant-Bills">
@@ -331,7 +339,10 @@ const MyBills = () => {
                     </td>
                     <td className="table-data-Tenant-Bills action-cell-Tenant-Bills">
                       {isUnpaid ? (
-                        <button className="action-btn-Tenant-Bills pay-now-btn-Tenant-Bills">
+                        <button 
+                          className="action-btn-Tenant-Bills pay-now-btn-Tenant-Bills"
+                          onClick={() => handlePayNow(bill.billid)} // ✅ UPDATED: Added onClick handler
+                        >
                           Pay Now
                         </button>
                       ) : isForValidation ? (
@@ -421,7 +432,10 @@ const MyBills = () => {
                 </div>
                 <div className="mobile-bill-footer-Tenant-Bills">
                   {isUnpaid ? (
-                    <button className="mobile-action-btn-Tenant-Bills pay-now-btn-Tenant-Bills">
+                    <button 
+                      className="mobile-action-btn-Tenant-Bills pay-now-btn-Tenant-Bills"
+                      onClick={() => handlePayNow(bill.billid)} // ✅ UPDATED: Added onClick handler
+                    >
                       <CreditCard size={16} />
                       Pay Now
                     </button>

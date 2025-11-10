@@ -10,7 +10,8 @@ import {
   Smartphone,
   Banknote,
   Building,
-  Download
+  Download,
+  Eye
 } from "lucide-react";
 import "../../styles/tenant/Payment.css";
 
@@ -25,19 +26,6 @@ const Payment = () => {
 
     // ✅ ADD API BASE
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
-
-    // ✅ ADD: Get image URL function for receipts
-    const getImageUrl = (imagePath, folder = 'receipts') => {
-        if (!imagePath) return null;
-        
-        // If it's already a full URL (Cloudinary), use it directly
-        if (imagePath.startsWith('http')) {
-            return imagePath;
-        }
-        
-        // Otherwise, construct the local path
-        return `${API_BASE}/uploads/${folder}/${imagePath}`;
-    };
 
     const itemsPerPage = 6;
     const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -68,6 +56,35 @@ const Payment = () => {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // ✅ UPDATED: Consistent receipt viewing like Transactions component
+    const handleViewReceipt = async (billId) => {
+        try {
+            // ✅ UPDATED API ENDPOINT - Same as Transactions component
+            const response = await fetch(`${API_BASE}/api/transactions/receipt/${billId}`);
+            const receiptData = await response.json();
+
+            if (response.ok && receiptData.receipt_url) {
+                // ✅ Use receipt_url directly like Transactions component
+                window.open(receiptData.receipt_url, '_blank');
+            } else {
+                // Fallback: Show payment details if no receipt
+                const payment = paymentHistory.find(p => p.id === billId || p.billid === billId);
+                if (payment) {
+                    alert(`Payment Details:\n- ID: #${payment.id || payment.billid}\n- Amount: ₱${payment.amount}\n- Date: ${new Date(payment.date).toLocaleDateString()}\n- Status: ${payment.status}\n\nNo digital receipt available.`);
+                } else {
+                    alert(`No receipt available for this payment.`);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching receipt:', error);
+            // Fallback to showing basic payment info
+            const payment = paymentHistory.find(p => p.id === billId || p.billid === billId);
+            if (payment) {
+                alert(`Payment Details:\n- ID: #${payment.id || payment.billid}\n- Amount: ₱${payment.amount}\n- Date: ${new Date(payment.date).toLocaleDateString()}\n- Status: ${payment.status}\n\nReceipt is not available.`);
+            }
         }
     };
 
@@ -157,36 +174,6 @@ const Payment = () => {
             case "bank transfer": return <Building size={16} className="payment-method-icon-tenant-p" />;
             case "credit card": return <CreditCard size={16} className="payment-method-icon-tenant-p" />;
             default: return <CreditCard size={16} className="payment-method-icon-tenant-p" />;
-        }
-    };
-
-    // ✅ FIXED: Function to handle viewing receipt with proper URL handling
-    const handleViewReceipt = async (payment) => {
-        try {
-            // First try to get receipt from the payment data
-            if (payment.receipt_url) {
-                const receiptUrl = getImageUrl(payment.receipt_url, 'receipts');
-                window.open(receiptUrl, "_blank");
-                return;
-            }
-
-            // If no receipt_url in payment data, try to fetch it from API
-            // ✅ UPDATED API ENDPOINT
-            const response = await fetch(`${API_BASE}/api/transactions/receipt/${payment.id || payment.billid}`);
-            const receiptData = await response.json();
-
-            if (response.ok && receiptData.receiptUrl) {
-                const receiptUrl = getImageUrl(receiptData.receiptUrl, 'receipts');
-                window.open(receiptUrl, "_blank");
-            } else {
-                // If no receipt available, show payment details
-                console.log("No receipt available for payment:", payment);
-                alert(`Receipt for Payment #${payment.id || payment.billid}\nAmount: ₱${payment.amount}\nDate: ${new Date(payment.date).toLocaleDateString()}\n\nNo digital receipt available.`);
-            }
-        } catch (error) {
-            console.error("Error fetching receipt:", error);
-            // Fallback to showing basic payment info
-            alert(`Payment Details:\n- ID: #${payment.id || payment.billid}\n- Amount: ₱${payment.amount}\n- Date: ${new Date(payment.date).toLocaleDateString()}\n- Status: ${payment.status}\n\nReceipt is not available.`);
         }
     };
 
@@ -291,7 +278,7 @@ const Payment = () => {
                                 <div className="payment-card-content-tenant-p">
                                     <div className="payment-main-info-tenant-p">
                                         <h3 className="payment-amount-tenant-p">
-                                            {payment.amount?.toLocaleString() || '0.00'}
+                                            ₱{payment.amount?.toLocaleString() || '0.00'}
                                         </h3>
                                         <p className="payment-description-tenant-p">
                                             {payment.description || `Payment for ${payment.billType}`}
@@ -337,11 +324,13 @@ const Payment = () => {
                                         <span className="id-value-tenant-p">#{payment.id || payment.billid}</span>
                                     </div>
                                     <div className="payment-actions-tenant-p">
+                                        {/* ✅ UPDATED: Consistent with Transactions component */}
                                         <button 
                                             className="view-receipt-btn-tenant-p"
-                                            onClick={() => handleViewReceipt(payment)}
+                                            onClick={() => handleViewReceipt(payment.id || payment.billid)}
+                                            title="View payment receipt"
                                         >
-                                            <Download size={16} className="receipt-icon-tenant-p" />
+                                            <Eye size={16} className="receipt-icon-tenant-p" />
                                             <span className="receipt-text-tenant-p">View Receipt</span>
                                         </button>
                                     </div>
