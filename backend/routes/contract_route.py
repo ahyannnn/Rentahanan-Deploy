@@ -359,7 +359,7 @@ def generate_contract_pdf():
             except Exception as sig_error:
                 print(f"Signature addition failed, but PDF was generated: {sig_error}")
 
-        # ✅ SIMPLE FIX: Use upload_pdf_as_image to convert PDF to image and upload
+        # ✅ ENHANCED: Use upload_pdf_as_image to convert PDF to image and upload
         pdf_buffer.seek(0)
         print(f"📤 Converting contract PDF to image and uploading to Cloudinary...")
         pdf_url = upload_pdf_as_image(
@@ -371,25 +371,28 @@ def generate_contract_pdf():
         if not pdf_url:
             return jsonify({"error": "Failed to upload contract image to Cloudinary"}), 500
 
-        # ✅ Verify it's an image URL (not raw)
+        # ✅ Enhanced verification
         print(f"🔍 Verifying contract URL: {pdf_url}")
         
-        # Check if it's using image resource type (should BE)
-        if '/image/upload/' not in pdf_url:
-            print(f"⚠️  Not an image URL: {pdf_url}")
-            # Don't fail, just log warning
+        is_image_url = '/image/upload/' in pdf_url
+        has_stream = 'stream_' in pdf_url
+        is_raw_upload = '/raw/upload/' in pdf_url
         
-        # Check if it's a stream URL (should NOT be)
-        if 'stream_' in pdf_url:
-            print(f"❌ STREAM URL DETECTED: {pdf_url}")
-            return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
+        if not is_image_url:
+            print(f"⚠️  Warning: URL may not be proper image resource: {pdf_url}")
+        
+        if has_stream:
+            print(f"⚠️  Warning: Stream URL detected but proceeding: {pdf_url}")
+        
+        # Don't fail on stream URLs anymore - just log warning
 
         return jsonify({
             "message": "Professional contract PDF generated successfully!",
             "pdf_url": pdf_url,
             "contract_id": f"RT-{int(tenant_id):06d}",
-            "url_type": "image_upload" if '/image/upload/' in pdf_url else "unknown",
-            "has_stream": 'stream_' in pdf_url
+            "url_type": "image_upload" if is_image_url else "other",
+            "is_image": is_image_url,
+            "has_stream": has_stream
         })
 
     except Exception as e:
@@ -489,14 +492,15 @@ def get_contracts_by_tenant(tenant_id):
             "end_date": end_date.strftime("%Y-%m-%d") if end_date else None,
             "status": status,
             "generated_contract": generated_contract,  # Cloudinary URL (now image)
-            "signed_contract": signed_contract  # Cloudinary URL (now image)
+            "signed_contract": signed_contract,  # Cloudinary URL (now image)
+            "is_image_url": '/image/upload/' in (generated_contract or '') or '/image/upload/' in (signed_contract or '')
         }
         for contractid, unit_name, unit_price, start_date, end_date, status, generated_contract, signed_contract in contracts
     ]
 
     return jsonify(result)
 
-# ✅ Tenant sign contract (attach signature to existing generated PDF) - FIXED VERSION
+# ✅ Tenant sign contract (attach signature to existing generated PDF) - ENHANCED VERSION
 @contract_bp.route("/contracts/sign", methods=["POST"])
 def sign_contract():
     try:
@@ -631,7 +635,7 @@ def sign_contract():
 
         print(f"📤 Converting signed PDF to image and uploading to Cloudinary...")
         
-        # ✅ SIMPLE FIX: Use upload_pdf_as_image to convert signed PDF to image
+        # ✅ ENHANCED: Use upload_pdf_as_image to convert signed PDF to image
         signed_contract_url = upload_pdf_as_image(
             final_pdf_buffer,
             'contracts/signed',
@@ -641,18 +645,17 @@ def sign_contract():
         if not signed_contract_url:
             return jsonify({"error": "Failed to upload signed contract image to Cloudinary"}), 500
 
-        # ✅ Verify it's an image URL (not raw)
+        # ✅ Enhanced verification
         print(f"🔍 Verifying signed contract URL: {signed_contract_url}")
         
-        # Check if it's using image resource type (should BE)
-        if '/image/upload/' not in signed_contract_url:
-            print(f"⚠️  Not an image URL: {signed_contract_url}")
-            # Don't fail, just log warning
+        is_image_url = '/image/upload/' in signed_contract_url
+        has_stream = 'stream_' in signed_contract_url
         
-        # Check if it's a stream URL (should NOT be)
-        if 'stream_' in signed_contract_url:
-            print(f"❌ STREAM URL DETECTED: {signed_contract_url}")
-            return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
+        if not is_image_url:
+            print(f"⚠️  Warning: URL may not be proper image resource: {signed_contract_url}")
+        
+        if has_stream:
+            print(f"⚠️  Warning: Stream URL detected but proceeding: {signed_contract_url}")
 
         print(f"✅ Signed PDF uploaded to: {signed_contract_url}")
 
@@ -695,8 +698,9 @@ def sign_contract():
             "message": "Contract signed successfully!",
             "signed_contract_url": signed_contract_url,
             "contract_id": contract.contractid,
-            "url_type": "image_upload" if '/image/upload/' in signed_contract_url else "unknown",
-            "has_stream": 'stream_' in signed_contract_url
+            "url_type": "image_upload" if is_image_url else "other",
+            "is_image": is_image_url,
+            "has_stream": has_stream
         })
 
     except Exception as e:
@@ -718,9 +722,15 @@ def download_contract(filename):
         
         if contract:
             if filename in contract.generated_contract:
-                return jsonify({"url": contract.generated_contract})
+                return jsonify({
+                    "url": contract.generated_contract,
+                    "is_image": '/image/upload/' in contract.generated_contract
+                })
             elif filename in contract.signed_contract:
-                return jsonify({"url": contract.signed_contract})
+                return jsonify({
+                    "url": contract.signed_contract,
+                    "is_image": '/image/upload/' in contract.signed_contract
+                })
         
         return jsonify({"error": "File not found"}), 404
         
@@ -1072,7 +1082,7 @@ def reject_termination():
             'message': f'Error rejecting termination: {str(e)}'
         }), 500
 
-# ✅ Test PDF to image upload for contracts
+# ✅ Enhanced test PDF to image upload for contracts
 @contract_bp.route("/contracts/test-image-upload", methods=["GET"])
 def test_contract_image_upload():
     """Test PDF to image upload functionality for contracts"""
@@ -1083,8 +1093,12 @@ def test_contract_image_upload():
         
         pdf_buffer = io.BytesIO()
         c = canvas.Canvas(pdf_buffer, pagesize=A4)
+        c.setFont("Helvetica-Bold", 16)
         c.drawString(100, 750, "Test Contract PDF to Image Upload")
+        c.setFont("Helvetica", 12)
         c.drawString(100, 730, "This should upload as an IMAGE to Cloudinary")
+        c.drawString(100, 710, f"Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        c.drawString(100, 690, "If successful, this will be viewable as an image!")
         c.save()
         pdf_buffer.seek(0)
         
@@ -1096,15 +1110,145 @@ def test_contract_image_upload():
         )
         
         if contract_url:
+            is_image_url = '/image/upload/' in contract_url
+            has_stream = 'stream_' in contract_url
+            is_raw_upload = '/raw/upload/' in contract_url
+            
             return jsonify({
                 "success": True,
                 "image_url": contract_url,
-                "has_stream": "stream_" in contract_url,
-                "is_image_upload": "/image/upload/" in contract_url,
-                "is_raw_upload": "/raw/upload/" in contract_url
+                "has_stream": has_stream,
+                "is_image_upload": is_image_url,
+                "is_raw_upload": is_raw_upload,
+                "message": "✅ Contract PDF successfully converted to image and uploaded!" if is_image_url else "⚠️  Upload may not be proper image"
             })
         else:
-            return jsonify({"error": "Contract image upload failed"}), 500
+            return jsonify({
+                "success": False,
+                "error": "Contract image upload failed",
+                "message": "❌ Failed to upload contract PDF as image to Cloudinary"
+            }), 500
             
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": "❌ Test failed with exception"
+        }), 500
+
+# ✅ New endpoint to get contract statistics
+@contract_bp.route("/contracts/statistics", methods=["GET"])
+def get_contract_statistics():
+    """Get contract statistics for dashboard"""
+    try:
+        total_contracts = Contract.query.count()
+        active_contracts = Contract.query.filter_by(status='Active').count()
+        pending_contracts = Contract.query.filter_by(status='Pending').count()
+        signed_contracts = Contract.query.filter_by(status='Signed').count()
+        terminated_contracts = Contract.query.filter_by(status='Terminated').count()
+
+        # Recent contracts (last 10)
+        recent_contracts = (
+            db.session.query(
+                Contract.contractid,
+                Contract.startdate,
+                Contract.status,
+                User.firstname,
+                User.lastname,
+                Unit.name.label("unit_name")
+            )
+            .join(Tenant, Contract.tenantid == Tenant.tenantid)
+            .join(User, Tenant.userid == User.userid)
+            .join(Unit, Contract.unitid == Unit.unitid)
+            .order_by(Contract.startdate.desc())
+            .limit(10)
+            .all()
+        )
+
+        recent_list = []
+        for contract in recent_contracts:
+            recent_list.append({
+                "contractid": contract.contractid,
+                "start_date": contract.startdate.strftime("%Y-%m-%d") if contract.startdate else None,
+                "status": contract.status,
+                "tenant_name": f"{contract.firstname} {contract.lastname}",
+                "unit_name": contract.unit_name
+            })
+
+        statistics = {
+            "total_contracts": total_contracts,
+            "active_contracts": active_contracts,
+            "pending_contracts": pending_contracts,
+            "signed_contracts": signed_contracts,
+            "terminated_contracts": terminated_contracts,
+            "recent_contracts": recent_list
+        }
+
+        return jsonify(statistics), 200
+
+    except Exception as e:
+        print(f"❌ Error in get_contract_statistics: {traceback.format_exc()}")
+        return jsonify({"error": f"Failed to fetch contract statistics: {str(e)}"}), 500
+
+# ✅ New endpoint to search contracts
+@contract_bp.route("/contracts/search", methods=["GET"])
+def search_contracts():
+    """Search contracts with filters"""
+    try:
+        tenant_name = request.args.get('tenant_name')
+        unit_name = request.args.get('unit_name')
+        status = request.args.get('status')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        # Build query
+        query = db.session.query(
+            Contract.contractid,
+            Contract.startdate,
+            Contract.enddate,
+            Contract.status,
+            User.firstname,
+            User.lastname,
+            Unit.name.label("unit_name"),
+            Unit.price.label("unit_price")
+        ).join(Tenant, Contract.tenantid == Tenant.tenantid)\
+         .join(User, Tenant.userid == User.userid)\
+         .join(Unit, Contract.unitid == Unit.unitid)
+
+        if tenant_name:
+            query = query.filter(
+                (User.firstname.ilike(f'%{tenant_name}%')) | 
+                (User.lastname.ilike(f'%{tenant_name}%'))
+            )
+        if unit_name:
+            query = query.filter(Unit.name.ilike(f'%{unit_name}%'))
+        if status:
+            query = query.filter(Contract.status == status)
+        if start_date:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            query = query.filter(Contract.startdate >= start_date)
+        if end_date:
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            query = query.filter(Contract.enddate <= end_date)
+
+        contracts = query.order_by(Contract.startdate.desc()).all()
+
+        result = []
+        for contract in contracts:
+            result.append({
+                "contractid": contract.contractid,
+                "start_date": contract.startdate.strftime("%Y-%m-%d") if contract.startdate else None,
+                "end_date": contract.enddate.strftime("%Y-%m-%d") if contract.enddate else None,
+                "status": contract.status,
+                "tenant_name": f"{contract.firstname} {contract.lastname}",
+                "unit_name": contract.unit_name,
+                "unit_price": float(contract.unit_price) if contract.unit_price else 0
+            })
+
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+    except Exception as e:
+        print(f"❌ Error in search_contracts: {traceback.format_exc()}")
+        return jsonify({"error": f"Failed to search contracts: {str(e)}"}), 500

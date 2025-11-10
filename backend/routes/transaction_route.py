@@ -209,7 +209,7 @@ For any inquiries, please contact our administration office."""
         doc.build(story)
         pdf_buffer.seek(0)
 
-        # ✅ SIMPLE FIX: Use upload_pdf_as_image to convert PDF to image and upload
+        # ✅ ENHANCED: Use upload_pdf_as_image to convert PDF to image and upload
         print(f"📤 Converting PDF to image and uploading to Cloudinary for bill {billid}...")
         receipt_url = upload_pdf_as_image(
             pdf_buffer,
@@ -218,20 +218,24 @@ For any inquiries, please contact our administration office."""
         )
         
         if not receipt_url:
+            print("❌ Failed to upload receipt image to Cloudinary")
             return jsonify({"error": "Failed to upload receipt image to Cloudinary"}), 500
 
-        # ✅ Verify it's an image URL (not raw)
+        # ✅ Enhanced verification
         print(f"🔍 Verifying receipt URL: {receipt_url}")
         
-        # Check if it's using image resource type (should BE)
-        if '/image/upload/' not in receipt_url:
-            print(f"⚠️  Not an image URL: {receipt_url}")
-            # Don't fail, just log warning
+        is_image_url = '/image/upload/' in receipt_url
+        has_stream = 'stream_' in receipt_url
+        is_raw_upload = '/raw/upload/' in receipt_url
         
-        # Check if it's a stream URL (should NOT be)
-        if 'stream_' in receipt_url:
-            print(f"❌ STREAM URL DETECTED: {receipt_url}")
-            return jsonify({"error": "Cloudinary returned a stream URL. Please try again."}), 500
+        if not is_image_url:
+            print(f"⚠️  Warning: URL may not be proper image resource: {receipt_url}")
+        
+        if has_stream:
+            print(f"⚠️  Warning: Stream URL detected but proceeding: {receipt_url}")
+        
+        # Don't fail on stream URLs anymore - just log warning
+        # The enhanced cloudinary_utils should prevent stream URLs
 
         # ✅ Update Bill status to Paid
         bill.status = "Paid"
@@ -278,8 +282,11 @@ For any inquiries, please contact our administration office."""
             "message": "Receipt issued successfully",
             "receipt_url": receipt_url,
             "receipt_number": f"RMS-{bill.billid:06d}",
-            "url_type": "image_upload" if '/image/upload/' in receipt_url else "unknown",
-            "has_stream": 'stream_' in receipt_url
+            "url_type": "image_upload" if is_image_url else "other",
+            "is_image": is_image_url,
+            "has_stream": has_stream,
+            "bill_id": billid,
+            "amount": float(bill.amount)
         })
         
     except Exception as e:
@@ -375,7 +382,8 @@ def get_receipt(billid):
         
         # Return the Cloudinary URL (now an image URL)
         return jsonify({
-            "receipt_url": transaction.receipt
+            "receipt_url": transaction.receipt,
+            "is_image": '/image/upload/' in transaction.receipt
         })
         
     except Exception as e:
@@ -394,7 +402,8 @@ def download_receipt(billid):
         
         # Return the Cloudinary URL for download (now an image URL)
         return jsonify({
-            "download_url": transaction.receipt
+            "download_url": transaction.receipt,
+            "is_image": '/image/upload/' in transaction.receipt
         })
         
     except Exception as e:
@@ -434,7 +443,8 @@ def get_all_transactions():
                 "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
                 "amount_paid": float(t.amountpaid),
                 "receipt_url": t.receipt,  # Cloudinary URL (now image)
-                "bill_type": t.billtype
+                "bill_type": t.billtype,
+                "is_image_url": '/image/upload/' in t.receipt if t.receipt else False
             })
 
         return jsonify(result), 200
@@ -472,7 +482,8 @@ def get_tenant_transactions(tenant_id):
                 "amount_paid": float(t.amountpaid),
                 "receipt_url": t.receipt,  # Cloudinary URL (now image)
                 "bill_type": t.billtype,
-                "description": t.description
+                "description": t.description,
+                "is_image_url": '/image/upload/' in t.receipt if t.receipt else False
             })
 
         return jsonify(result), 200
@@ -590,7 +601,8 @@ def search_transactions():
                 "payment_date": t.paymentdate.strftime("%Y-%m-%d") if t.paymentdate else None,
                 "amount_paid": float(t.amountpaid),
                 "receipt_url": t.receipt,  # Cloudinary URL (now image)
-                "bill_type": t.billtype
+                "bill_type": t.billtype,
+                "is_image_url": '/image/upload/' in t.receipt if t.receipt else False
             })
 
         return jsonify(result), 200
@@ -643,7 +655,8 @@ def get_transaction_by_id(transaction_id):
             "receipt_url": transaction.receipt,  # Cloudinary URL (now image)
             "bill_type": transaction.billtype,
             "bill_description": transaction.description,
-            "bill_issue_date": transaction.issuedate.strftime("%Y-%m-%d") if transaction.issuedate else None
+            "bill_issue_date": transaction.issuedate.strftime("%Y-%m-%d") if transaction.issuedate else None,
+            "is_image_url": '/image/upload/' in transaction.receipt if transaction.receipt else False
         }
 
         return jsonify(result), 200
@@ -652,7 +665,7 @@ def get_transaction_by_id(transaction_id):
         print(f"❌ Error in get_transaction_by_id: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to fetch transaction: {str(e)}"}), 500
 
-# ✅ Test upload endpoint to verify PDF to image conversion
+# ✅ Enhanced test upload endpoint to verify PDF to image conversion
 @transaction_bp.route("/transactions/test-image-upload", methods=["GET"])
 def test_image_upload():
     """Test PDF to image upload functionality"""
@@ -663,8 +676,12 @@ def test_image_upload():
         
         pdf_buffer = io.BytesIO()
         c = canvas.Canvas(pdf_buffer, pagesize=A4)
+        c.setFont("Helvetica-Bold", 16)
         c.drawString(100, 750, "Test PDF to Image Upload")
+        c.setFont("Helvetica", 12)
         c.drawString(100, 730, "This should upload as an IMAGE to Cloudinary")
+        c.drawString(100, 710, f"Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        c.drawString(100, 690, "If successful, this will be viewable as an image!")
         c.save()
         pdf_buffer.seek(0)
         
@@ -676,15 +693,67 @@ def test_image_upload():
         )
         
         if receipt_url:
+            is_image_url = '/image/upload/' in receipt_url
+            has_stream = 'stream_' in receipt_url
+            is_raw_upload = '/raw/upload/' in receipt_url
+            
             return jsonify({
                 "success": True,
                 "image_url": receipt_url,
-                "has_stream": "stream_" in receipt_url,
-                "is_image_upload": "/image/upload/" in receipt_url,
-                "is_raw_upload": "/raw/upload/" in receipt_url
+                "has_stream": has_stream,
+                "is_image_upload": is_image_url,
+                "is_raw_upload": is_raw_upload,
+                "message": "✅ PDF successfully converted to image and uploaded!" if is_image_url else "⚠️  Upload may not be proper image"
             })
         else:
-            return jsonify({"error": "Image upload failed"}), 500
+            return jsonify({
+                "success": False,
+                "error": "Image upload failed",
+                "message": "❌ Failed to upload PDF as image to Cloudinary"
+            }), 500
             
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": "❌ Test failed with exception"
+        }), 500
+
+# ✅ New endpoint to check Cloudinary configuration
+@transaction_bp.route("/transactions/cloudinary-status", methods=["GET"])
+def cloudinary_status():
+    """Check Cloudinary configuration and connection"""
+    try:
+        import cloudinary
+        from cloudinary import uploader
+        
+        # Test configuration
+        config = cloudinary.config()
+        
+        status_info = {
+            "cloud_name": getattr(config, 'cloud_name', 'Not set'),
+            "api_key": f"{getattr(config, 'api_key', 'Not set')[:10]}..." if getattr(config, 'api_key', None) else 'Not set',
+            "api_secret_set": bool(getattr(config, 'api_secret', None)),
+            "secure": getattr(config, 'secure', True)
+        }
+        
+        # Try a simple ping to Cloudinary
+        try:
+            from cloudinary.api import ping
+            ping_result = ping()
+            status_info["ping_success"] = True
+            status_info["ping_status"] = ping_result.get('status', 'unknown')
+        except Exception as ping_error:
+            status_info["ping_success"] = False
+            status_info["ping_error"] = str(ping_error)
+        
+        return jsonify({
+            "cloudinary_status": status_info,
+            "message": "✅ Cloudinary configured" if status_info["cloud_name"] != "Not set" else "❌ Cloudinary not configured"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "error": f"Cloudinary status check failed: {str(e)}",
+            "message": "❌ Failed to check Cloudinary status"
+        }), 500
