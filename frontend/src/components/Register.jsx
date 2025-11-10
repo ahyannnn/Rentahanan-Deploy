@@ -5,6 +5,7 @@ import "./../styles/Register.css";
 const Register = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [formData, setFormData] = useState({
     firstname: "",
     middlename: "",
@@ -29,6 +30,30 @@ const Register = () => {
   // ✅ ADD API BASE
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
+  // ✅ CHECK EMAIL AVAILABILITY FUNCTION
+  const checkEmailExists = async (email) => {
+    if (!email || !validateEmail(email)) {
+      return false; // Don't check if email is invalid
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.exists;
+      }
+      return false; // If API fails, don't block user
+    } catch (error) {
+      console.error("Error checking email:", error);
+      return false; // Don't block on network errors
+    }
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (errors[e.target.name]) {
@@ -39,7 +64,7 @@ const Register = () => {
     }
   };
 
-  // --- VALIDATION FUNCTIONS (keep your existing ones) ---
+  // --- VALIDATION FUNCTIONS ---
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -82,13 +107,22 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateStep2 = () => {
+  const validateStep2 = async () => {
     let newErrors = {};
     
     if (!formData.email.trim()) {
       newErrors.email = "Email address is required.";
     } else if (!validateEmail(formData.email)) {
       newErrors.email = "Please enter a valid email address.";
+    } else {
+      // Check if email already exists
+      setCheckingEmail(true);
+      const emailExists = await checkEmailExists(formData.email);
+      setCheckingEmail(false);
+      
+      if (emailExists) {
+        newErrors.email = "This email is already registered. Please use a different email or login.";
+      }
     }
     
     if (!formData.phone.trim()) {
@@ -134,12 +168,14 @@ const Register = () => {
   };
 
   // --- NAVIGATION HANDLERS ---
-  const handleNext = () => {
+  const handleNext = async () => {
     let isValid = false;
     if (step === 1) {
       isValid = validateStep1();
     } else if (step === 2) {
-      isValid = validateStep2();
+      setIsLoading(true);
+      isValid = await validateStep2();
+      setIsLoading(false);
     }
 
     if (isValid) {
@@ -149,10 +185,9 @@ const Register = () => {
 
   const handlePrev = () => setStep(step - 1);
 
-  // NEW: Send welcome email after successful registration (no verification needed)
+  // Send welcome email after successful registration
   const sendWelcomeEmail = async (email, firstName) => {
     try {
-      // ✅ UPDATED API ENDPOINT
       const res = await fetch(`${API_BASE}/api/welcome/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,7 +219,6 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      // ✅ UPDATED API ENDPOINT
       const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -327,9 +361,11 @@ const Register = () => {
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="e.g. juan.delacruz@gmail.com"
+                        disabled={isLoading || checkingEmail}
                       />
                       <div className="error-email-Register">
-                        {errors.email && <p className="error-text-Register">{errors.email}</p>}
+                        {checkingEmail && <p className="loading-text-Register">Checking email availability...</p>}
+                        {errors.email && !checkingEmail && <p className="error-text-Register">{errors.email}</p>}
                       </div>
                     </div>
 
@@ -465,7 +501,7 @@ const Register = () => {
                         type="button"
                         onClick={handlePrev}
                         className="btn-Register secondary-Register"
-                        disabled={isLoading}
+                        disabled={isLoading || checkingEmail}
                       >
                         Back
                       </button>
@@ -475,9 +511,9 @@ const Register = () => {
                         type="button" 
                         onClick={handleNext} 
                         className="btn-Register"
-                        disabled={isLoading}
+                        disabled={isLoading || checkingEmail}
                       >
-                        Next
+                        {isLoading ? "Checking..." : "Next"}
                       </button>
                     )}
                     {step === 3 && (
