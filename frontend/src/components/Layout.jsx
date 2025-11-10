@@ -66,20 +66,20 @@ const Layout = () => {
     return `${API_BASE}/uploads/${folder}/${imagePath}`;
   };
 
-  // 🔥 AUTO-REFRESH: 1-second interval for notifications
+  // 🔥 AUTO-REFRESH: 1-second interval for NOTIFICATIONS ONLY
   useEffect(() => {
     const intervalId = setInterval(() => {
-      fetchNotifications();
+      fetchNotifications(); // Only fetch notifications, not profile
     }, 1000); // 1 SECOND
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, []); // Empty dependency array - only run once on mount
 
-  // 🔥 AUTO-REFRESH: When tab becomes active
+  // 🔥 AUTO-REFRESH: When tab becomes active - NOTIFICATIONS ONLY
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        fetchNotifications();
+        fetchNotifications(); // Only fetch notifications
       }
     };
 
@@ -90,10 +90,10 @@ const Layout = () => {
     };
   }, []);
 
-  // 🔥 AUTO-REFRESH: When page gets focus
+  // 🔥 AUTO-REFRESH: When page gets focus - NOTIFICATIONS ONLY
   useEffect(() => {
     const handleFocus = () => {
-      fetchNotifications();
+      fetchNotifications(); // Only fetch notifications
     };
 
     window.addEventListener('focus', handleFocus);
@@ -186,8 +186,8 @@ const Layout = () => {
         if (JSON.stringify(newNotifications) !== JSON.stringify(notifications)) {
           setNotifications(newNotifications);
 
-          // Calculate unread count - treat all as unread since no is_read field yet
-          const unread = newNotifications.length;
+          // ✅ FIXED: Calculate unread count based on is_read field
+          const unread = newNotifications.filter(notif => !notif.is_read).length;
           setUnreadCount(unread);
         }
       } else {
@@ -257,7 +257,7 @@ const Layout = () => {
         // Remove from local state
         setNotifications(prev => prev.filter(notif => notif.notificationid !== notification.notificationid));
         // Update unread count
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        setUnreadCount(prev => Math.max(0, prev - (notification.is_read ? 0 : 1)));
       } else {
         console.error('Failed to delete notification:', data.message);
         alert('Failed to delete notification');
@@ -302,8 +302,10 @@ const Layout = () => {
     setShowAllNotifications(false);
     setActiveNotificationMenu(null);
 
-    // Mark as read
-    markNotificationAsRead(notification.notificationid);
+    // Mark as read only if it's unread
+    if (!notification.is_read) {
+      markNotificationAsRead(notification.notificationid);
+    }
 
     navigateBasedOnNotification(notification);
   };
