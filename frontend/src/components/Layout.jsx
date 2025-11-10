@@ -127,7 +127,7 @@ const Layout = () => {
     }
   };
 
-  // Fetch notifications from API - ✅ UPDATED API BASE with cache busting
+  // Fetch notifications from API - ✅ UPDATED API BASE
   const fetchNotifications = async () => {
     try {
       setNotificationsLoading(true);
@@ -137,8 +137,7 @@ const Layout = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      // 🔥 CACHE BUSTING: Add timestamp to prevent caching
-      const response = await fetch(`${API_BASE}/api/notifications/${userId}?t=${Date.now()}`);
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -147,15 +146,11 @@ const Layout = () => {
       const data = await response.json();
 
       if (data.success) {
-        setNotifications(data.notifications || []);
+        const newNotifications = data.notifications || [];
+        setNotifications(newNotifications);
 
-        // Calculate unread count
-        const unread = data.notifications.filter(notif => !notif.is_read).length;
-        setUnreadCount(unread);
-
-        // Log notification types for debugging
-        const groupNotifications = data.notifications.filter(notif => notif.isgroupnotification);
-        const individualNotifications = data.notifications.filter(notif => !notif.isgroupnotification);
+        // ✅ FIXED: All notifications are unread now
+        setUnreadCount(newNotifications.length);
 
       } else {
         console.error("Failed to fetch notifications:", data.message);
@@ -196,9 +191,7 @@ const Layout = () => {
     setShowNotifications(false);
     setShowAllNotifications(false);
 
-    // Mark as read
-    markNotificationAsRead(notification.notificationid);
-
+    // ❌ REMOVED: mark as read functionality
     navigateBasedOnNotification(notification);
   };
 
@@ -235,28 +228,7 @@ const Layout = () => {
     }
   };
 
-  // Mark notification as read - ✅ UPDATED API BASE
-  const markNotificationAsRead = async (notificationId) => {
-    try {
-      const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
-        method: 'PUT',
-      });
-
-      if (response.ok) {
-        // Update local state
-        setNotifications(prev =>
-          prev.map(notif =>
-            notif.notificationid === notificationId
-              ? { ...notif, is_read: true }
-              : notif
-          )
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
+  // ❌ REMOVED: markNotificationAsRead function
 
   // Handle view all notifications
   const handleViewAllNotifications = () => {
@@ -269,9 +241,7 @@ const Layout = () => {
     setShowAllNotifications(false);
     setActiveNotificationMenu(null);
 
-    // Mark as read
-    markNotificationAsRead(notification.notificationid);
-
+    // ❌ REMOVED: mark as read functionality
     navigateBasedOnNotification(notification);
   };
 
@@ -788,17 +758,7 @@ const Layout = () => {
               onClick={handleNotificationsToggle}
             >
               <Bell size={20} color="white" />
-              {/* Three dots indicator for desktop hover */}
-              <div className="notif-dots-indicator-Layout">
-                {unreadCount > 0 && (
-                  <>
-                    <span className="dot-Layout"></span>
-                    <span className="dot-Layout"></span>
-                    <span className="dot-Layout"></span>
-                  </>
-                )}
-              </div>
-              {/* Badge for mobile */}
+              {/* Number badge - ALWAYS SHOW IF THERE ARE NOTIFICATIONS */}
               {unreadCount > 0 && (
                 <div className="notif-badge-Layout">{unreadCount}</div>
               )}
@@ -806,7 +766,7 @@ const Layout = () => {
 
             {showNotifications && (
               <div className="notif-dropdown-Layout">
-                <h4>Notifications {unreadCount > 0 && `(${unreadCount} new)`}</h4>
+                <h4>Notifications {unreadCount > 0 && `(${unreadCount})`}</h4>
                 {notificationsLoading ? (
                   <div className="notif-loading-Layout">Loading notifications...</div>
                 ) : notifications.length === 0 ? (
@@ -817,7 +777,7 @@ const Layout = () => {
                       {displayedNotifications.map((notif) => (
                         <div
                           key={notif.notificationid}
-                          className={`notif-card-Layout ${!notif.is_read ? 'unread-Layout' : ''} ${getNotificationTypeClass(notif)}`}
+                          className={`notif-card-Layout ${getNotificationTypeClass(notif)}`}
                           onClick={() => handleNotificationCardClick(notif)}
                         >
                           <div className="notif-content-Layout">
