@@ -500,7 +500,7 @@ def get_contracts_by_tenant(tenant_id):
 
     return jsonify(result)
 
-# ✅ Tenant sign contract - FIXED VERSION for image-based contracts
+# ✅ Tenant sign contract - FIXED VERSION with better signature placement
 @contract_bp.route("/contracts/sign", methods=["POST"])
 def sign_contract():
     try:
@@ -540,8 +540,8 @@ def sign_contract():
             white_bg.paste(sig_image, mask=sig_image.split()[3])
             sig_image = white_bg
 
-        # Resize signature
-        max_width, max_height = 120, 40
+        # Resize signature to be larger and more visible
+        max_width, max_height = 200, 80  # Increased size for better visibility
         sig_image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
         # ✅ Download the contract image from Cloudinary
@@ -570,41 +570,13 @@ def sign_contract():
         # ✅ Create a new image with signature overlay
         signed_image = contract_image.copy()
         
-        # Position for tenant signature (bottom left)
-        signature_position = (100, signed_image.height - 150)  # Adjust position as needed
+        # ✅ Position for tenant signature - CENTERED and at proper height
+        # Calculate position to center the signature horizontally
+        signature_x = (signed_image.width - sig_image.width) // 2  # Center horizontally
+        signature_y = signed_image.height - 200  # Position from bottom
         
         # Paste signature onto contract image
-        signed_image.paste(sig_image, signature_position)
-        
-        # ✅ Add signature labels and date using PIL
-        from PIL import ImageDraw, ImageFont
-        
-        draw = ImageDraw.Draw(signed_image)
-        
-        # Try to use a font (fallback to default)
-        try:
-            font = ImageFont.truetype("arial.ttf", 20)
-            small_font = ImageFont.truetype("arial.ttf", 14)
-        except:
-            # Use default font if specific fonts not available
-            try:
-                font = ImageFont.load_default()
-                small_font = ImageFont.load_default()
-            except:
-                font = None
-                small_font = None
-        
-        # Add signature labels
-        label_position = (signature_position[0], signature_position[1] - 25)
-        date_position = (signature_position[0], signature_position[1] - 45)
-        
-        if font:
-            draw.text(label_position, "Tenant Signature", fill=(0, 0, 0), font=small_font)
-            draw.text(date_position, f"Date: {datetime.now().strftime('%Y-%m-%d')}", fill=(0, 0, 0), font=small_font)
-        else:
-            # Fallback without font
-            draw.text(label_position, "Tenant Signature", fill=(0, 0, 0))
-            draw.text(date_position, f"Date: {datetime.now().strftime('%Y-%m-%d')}", fill=(0, 0, 0))
+        signed_image.paste(sig_image, (signature_x, signature_y))
 
         # ✅ Save the signed image to buffer
         signed_image_buffer = io.BytesIO()
