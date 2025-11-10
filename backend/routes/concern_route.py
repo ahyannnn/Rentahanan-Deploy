@@ -171,7 +171,7 @@ def get_concerns(tenantid):
                 "landlordimage": c.landlordimage,  # Now Cloudinary URL
                 "status": c.status,
                 "creationdate": c.creationdate.isoformat() if c.creationdate else None,
-                "resolutiondate": c.resolutiondate.isoformat() if c.resolutiondate else None
+
             }
             result.append(concern_dict)
 
@@ -207,9 +207,7 @@ def update_concern(concernid):
         concern.status = status
         concern.landlordimage = landlordimage_url
         
-        # Update resolution date if resolved
-        if status.lower() == "resolved" and not concern.resolutiondate:
-            concern.resolutiondate = datetime.utcnow()
+        
 
         # ✅ Get tenant info for notification
         tenant = Tenant.query.filter_by(tenantid=concern.tenantid).first()
@@ -261,7 +259,7 @@ def update_concern(concernid):
                 "landlordimage": concern.landlordimage,
                 "status": concern.status,
                 "creationdate": concern.creationdate.isoformat() if concern.creationdate else None,
-                "resolutiondate": concern.resolutiondate.isoformat() if concern.resolutiondate else None
+       
             }
         }), 200
 
@@ -422,7 +420,6 @@ def get_concern_details(concernid):
             "landlordimage": concern.landlordimage,  # Cloudinary URL
             "status": concern.status,
             "creationdate": concern.creationdate.isoformat() if concern.creationdate else None,
-            "resolutiondate": concern.resolutiondate.isoformat() if concern.resolutiondate else None,
             "tenant_name": f"{user.firstname} {user.lastname}" if user else "Unknown",
             "unit_name": unit_name
         }
@@ -518,7 +515,6 @@ def search_concerns():
                 "description": concern.description,
                 "status": concern.status,
                 "creationdate": concern.creationdate.isoformat() if concern.creationdate else None,
-                "resolutiondate": concern.resolutiondate.isoformat() if concern.resolutiondate else None
             })
 
         return jsonify(result), 200
