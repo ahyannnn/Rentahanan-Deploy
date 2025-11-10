@@ -500,7 +500,7 @@ def get_contracts_by_tenant(tenant_id):
 
     return jsonify(result)
 
-# ✅ Tenant sign contract (attach signature to existing generated PDF) - ENHANCED VERSION
+# ✅ Tenant sign contract - FIXED VERSION for image-based contracts
 @contract_bp.route("/contracts/sign", methods=["POST"])
 def sign_contract():
     try:
@@ -525,57 +525,12 @@ def sign_contract():
 
         print(f"📄 Generated contract URL: {contract.generated_contract}")
 
-        # ✅ Download the existing generated PDF from Cloudinary
-        import requests
-        
-        # Use the Cloudinary URL directly
-        pdf_url = contract.generated_contract
-        
-        # Fix URL if it's using image upload instead of raw
-        if "/image/upload/" in pdf_url:
-            # Convert to raw URL format
-            pdf_url = pdf_url.replace("/image/upload/", "/raw/upload/")
-            print(f"🔄 Fixed URL to use raw upload: {pdf_url}")
-        
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        
-        print(f"📥 Downloading PDF from: {pdf_url}")
-        response = requests.get(pdf_url, headers=headers, timeout=30)
-        
-        if response.status_code != 200:
-            print(f"❌ Failed to download PDF. Status: {response.status_code}")
-            # Try the original URL as fallback
-            response = requests.get(contract.generated_contract, headers=headers, timeout=30)
-            if response.status_code != 200:
-                return jsonify({"error": f"Cannot download contract PDF. Status: {response.status_code}"}), 500
-
-        # Check if we got a PDF
-        if not response.content.startswith(b'%PDF'):
-            print(f"❌ Downloaded content is not a PDF")
-            print(f"❌ First bytes: {response.content[:10]}")
-            return jsonify({"error": "Downloaded file is not a valid PDF"}), 500
-
-        print(f"✅ Successfully downloaded PDF ({len(response.content)} bytes)")
-
-        existing_pdf_buffer = io.BytesIO(response.content)
-        
-        # Verify it's a valid PDF
-        try:
-            pdf_reader = PdfReader(existing_pdf_buffer)
-            print(f"✅ Valid PDF with {len(pdf_reader.pages)} pages")
-            existing_pdf_buffer.seek(0)
-        except Exception as e:
-            print(f"❌ Invalid PDF: {e}")
-            return jsonify({"error": "Downloaded file is not a valid PDF"}), 500
-
         # ✅ Process the tenant signature
         img_data = signature_file.read()
         if not img_data:
             return jsonify({"error": "Signature file is empty"}), 400
             
-        signature_file.seek(0)  # Reset file pointer for potential re-use
+        signature_file.seek(0)  # Reset file pointer
         
         sig_image = Image.open(io.BytesIO(img_data))
 
@@ -589,55 +544,80 @@ def sign_contract():
         max_width, max_height = 120, 40
         sig_image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
-        # ✅ Create signature overlay PDF
-        packet = io.BytesIO()
-        can = canvas.Canvas(packet, pagesize=A4)
+        # ✅ Download the contract image from Cloudinary
+        import requests
         
-        # Save processed signature to buffer
-        img_buffer = io.BytesIO()
-        sig_image.save(img_buffer, format="PNG", optimize=True)
-        img_buffer.seek(0)
-        signature_reader = ImageReader(img_buffer)
+        print(f"📥 Downloading contract image from: {contract.generated_contract}")
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        
+        response = requests.get(contract.generated_contract, headers=headers, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to download contract image. Status: {response.status_code}")
+            return jsonify({"error": f"Cannot download contract image. Status: {response.status_code}"}), 500
 
-        # Position for tenant signature (left side)
-        can.drawImage(signature_reader, 100, 65, width=120, height=40, mask='auto')
+        # Load the contract image
+        contract_image = Image.open(io.BytesIO(response.content))
+        
+        # Ensure both images are in RGB mode
+        if contract_image.mode != 'RGB':
+            contract_image = contract_image.convert('RGB')
+        if sig_image.mode != 'RGB':
+            sig_image = sig_image.convert('RGB')
+
+        # ✅ Create a new image with signature overlay
+        signed_image = contract_image.copy()
+        
+        # Position for tenant signature (bottom left)
+        signature_position = (100, signed_image.height - 150)  # Adjust position as needed
+        
+        # Paste signature onto contract image
+        signed_image.paste(sig_image, signature_position)
+        
+        # ✅ Add signature labels and date using PIL
+        from PIL import ImageDraw, ImageFont
+        
+        draw = ImageDraw.Draw(signed_image)
+        
+        # Try to use a font (fallback to default)
+        try:
+            font = ImageFont.truetype("arial.ttf", 20)
+            small_font = ImageFont.truetype("arial.ttf", 14)
+        except:
+            # Use default font if specific fonts not available
+            try:
+                font = ImageFont.load_default()
+                small_font = ImageFont.load_default()
+            except:
+                font = None
+                small_font = None
         
         # Add signature labels
-        can.setFont("Helvetica-Bold", 10)
-        can.drawString(100, 50, "Tenant Signature")
-        can.drawString(430, 50, "Landlord Signature")
+        label_position = (signature_position[0], signature_position[1] - 25)
+        date_position = (signature_position[0], signature_position[1] - 45)
         
-        # Add signing date
-        can.setFont("Helvetica", 9)
-        can.drawString(100, 35, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+        if font:
+            draw.text(label_position, "Tenant Signature", fill=(0, 0, 0), font=small_font)
+            draw.text(date_position, f"Date: {datetime.now().strftime('%Y-%m-%d')}", fill=(0, 0, 0), font=small_font)
+        else:
+            # Fallback without font
+            draw.text(label_position, "Tenant Signature", fill=(0, 0, 0))
+            draw.text(date_position, f"Date: {datetime.now().strftime('%Y-%m-%d')}", fill=(0, 0, 0))
+
+        # ✅ Save the signed image to buffer
+        signed_image_buffer = io.BytesIO()
+        signed_image.save(signed_image_buffer, format='JPEG', quality=90, optimize=True)
+        signed_image_buffer.seek(0)
+
+        print(f"📤 Uploading signed contract image to Cloudinary...")
         
-        can.save()
-
-        # ✅ Merge the signature overlay with the existing PDF
-        packet.seek(0)
-        new_pdf = PdfReader(packet)
-        existing_pdf = PdfReader(existing_pdf_buffer)
-        output = PdfWriter()
-
-        # Merge signatures onto the first page
-        page = existing_pdf.pages[0]
-        page.merge_page(new_pdf.pages[0])
-        output.add_page(page)
-
-        # Add remaining pages if any
-        for i in range(1, len(existing_pdf.pages)):
-            output.add_page(existing_pdf.pages[i])
-
-        # ✅ Save the final signed PDF
-        final_pdf_buffer = io.BytesIO()
-        output.write(final_pdf_buffer)
-        final_pdf_buffer.seek(0)
-
-        print(f"📤 Converting signed PDF to image and uploading to Cloudinary...")
+        # ✅ Upload the signed image to Cloudinary
+        from utils.cloudinary_utils import upload_image_to_cloudinary
         
-        # ✅ ENHANCED: Use upload_pdf_as_image to convert signed PDF to image
-        signed_contract_url = upload_pdf_as_image(
-            final_pdf_buffer,
+        signed_contract_url = upload_image_to_cloudinary(
+            signed_image_buffer,
             'contracts/signed',
             filename_prefix=f'signed_contract_{contract_id}'
         )
@@ -657,9 +637,9 @@ def sign_contract():
         if has_stream:
             print(f"⚠️  Warning: Stream URL detected but proceeding: {signed_contract_url}")
 
-        print(f"✅ Signed PDF uploaded to: {signed_contract_url}")
+        print(f"✅ Signed contract uploaded to: {signed_contract_url}")
 
-        # ✅ Update DB with signed PDF URL
+        # ✅ Update DB with signed contract URL
         contract.signed_contract = signed_contract_url
         contract.status = "Signed"
         
