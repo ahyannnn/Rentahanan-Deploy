@@ -127,7 +127,7 @@ const Layout = () => {
     }
   };
 
-  // Fetch notifications from API - ✅ UPDATED API BASE
+  // Fetch notifications from API - ✅ UPDATED API BASE with cache busting
   const fetchNotifications = async () => {
     try {
       setNotificationsLoading(true);
@@ -137,7 +137,8 @@ const Layout = () => {
       const storedUser = JSON.parse(storedUserRaw);
       const userId = storedUser.userid;
 
-      const response = await fetch(`${API_BASE}/api/notifications/${userId}`);
+      // 🔥 CACHE BUSTING: Add timestamp to prevent caching
+      const response = await fetch(`${API_BASE}/api/notifications/${userId}?t=${Date.now()}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
