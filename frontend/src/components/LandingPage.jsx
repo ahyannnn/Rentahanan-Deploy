@@ -216,52 +216,6 @@ function LandingPage() {
         )}
       </section>
 
-      {/* Toolkit Section */}
-      <section className="toolkit-section-Layout">
-        <h2 className="section-title-Layout">Rental Toolkit</h2>
-        <div className="toolkit-container-Layout">
-          <div className="toolkit-card-Layout">
-            <div className="toolkit-icon-Layout">
-              <Wrench size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">Maintenance Guide</h3>
-            <p className="toolkit-description-Layout">
-              Essential tips for basic home maintenance and when to contact your landlord.
-            </p>
-          </div>
-          
-          <div className="toolkit-card-Layout">
-            <div className="toolkit-icon-Layout">
-              <Hammer size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">DIY Repairs</h3>
-            <p className="toolkit-description-Layout">
-              Simple fixes you can do yourself to make your rental feel like home.
-            </p>
-          </div>
-          
-          <div className="toolkit-card-Layout">
-            <div className="toolkit-icon-Layout">
-              <PaintBucket size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">Decoration Tips</h3>
-            <p className="toolkit-description-Layout">
-              Creative ways to personalize your space without permanent changes.
-            </p>
-          </div>
-          
-          <div className="toolkit-card-Layout">
-            <div className="toolkit-icon-Layout">
-              <Drill size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">Installation Help</h3>
-            <p className="toolkit-description-Layout">
-              Guidelines for installing shelves, curtains, and other temporary fixtures.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="features-section-Layout">
         <h2 className="section-title-Layout">Why Choose RENTAHANAN?</h2>
