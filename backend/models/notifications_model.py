@@ -8,7 +8,7 @@ def get_ph_time():
     return ph_time
 
 class Notification(db.Model):
-    _tablename_ = "Notifications"
+    __tablename__ = "Notifications"
     notificationid = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     message = db.Column(db.Text, nullable=False)
