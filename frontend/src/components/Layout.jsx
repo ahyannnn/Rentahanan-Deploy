@@ -591,8 +591,12 @@ const Layout = () => {
     <div className="modal-overlay-Layout" onClick={closeProfileModal}>
       <div className="profile-modal-content-Layout" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header-Layout">
-          <h2>User Profile</h2>
-          <button className="close-text-btn-Layout" onClick={closeProfileModal}>
+          <h2 title="View and manage your profile information">User Profile</h2>
+          <button 
+            className="close-text-btn-Layout" 
+            onClick={closeProfileModal}
+            title="Close profile modal"
+          >
             <X size={16} /> Close
           </button>
         </div>
@@ -611,10 +615,14 @@ const Layout = () => {
                 height="120"
                 style={{ borderRadius: "50%", background: "#eee", objectFit: "cover" }}
                 onError={handleProfileImageError}
+                title="Your profile picture"
               />
             )}
             {isEditing && (
-              <label className="upload-btn-icon-label-Layout">
+              <label 
+                className="upload-btn-icon-label-Layout"
+                title="Change profile picture"
+              >
                 <Camera size={18} />
                 <input
                   type="file"
@@ -626,16 +634,16 @@ const Layout = () => {
             )}
           </div>
 
-          <h3 className="user-full-name-Layout">
+          <h3 className="user-full-name-Layout" title="Your full name">
             {userData.firstname} {userData.middlename || ""} {userData.lastname}
           </h3>
-          <p className="user-role-label-Layout">
+          <p className="user-role-label-Layout" title="Your account role">
             {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
           </p>
           
           {/* ✅ CONDITIONAL: Only show status if user is not owner */}
           {showStatus && (
-            <p className="user-status-label-Layout">
+            <p className="user-status-label-Layout" title="Your current tenant status">
               Status: <span className={`status-badge status-${tenantStatus?.toLowerCase()}`}>
                 {tenantStatus || "Registered"}
               </span>
@@ -644,7 +652,7 @@ const Layout = () => {
 
           <div className="user-details-list-Layout">
             <div className="detail-item-Layout">
-              <Mail size={18} className="detail-icon-Layout" />
+              <Mail size={18} className="detail-icon-Layout" title="Email address" />
               {isEditing ? (
                 <input
                   type="email"
@@ -652,14 +660,15 @@ const Layout = () => {
                   value={userData.email || ""}
                   onChange={handleInputChange}
                   className="editable-input-Layout"
+                  title="Edit your email address"
                 />
               ) : (
-                <span>{userData.email || "N/A"}</span>
+                <span title="Your email address">{userData.email || "N/A"}</span>
               )}
             </div>
 
             <div className="detail-item-Layout">
-              <Phone size={18} className="detail-icon-Layout" />
+              <Phone size={18} className="detail-icon-Layout" title="Phone number" />
               {isEditing ? (
                 <input
                   type="tel"
@@ -667,17 +676,18 @@ const Layout = () => {
                   value={userData.phone || ""}
                   onChange={handleInputChange}
                   className="editable-input-Layout"
+                  title="Edit your phone number"
                 />
               ) : (
-                <span>{userData.phone || "N/A"}</span>
+                <span title="Your phone number">{userData.phone || "N/A"}</span>
               )}
             </div>
 
             {/* ✅ CONDITIONAL: Only show joined date if user is not owner */}
             {showJoinedDate && (
               <div className="detail-item-Layout detail-view-only-Layout">
-                <Calendar size={18} className="detail-icon-Layout" />
-                <span>Joined: {formatDate(userData.datecreated || "")}</span>
+                <Calendar size={18} className="detail-icon-Layout" title="Account creation date" />
+                <span title="When you joined RenTahanan">Joined: {formatDate(userData.datecreated || "")}</span>
               </div>
             )}
           </div>
@@ -685,17 +695,29 @@ const Layout = () => {
           <div className="modal-actions-Layout">
             {isEditing ? (
               <>
-                <button className="btn-save-Layout" onClick={handleSaveEdit}>
+                <button 
+                  className="btn-save-Layout" 
+                  onClick={handleSaveEdit}
+                  title="Save your profile changes"
+                >
                   <Save size={16} /> Save
                 </button>
-                <button className="btn-cancel-Layout" onClick={handleCancelEdit}>
+                <button 
+                  className="btn-cancel-Layout" 
+                  onClick={handleCancelEdit}
+                  title="Discard changes and cancel editing"
+                >
                   <RotateCcw size={16} /> Cancel
                 </button>
               </>
             ) : (
               /* ✅ UPDATED: Show edit button for owners, hide only for terminated tenants */
               showEditButton && (
-                <button className="btn-edit-Layout" onClick={() => setIsEditing(true)}>
+                <button 
+                  className="btn-edit-Layout" 
+                  onClick={() => setIsEditing(true)}
+                  title="Edit your profile information"
+                >
                   <Edit size={16} /> Edit Profile
                 </button>
               )
@@ -717,6 +739,7 @@ const Layout = () => {
               src="/logo.png"
               alt="RenTahanan Logo"
               className="logo-Layout"
+              title="RenTahanan - Your Home Rental Partner"
             />
             <div className="nav-brand-text-Layout">RenTahanan</div>
           </div>
@@ -731,7 +754,11 @@ const Layout = () => {
                 className={`linkholder-Layout ${location.pathname === link.to ? "active-Layout" : ""
                   }`}
               >
-                <Link to={link.to} onClick={closeSidebar}>
+                <Link 
+                  to={link.to} 
+                  onClick={closeSidebar}
+                  title={`Go to ${link.name}`}
+                >
                   <Icon size={18} style={{ marginRight: "8px" }} />
                   {link.name}
                 </Link>
@@ -740,22 +767,31 @@ const Layout = () => {
           })}
         </div>
 
-        <button id="logout-Layout" onClick={handleLogout}>
+        <button 
+          id="logout-Layout" 
+          onClick={handleLogout}
+          title="Sign out of your account"
+        >
           Log out
         </button>
       </div>
 
       {/* HEADER */}
       <div className="header-Layout">
-        <button className="menu-btn-Layout" onClick={toggleSidebar}>
+        <button 
+          className="menu-btn-Layout" 
+          onClick={toggleSidebar}
+          title="Toggle navigation menu"
+        >
           &#9776;
         </button>
-        <h3>{pageTitle}</h3>
+        <h3 title="Current page">{pageTitle}</h3>
         <div className="notifprofile-Layout">
           <div className="notif-wrapper-Layout">
             <button
               className="notif-btn-Layout"
               onClick={handleNotificationsToggle}
+              title={`View notifications (${unreadCount} unread)`}
             >
               <Bell size={20} color="white" />
               {/* Number badge - ALWAYS SHOW IF THERE ARE NOTIFICATIONS */}
@@ -766,7 +802,7 @@ const Layout = () => {
 
             {showNotifications && (
               <div className="notif-dropdown-Layout">
-                <h4>Notifications {unreadCount > 0 && `(${unreadCount})`}</h4>
+                <h4 title="Your notifications">Notifications {unreadCount > 0 && `(${unreadCount})`}</h4>
                 {notificationsLoading ? (
                   <div className="notif-loading-Layout">Loading notifications...</div>
                 ) : notifications.length === 0 ? (
@@ -779,17 +815,18 @@ const Layout = () => {
                           key={notif.notificationid}
                           className={`notif-card-Layout ${getNotificationTypeClass(notif)}`}
                           onClick={() => handleNotificationCardClick(notif)}
+                          title="Click to view this notification"
                         >
                           <div className="notif-content-Layout">
-                            <h5>{notif.title}</h5>
-                            <p>{notif.message}</p>
+                            <h5 title="Notification title">{notif.title}</h5>
+                            <p title="Notification message">{notif.message}</p>
 
                             {/* ✅ ADDED: Show notification target info */}
                             <div className="notif-target-info-Layout">
                               {getNotificationTargetInfo(notif)}
                             </div>
 
-                            <span className="notif-time-Layout">
+                            <span className="notif-time-Layout" title="Notification time">
                               {formatNotificationTime(notif.creationdate)}
                             </span>
                           </div>
@@ -799,6 +836,7 @@ const Layout = () => {
                             <button
                               className="three-dots-btn-Layout"
                               onClick={(e) => handleThreeDotsClick(notif.notificationid, e)}
+                              title="Notification options"
                             >
                               <MoreHorizontal size={16} />
                             </button>
@@ -809,6 +847,7 @@ const Layout = () => {
                                 <button
                                   className="notif-menu-item-Layout view-menu-item-Layout"
                                   onClick={(e) => handleViewNotification(notif, e)}
+                                  title="View this notification"
                                 >
                                   <Eye size={14} />
                                   View
@@ -819,6 +858,7 @@ const Layout = () => {
                                   <button
                                     className="notif-menu-item-Layout delete-menu-item-Layout"
                                     onClick={(e) => handleDeleteNotification(notif, e)}
+                                    title="Delete this notification"
                                   >
                                     <Trash2 size={14} />
                                     Delete
@@ -836,6 +876,7 @@ const Layout = () => {
                       <button
                         className="view-all-btn-Layout"
                         onClick={handleViewAllNotifications}
+                        title={showAllNotifications ? "Show fewer notifications" : "View all notifications"}
                       >
                         {showAllNotifications ? 'Show Less' : `View All (${notifications.length})`}
                       </button>
@@ -846,7 +887,11 @@ const Layout = () => {
             )}
           </div>
 
-          <button className="profile-image-btn-Layout" onClick={openProfileModal}>
+          <button 
+            className="profile-image-btn-Layout" 
+            onClick={openProfileModal}
+            title="View and edit your profile"
+          >
             {headerImageError || !headerProfilePictureUrl || headerProfilePictureUrl === "/default-profile.png" ? (
               <div className="header-profile-icon-fallback-Layout">
                 <User size={20} />
@@ -857,6 +902,7 @@ const Layout = () => {
                 alt="Profile"
                 className="header-profile-image-Layout"
                 onError={handleHeaderImageError}
+                title="Your profile picture"
               />
             )}
           </button>

@@ -147,6 +147,7 @@ const Login = () => {
                                 marginBottom: "2rem",
                                 textAlign: "center",
                             }}
+                            title="Access your RenTahanan account"
                         >
                             Login
                         </h2>
@@ -155,7 +156,7 @@ const Login = () => {
 
                             {/* EMAIL */}
                             <div className="form-group-Login">
-                                <label>Email Address</label>
+                                <label title="Your registered email address">Email Address</label>
                                 <input
                                     type="email"
                                     placeholder="Enter your email"
@@ -165,6 +166,7 @@ const Login = () => {
                                         setEmailError(""); // Clear error when user types
                                     }}
                                     className={`input-field-Login ${emailError ? 'input-error-Login' : ''}`}
+                                    title="Enter the email address you used to register"
                                 />
                                 {emailError && (
                                     <div className="error-message-Login">
@@ -175,7 +177,7 @@ const Login = () => {
 
                             {/* PASSWORD */}
                             <div className="form-group-Login password-group-Login">
-                                <label>Password</label>
+                                <label title="Your account password">Password</label>
                                 <div className="password-wrapper-Login">
                                     <input
                                         type={showPassword ? "text" : "password"}
@@ -186,11 +188,13 @@ const Login = () => {
                                             setPasswordError(""); // Clear error when user types
                                         }}
                                         className={`input-field-Login ${passwordError ? 'input-error-Login' : ''}`}
+                                        title="Enter your account password"
                                     />
                                     <button
                                         type="button"
                                         className="show-password-btn-Login"
                                         onClick={() => setShowPassword(!showPassword)}
+                                        title={showPassword ? "Hide password text" : "Show password text"}
                                     >
                                         {showPassword ? "Hide" : "Show"}
                                     </button>
@@ -203,19 +207,39 @@ const Login = () => {
                                 )}
 
                                 <div className="forgot-link-Login">
-                                    <Link to="/forgot-password">Forgot Password?</Link>
+                                    <Link 
+                                        to="/forgot-password" 
+                                        title="Reset your password if you've forgotten it"
+                                    >
+                                        Forgot Password?
+                                    </Link>
                                 </div>
                             </div>
 
                             {/* BUTTONS */}
-                            <button className="main-login-btn-Login" type="submit">
+                            <button 
+                                className="main-login-btn-Login" 
+                                type="submit"
+                                title="Sign in to your account"
+                            >
                                 Login
                             </button>
 
-                            <span className="or-text-Login">OR</span>
+                            <span 
+                                className="or-text-Login"
+                                title="Alternative options"
+                            >
+                                OR
+                            </span>
 
                             <div className="bottom-text-Login">
-                                Don't have an account? <Link to="/register">Register</Link>
+                                Don't have an account?{" "}
+                                <Link 
+                                    to="/register" 
+                                    title="Create a new RenTahanan account"
+                                >
+                                    Register
+                                </Link>
                             </div>
                         </form>
                     </div>
