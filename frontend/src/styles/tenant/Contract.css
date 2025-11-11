@@ -1208,3 +1208,398 @@
 .form-tooltip-Contract:hover {
     color: #0a2d8d;
 }
+
+/* ===== Mobile Responsive Improvements ===== */
+@media (max-width: 768px) {
+  .contract-container-Contract {
+    padding: 15px 12px;
+  }
+  
+  .contract-header-Contract {
+    margin-bottom: 30px;
+  }
+  
+  .contract-title-Contract {
+    font-size: 1.8rem;
+    gap: 8px;
+  }
+  
+  .header-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .contract-subtitle-Contract {
+    font-size: 1rem;
+  }
+  
+  .contract-summary-Contract {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+  
+  .summary-card-Contract {
+    padding: 18px;
+    gap: 12px;
+  }
+  
+  .summary-icon-Contract {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+  }
+  
+  .summary-icon-Contract .icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .summary-label-Contract {
+    font-size: 0.85rem;
+  }
+  
+  .summary-value-Contract {
+    font-size: 1.1rem;
+  }
+  
+  .contract-actions-Contract {
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .contract-preview-Contract {
+    padding: 20px;
+  }
+  
+  .preview-header-Contract {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .preview-actions-Contract {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .open-btn-Contract,
+  .terminate-btn-Contract {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    flex: 1;
+    min-width: 140px;
+    justify-content: center;
+  }
+  
+  .signature-prompt-Contract {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+    gap: 15px;
+  }
+  
+  .prompt-content-Contract {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .prompt-icon-Contract {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .prompt-title-Contract {
+    font-size: 1.2rem;
+  }
+  
+  .sign-btn-Contract {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+  
+  .signature-area-Contract {
+    padding: 20px;
+  }
+  
+  .signature-canvas-container-Contract {
+    margin-bottom: 20px;
+  }
+  
+  .sigCanvas-Contract {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 180px !important;
+  }
+  
+  .signature-buttons-Contract {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .signature-action-buttons-Contract {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .clear-btn-Contract,
+  .cancel-btn-Contract,
+  .save-signature-btn-Contract {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+  
+  .signed-message-Contract {
+    padding: 20px;
+  }
+  
+  .signed-header-Contract {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+  
+  .signed-actions-Contract {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .signed-file-info-Contract {
+    text-align: center;
+  }
+  
+  .view-signed-btn-Contract {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Modal Improvements */
+  .modal-overlay-Contract {
+    padding: 10px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .modal-content-Contract {
+    width: 100%;
+    margin: 0;
+    max-width: none;
+  }
+  
+  .modal-content-Contract.terminate,
+  .modal-content-Contract.confirm {
+    max-width: none;
+  }
+  
+  .modal-header-Contract {
+    padding: 16px 20px;
+  }
+  
+  .modal-body-Contract {
+    padding: 20px;
+  }
+  
+  .modal-footer-Contract {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .cancel-btn-Contract,
+  .proceed-btn-Contract,
+  .terminate-final-btn-Contract {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .terminate-warning-Contract {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .confirm-warning-Contract {
+    padding: 15px;
+  }
+  
+  .confirm-list-Contract {
+    padding-left: 15px;
+  }
+  
+  /* Success Modal Mobile Improvements */
+  .success-details-Contract {
+    padding: 15px;
+  }
+  
+  .success-detail-item-Contract {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 10px 0;
+  }
+  
+  .success-modal-actions-Contract {
+    margin-top: 15px;
+  }
+  
+  .success-modal-button-Contract {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .contract-container-Contract {
+    padding: 12px 10px;
+  }
+  
+  .contract-title-Contract {
+    font-size: 1.6rem;
+  }
+  
+  .summary-card-Contract {
+    padding: 15px;
+    text-align: center;
+  }
+  
+  .summary-card-Contract {
+    flex-direction: column;
+  }
+  
+  .contract-preview-Contract {
+    padding: 15px;
+  }
+  
+  .preview-actions-Contract {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .open-btn-Contract,
+  .terminate-btn-Contract {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .signature-area-Contract {
+    padding: 15px;
+  }
+  
+  .sigCanvas-Contract {
+    height: 150px !important;
+  }
+  
+  .signature-action-buttons-Contract {
+    flex-direction: column;
+  }
+  
+  .modal-content-Contract {
+    padding: 25px 15px;
+  }
+  
+  .modal-title-Contract {
+    font-size: 1.3rem;
+  }
+  
+  .form-input-Contract {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Improve touch targets */
+  button {
+    min-height: 44px;
+  }
+  
+  .open-btn-Contract,
+  .terminate-btn-Contract,
+  .sign-btn-Contract,
+  .clear-btn-Contract,
+  .cancel-btn-Contract,
+  .save-signature-btn-Contract,
+  .view-signed-btn-Contract,
+  .proceed-btn-Contract,
+  .terminate-final-btn-Contract,
+  .success-modal-button-Contract {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  .contract-title-Contract {
+    font-size: 1.4rem;
+  }
+  
+  .summary-card-Contract {
+    padding: 12px;
+  }
+  
+  .summary-value-Contract {
+    font-size: 1rem;
+  }
+  
+  .preview-actions-Contract {
+    gap: 8px;
+  }
+  
+  .signature-buttons-Contract {
+    gap: 8px;
+  }
+  
+  .signature-action-buttons-Contract {
+    gap: 8px;
+  }
+}
+
+/* Landscape mode improvements */
+@media (max-width: 768px) and (orientation: landscape) {
+  .contract-container-Contract {
+    padding: 10px;
+  }
+  
+  .contract-summary-Contract {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .summary-card-Contract {
+    padding: 12px;
+  }
+  
+  .sigCanvas-Contract {
+    height: 120px !important;
+  }
+  
+  .modal-overlay-Contract {
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+  
+  .modal-content-Contract {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* High-resolution mobile devices */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
+  .contract-container-Contract {
+    padding: 15px;
+  }
+  
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .summary-card-Contract:hover {
+    transform: none; /* Disable hover effects on touch devices */
+  }
+}
