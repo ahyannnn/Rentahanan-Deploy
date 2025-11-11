@@ -198,21 +198,21 @@ function Notification() {
           <p>Manage and track all tenant-reported problems</p>
         </div>
         <div className="owner-notifications-stats">
-          <div className="owner-stat-card">
+          <div className="owner-stat-card" title="Number of pending maintenance issues">
             <div className="stat-icon pending"><Clock size={20} /></div>
             <div className="stat-info">
               <span className="stat-number">{statusCounts.Pending}</span>
               <span className="stat-label">Pending</span>
             </div>
           </div>
-          <div className="owner-stat-card">
+          <div className="owner-stat-card" title="Number of issues currently being worked on">
             <div className="stat-icon progress"><AlertCircle size={20} /></div>
             <div className="stat-info">
               <span className="stat-number">{statusCounts["In Progress"]}</span>
               <span className="stat-label">In Progress</span>
             </div>
           </div>
-          <div className="owner-stat-card">
+          <div className="owner-stat-card" title="Number of successfully resolved issues">
             <div className="stat-icon resolved"><CheckCircle size={20} /></div>
             <div className="stat-info">
               <span className="stat-number">{statusCounts.Resolved}</span>
@@ -231,6 +231,7 @@ function Notification() {
               className="owner-filter-dropdown"
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
+              title="Filter maintenance issues by status"
             >
               {Object.keys(statusCounts).map(filter => (
                 <option key={filter} value={filter}>
@@ -248,6 +249,7 @@ function Notification() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="owner-notifications-search-input"
+              title="Search maintenance issues by tenant name, unit, or issue description"
             />
           </div>
         </div>
@@ -268,6 +270,7 @@ function Notification() {
                 key={problem.id}
                 className={`owner-notification-item status-${problem.status.toLowerCase().replace(' ', '-')}`}
                 onClick={() => openProblemModal(problem)}
+                title={`Click to view details of ${problem.subject}`}
               >
                 <div className="owner-notification-header">
                   <div className="owner-notification-main">
@@ -276,14 +279,14 @@ function Notification() {
                       <h4 className="owner-notification-title">{problem.subject}</h4>
                       <p className="owner-notification-description">{problem.description}</p>
                       <div className="owner-notification-meta">
-                        <div className="owner-meta-item"><User size={14} /><span>{problem.tenant_name}</span></div>
-                        <div className="owner-meta-item"><span className="owner-unit-badge">{problem.unit}</span></div>
-                        <div className="owner-meta-item"><Calendar size={14} /><span>{new Date(problem.creationdate).toLocaleDateString()}</span></div>
+                        <div className="owner-meta-item" title={`Tenant: ${problem.tenant_name}`}><User size={14} /><span>{problem.tenant_name}</span></div>
+                        <div className="owner-meta-item" title={`Unit: ${problem.unit}`}><span className="owner-unit-badge">{problem.unit}</span></div>
+                        <div className="owner-meta-item" title={`Reported on: ${new Date(problem.creationdate).toLocaleDateString()}`}><Calendar size={14} /><span>{new Date(problem.creationdate).toLocaleDateString()}</span></div>
                       </div>
                     </div>
                   </div>
                   <div className="owner-notification-actions">
-                    <div className={`owner-status-badge status-${problem.status.toLowerCase().replace(' ', '-')}`}>
+                    <div className={`owner-status-badge status-${problem.status.toLowerCase().replace(' ', '-')}`} title={`Current status: ${problem.status}`}>
                       {getStatusIcon(problem.status)} {problem.status}
                     </div>
                     <div className="owner-action-buttons">
@@ -296,7 +299,7 @@ function Notification() {
                           <Trash2 size={16} />
                         </button>
                       )}
-                      <button className="owner-arrow-btn"><ChevronRight size={20} /></button>
+                      <button className="owner-arrow-btn" title="View issue details"><ChevronRight size={20} /></button>
                     </div>
                   </div>
                 </div>
@@ -314,24 +317,24 @@ function Notification() {
               <div className="owner-modal-title-section">
                 <h3>{selectedProblem.subject}</h3>
                 <div className="owner-modal-badges">
-                  <span className={`owner-status-badge status-${selectedProblem.status.toLowerCase().replace(' ', '-')}`}>
+                  <span className={`owner-status-badge status-${selectedProblem.status.toLowerCase().replace(' ', '-')}`} title={`Current status: ${selectedProblem.status}`}>
                     {getStatusIcon(selectedProblem.status)} {selectedProblem.status}
                   </span>
                 </div>
               </div>
-              <button className="owner-close-btn" onClick={() => setShowProblemModal(false)}>×</button>
+              <button className="owner-close-btn" onClick={() => setShowProblemModal(false)} title="Close modal">×</button>
             </div>
 
             <div className="owner-problem-modal-body">
               <div className="owner-detail-grid">
-                <div className="owner-detail-item"><label>Tenant Name</label><p>{selectedProblem.tenant_name}</p></div>
-                <div className="owner-detail-item"><label>Unit</label><p>{selectedProblem.unit}</p></div>
-                <div className="owner-detail-item"><label>Date Reported</label><p>{new Date(selectedProblem.creationdate).toLocaleString()}</p></div>
+                <div className="owner-detail-item" title={`Tenant who reported the issue: ${selectedProblem.tenant_name}`}><label>Tenant Name</label><p>{selectedProblem.tenant_name}</p></div>
+                <div className="owner-detail-item" title={`Affected unit: ${selectedProblem.unit}`}><label>Unit</label><p>{selectedProblem.unit}</p></div>
+                <div className="owner-detail-item" title={`Date reported: ${new Date(selectedProblem.creationdate).toLocaleString()}`}><label>Date Reported</label><p>{new Date(selectedProblem.creationdate).toLocaleString()}</p></div>
               </div>
 
               <div className="owner-description-section">
                 <label>Problem Description</label>
-                <p>{selectedProblem.description}</p>
+                <p title="Full problem description">{selectedProblem.description}</p>
               </div>
 
               {selectedProblem.image && (
@@ -343,6 +346,7 @@ function Notification() {
                       onClick={() =>
                         window.open(`${API_BASE}${selectedProblem.image}`, "_blank", "noopener,noreferrer")
                       }
+                      title="View photo attached by tenant"
                     >
                       View Tenant Photo
                     </button>
@@ -359,6 +363,7 @@ function Notification() {
                       onClick={() =>
                         window.open(`${API_BASE}${selectedProblem.landlordimage}`, "_blank", "noopener,noreferrer")
                       }
+                      title="View photo you uploaded as proof of fix"
                     >
                       View Your Photo
                     </button>
@@ -373,12 +378,13 @@ function Notification() {
                     <button 
                       className="owner-status-btn progress" 
                       onClick={() => handleUpdateStatus("In Progress")}
+                      title="Mark this issue as being worked on"
                     >
                       <AlertCircle size={16} /> Mark In Progress
                     </button>
 
                     {/* ✅ Upload Landlord Fix Photo */}
-                    <label htmlFor="landlord-image-upload" className="owner-upload-photo-btn">
+                    <label htmlFor="landlord-image-upload" className="owner-upload-photo-btn" title="Upload photo showing the completed fix">
                       <Wrench size={16} /> Upload Fix Photo
                     </label>
                     <input
@@ -393,6 +399,7 @@ function Notification() {
                       className="owner-status-btn resolved" 
                       onClick={() => handleUpdateStatus("Resolved")}
                       disabled={!selectedProblem.landlordimage}
+                      title={!selectedProblem.landlordimage ? "Upload a fix photo first" : "Mark this issue as resolved"}
                     >
                       <CheckCircle size={16} /> Mark Resolved
                     </button>
@@ -417,11 +424,12 @@ function Notification() {
                 <button 
                   className="owner-delete-modal-btn" 
                   onClick={() => handleDeleteClick(selectedProblem)}
+                  title="Remove this resolved issue from your view"
                 >
                   <Trash2 size={16} /> Delete From My View
                 </button>
               )}
-              <button className="owner-close-modal-btn" onClick={() => setShowProblemModal(false)}>Close</button>
+              <button className="owner-close-modal-btn" onClick={() => setShowProblemModal(false)} title="Close this modal">Close</button>
             </div>
           </div>
         </div>
@@ -438,9 +446,9 @@ function Notification() {
               <h3>Delete From Your View?</h3>
               <p>This concern will be removed from your view but the tenant will still see it. The concern will be permanently deleted including all images only when both you and the tenant have deleted it.</p>
               <div className="owner-delete-modal-details">
-                <p><strong>Issue:</strong> {problemToDelete.subject}</p>
-                <p><strong>Tenant:</strong> {problemToDelete.tenant_name}</p>
-                <p><strong>Unit:</strong> {problemToDelete.unit}</p>
+                <p title={`Issue: ${problemToDelete.subject}`}><strong>Issue:</strong> {problemToDelete.subject}</p>
+                <p title={`Tenant: ${problemToDelete.tenant_name}`}><strong>Tenant:</strong> {problemToDelete.tenant_name}</p>
+                <p title={`Unit: ${problemToDelete.unit}`}><strong>Unit:</strong> {problemToDelete.unit}</p>
               </div>
             </div>
             <div className="owner-delete-modal-actions">
@@ -448,6 +456,7 @@ function Notification() {
                 className="owner-delete-cancel-btn" 
                 onClick={cancelDelete}
                 disabled={isDeleting}
+                title="Cancel deletion"
               >
                 Cancel
               </button>
@@ -455,6 +464,7 @@ function Notification() {
                 className="owner-delete-confirm-btn" 
                 onClick={confirmDelete}
                 disabled={isDeleting}
+                title={isDeleting ? "Deleting in progress..." : "Confirm removal from your view"}
               >
                 {isDeleting ? "Deleting..." : "Yes, Remove From My View"}
               </button>
@@ -489,7 +499,7 @@ function Notification() {
                 <div className="owner-delete-success-detail-item">
                   <span className="owner-delete-detail-label">Action:</span>
                   <span className="owner-delete-detail-value">
-                    <span className="owner-delete-status-badge">
+                    <span className="owner-delete-status-badge" title="Issue removed from your view">
                       <CheckCircle size={14} />
                       Removed From View
                     </span>
@@ -497,13 +507,14 @@ function Notification() {
                 </div>
                 <div className="owner-delete-success-detail-item">
                   <span className="owner-delete-detail-label">Removed:</span>
-                  <span className="owner-delete-detail-value">{new Date().toLocaleDateString()}</span>
+                  <span className="owner-delete-detail-value" title={`Removed on: ${new Date().toLocaleDateString()}`}>{new Date().toLocaleDateString()}</span>
                 </div>
               </div>
 
               <button 
                 className="owner-delete-success-close-btn"
                 onClick={handleCloseDeleteSuccessModal}
+                title="Return to maintenance issues list"
               >
                 Continue
               </button>

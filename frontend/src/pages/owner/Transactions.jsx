@@ -196,6 +196,7 @@ function Transactions() {
           key="approve"
           className="action-button action-button-primary"
           onClick={() => handleOpenApproveModal(bill)}
+          title="Approve this payment and issue receipt"
         >
           <CheckCircle size={16} />
           Approve
@@ -206,6 +207,7 @@ function Transactions() {
           key="reject"
           className="action-button action-button-reject"
           onClick={() => handleOpenRejectModal(bill)}
+          title="Reject this payment and reset bill status"
         >
           <XCircle size={16} />
           Reject
@@ -219,6 +221,7 @@ function Transactions() {
           key="view-receipt"
           className="action-button action-button-download"
           onClick={() => handleViewReceipt(bill.billid)}
+          title="View issued receipt for this payment"
         >
           <Eye size={16} />
           View Receipt
@@ -237,17 +240,17 @@ function Transactions() {
           <p>Track and manage all tenant bills and payments</p>
         </div>
         <div className="owner-transactions-stats">
-          <div className="stat-card">
+          <div className="stat-card" title="Total number of bills">
             <span className="stat-number">{bills.length}</span>
             <span className="stat-label">Total Bills</span>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" title="Number of paid bills">
             <span className="stat-number">
               {bills.filter(b => b.status === "Paid").length}
             </span>
             <span className="stat-label">Paid</span>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" title="Number of payments awaiting validation">
             <span className="stat-number">
               {bills.filter(b => b.status === "For Validation").length}
             </span>
@@ -270,6 +273,7 @@ function Transactions() {
                 key={tab.key}
                 className={`owner-transactions-tab ${activeTab === tab.key ? "owner-transactions-tab-active" : ""}`}
                 onClick={() => setActiveTab(tab.key)}
+                title={`View ${tab.label.toLowerCase()}`}
               >
                 {tab.label}
               </button>
@@ -284,6 +288,7 @@ function Transactions() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="owner-transactions-search-input"
+              title="Search transactions by tenant name"
             />
           </div>
         </div>
@@ -299,17 +304,17 @@ function Transactions() {
             <table className="owner-transactions-table">
               <thead>
                 <tr>
-                  <th>Bill ID</th>
-                  <th>Tenant</th>
-                  <th>Unit</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Payment Method</th>
-                  <th>Reference</th>
-                  <th>Proof</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th title="Unique bill identifier">Bill ID</th>
+                  <th title="Tenant associated with the bill">Tenant</th>
+                  <th title="Rental unit associated with the bill">Unit</th>
+                  <th title="Type of bill (Rent, Water, etc.)">Type</th>
+                  <th title="Bill amount">Amount</th>
+                  <th title="Payment method used">Payment Method</th>
+                  <th title="Payment reference number">Reference</th>
+                  <th title="Payment proof/document">Proof</th>
+                  <th title="Bill issue date">Date</th>
+                  <th title="Current payment status">Status</th>
+                  <th title="Available actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -328,17 +333,17 @@ function Transactions() {
                     const status = getStatusVariant(b.status);
                     return (
                       <tr key={b.billid} className="owner-transactions-row">
-                        <td className="owner-transactions-bill-id">#{b.billid}</td>
-                        <td className="owner-transactions-tenant">{b.tenant_name}</td>
-                        <td className="owner-transactions-unit">{b.unit_name}</td>
-                        <td className="owner-transactions-type">{b.billtype}</td>
-                        <td className="owner-transactions-amount">
+                        <td className="owner-transactions-bill-id" title={`Bill ID: ${b.billid}`}>#{b.billid}</td>
+                        <td className="owner-transactions-tenant" title={`Tenant: ${b.tenant_name}`}>{b.tenant_name}</td>
+                        <td className="owner-transactions-unit" title={`Unit: ${b.unit_name}`}>{b.unit_name}</td>
+                        <td className="owner-transactions-type" title={`Bill type: ${b.billtype}`}>{b.billtype}</td>
+                        <td className="owner-transactions-amount" title={`Amount: ${formatCurrency(parseFloat(b.amount))}`}>
                           {formatCurrency(parseFloat(b.amount))}
                         </td>
-                        <td className="owner-transactions-method">
+                        <td className="owner-transactions-method" title={`Payment method: ${b.paymenttype || "N/A"}`}>
                           {b.paymenttype || "N/A"}
                         </td>
-                        <td className="owner-transactions-reference">
+                        <td className="owner-transactions-reference" title={`Reference: ${b.GCash_Ref || "N/A"}`}>
                           {b.GCash_Ref || "N/A"}
                         </td>
                         <td className="owner-transactions-proof">
@@ -349,19 +354,20 @@ function Transactions() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="proof-link"
+                              title="View payment proof/document"
                             >
                               <Eye size={16} />
                               View
                             </a>
                           ) : (
-                            "N/A"
+                            <span title="No payment proof available">N/A</span>
                           )}
                         </td>
-                        <td className="owner-transactions-date">
+                        <td className="owner-transactions-date" title={`Issued: ${formatDate(b.issuedate)}`}>
                           {formatDate(b.issuedate)}
                         </td>
                         <td className="owner-transactions-status">
-                          <span className={`status-badge ${status.class}`}>
+                          <span className={`status-badge ${status.class}`} title={`Payment status: ${status.label}`}>
                             {status.label}
                           </span>
                         </td>
@@ -382,7 +388,7 @@ function Transactions() {
       {showApproveModal && (
         <div className="modal-overlay-transactions" onClick={() => setShowApproveModal(false)}>
           <div className="modal-content-transactions" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn-transactions" onClick={() => setShowApproveModal(false)}>
+            <button className="close-btn-transactions" onClick={() => setShowApproveModal(false)} title="Close approval modal">
               <X size={24} />
             </button>
             
@@ -398,11 +404,11 @@ function Transactions() {
             </p>
             
             <div className="modal-bill-details-transactions">
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title={`Amount: ${selectedBill && formatCurrency(parseFloat(selectedBill.amount))}`}>
                 <span>Amount:</span>
                 <strong>{selectedBill && formatCurrency(parseFloat(selectedBill.amount))}</strong>
               </div>
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title={`Payment method: ${selectedBill?.paymenttype || "N/A"}`}>
                 <span>Payment Method:</span>
                 <span>{selectedBill?.paymenttype || "N/A"}</span>
               </div>
@@ -412,12 +418,14 @@ function Transactions() {
               <button 
                 className="modal-btn-transactions modal-btn-cancel"
                 onClick={() => setShowApproveModal(false)}
+                title="Cancel approval"
               >
                 Cancel
               </button>
               <button 
                 className="modal-btn-transactions modal-btn-confirm"
                 onClick={handleApproveConfirm}
+                title="Confirm payment approval and issue receipt"
               >
                 Yes, Approve Payment
               </button>
@@ -430,7 +438,7 @@ function Transactions() {
       {showRejectModal && (
         <div className="modal-overlay-transactions" onClick={() => setShowRejectModal(false)}>
           <div className="modal-content-transactions" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn-transactions" onClick={() => setShowRejectModal(false)}>
+            <button className="close-btn-transactions" onClick={() => setShowRejectModal(false)} title="Close rejection modal">
               <X size={24} />
             </button>
             
@@ -446,11 +454,11 @@ function Transactions() {
             </p>
             
             <div className="modal-bill-details-transactions">
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title={`Amount: ${selectedBill && formatCurrency(parseFloat(selectedBill.amount))}`}>
                 <span>Amount:</span>
                 <strong>{selectedBill && formatCurrency(parseFloat(selectedBill.amount))}</strong>
               </div>
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title={`Payment method: ${selectedBill?.paymenttype || "N/A"}`}>
                 <span>Payment Method:</span>
                 <span>{selectedBill?.paymenttype || "N/A"}</span>
               </div>
@@ -460,12 +468,14 @@ function Transactions() {
               <button 
                 className="modal-btn-transactions modal-btn-cancel"
                 onClick={() => setShowRejectModal(false)}
+                title="Cancel rejection"
               >
                 Cancel
               </button>
               <button 
                 className="modal-btn-transactions modal-btn-reject"
                 onClick={handleRejectConfirm}
+                title="Confirm payment rejection and reset bill status"
               >
                 Yes, Reject Payment
               </button>
@@ -490,11 +500,11 @@ function Transactions() {
             </p>
             
             <div className="modal-bill-details-transactions">
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title={`Amount: ${selectedBill && formatCurrency(parseFloat(selectedBill.amount))}`}>
                 <span>Amount:</span>
                 <strong>{selectedBill && formatCurrency(parseFloat(selectedBill.amount))}</strong>
               </div>
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title="Payment status updated to Paid">
                 <span>Status:</span>
                 <span className="status-approved">Paid</span>
               </div>
@@ -503,6 +513,7 @@ function Transactions() {
             <button 
               className="modal-btn-transactions modal-btn-success"
               onClick={() => setShowSuccessModal(false)}
+              title="Continue to transactions"
             >
               Continue
             </button>
@@ -526,11 +537,11 @@ function Transactions() {
             </p>
             
             <div className="modal-bill-details-transactions">
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title={`Bill ID: ${selectedBill?.billid}`}>
                 <span>Bill ID:</span>
                 <strong>#{selectedBill?.billid}</strong>
               </div>
-              <div className="bill-detail-item">
+              <div className="bill-detail-item" title="Payment status reset to Unpaid">
                 <span>Status:</span>
                 <span className="status-unpaid">Unpaid</span>
               </div>
@@ -539,6 +550,7 @@ function Transactions() {
             <button 
               className="modal-btn-transactions modal-btn-success"
               onClick={() => setShowRejectSuccessModal(false)}
+              title="Continue to transactions"
             >
               Continue
             </button>

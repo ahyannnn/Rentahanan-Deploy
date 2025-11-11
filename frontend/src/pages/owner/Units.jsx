@@ -244,7 +244,7 @@ function Units() {
           <p className="Owner-Units-subtitle">Manage your rental properties and units</p>
         </div>
         <div className="Owner-Units-stats">
-          <div className="Owner-Units-stat-card">
+          <div className="Owner-Units-stat-card" title="Total number of property units">
             <div className="Owner-Units-stat-icon total">
               <Home size={20} />
             </div>
@@ -253,7 +253,7 @@ function Units() {
               <span className="Owner-Units-stat-label">Total Units</span>
             </div>
           </div>
-          <div className="Owner-Units-stat-card">
+          <div className="Owner-Units-stat-card" title="Number of available units for rent">
             <div className="Owner-Units-stat-icon available">
               <Users size={20} />
             </div>
@@ -262,7 +262,7 @@ function Units() {
               <span className="Owner-Units-stat-label">Available</span>
             </div>
           </div>
-          <div className="Owner-Units-stat-card">
+          <div className="Owner-Units-stat-card" title="Number of currently occupied units">
             <div className="Owner-Units-stat-icon occupied">
               <Calendar size={20} />
             </div>
@@ -282,16 +282,17 @@ function Units() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`Owner-Units-tab-btn ${activeTab === tab ? "Owner-Units-tab-active" : ""}`}
+              title={`View ${tab.toLowerCase()} units`}
             >
               {tab}
-              {tab === "All" && <span className="Owner-Units-tab-badge">{stats.total}</span>}
-              {tab === "Available" && <span className="Owner-Units-tab-badge">{stats.available}</span>}
-              {tab === "Occupied" && <span className="Owner-Units-tab-badge">{stats.occupied}</span>}
+              {tab === "All" && <span className="Owner-Units-tab-badge" title={`${stats.total} total units`}>{stats.total}</span>}
+              {tab === "Available" && <span className="Owner-Units-tab-badge" title={`${stats.available} available units`}>{stats.available}</span>}
+              {tab === "Occupied" && <span className="Owner-Units-tab-badge" title={`${stats.occupied} occupied units`}>{stats.occupied}</span>}
             </button>
           ))}
         </div>
 
-        <button className="Owner-Units-add-btn" onClick={() => setShowAddModal(true)}>
+        <button className="Owner-Units-add-btn" onClick={() => setShowAddModal(true)} title="Add a new property unit">
           <Plus size={18} />
           Add New Unit
         </button>
@@ -307,7 +308,7 @@ function Units() {
         <div className="Owner-Units-grid">
           {filteredUnits.length > 0 ? (
             filteredUnits.map((unit) => (
-              <div key={unit.unitid} className="Owner-Units-card">
+              <div key={unit.unitid} className="Owner-Units-card" title={`View details for ${unit.name}`}>
                 <div className="Owner-Units-image-container">
                   {unit.imagepath ? (
                     // ✅ FIXED: Use the full Cloudinary URL directly
@@ -315,28 +316,29 @@ function Units() {
                       src={unit.imagepath}
                       alt={unit.name}
                       className="Owner-Units-thumbnail"
+                      title={`Image of ${unit.name}`}
                     />
                   ) : (
-                    <div className="Owner-Units-image-placeholder">
+                    <div className="Owner-Units-image-placeholder" title="No image available">
                       <Home size={32} className="Owner-Units-placeholder-icon" />
                     </div>
                   )}
                   <div className="Owner-Units-image-overlay">
-                    <span className={`Owner-Units-status-badge ${unit.status.toLowerCase()}`}>
+                    <span className={`Owner-Units-status-badge ${unit.status.toLowerCase()}`} title={`Status: ${unit.status}`}>
                       {unit.status}
                     </span>
-                    <span className="Owner-Units-name-tag">{unit.name}</span>
+                    <span className="Owner-Units-name-tag" title={`Unit: ${unit.name}`}>{unit.name}</span>
                   </div>
                 </div>
 
                 <div className="Owner-Units-card-content">
-                  <h3 className="Owner-Units-card-title">{unit.name}</h3>
-                  <p className="Owner-Units-card-description">
+                  <h3 className="Owner-Units-card-title" title={unit.name}>{unit.name}</h3>
+                  <p className="Owner-Units-card-description" title={unit.description || "No description available"}>
                     {unit.description || "No description available"}
                   </p>
 
                   <div className="Owner-Units-price-section">
-                    <span className="Owner-Units-price">
+                    <span className="Owner-Units-price" title={`Monthly rent: ₱${Number(unit.price).toLocaleString()}`}>
                       ₱{Number(unit.price).toLocaleString()}
                     </span>
                     <span className="Owner-Units-price-period">/month</span>
@@ -349,6 +351,7 @@ function Units() {
                         setSelectedUnit(unit);
                         setShowViewModal(true);
                       }}
+                      title={`View details for ${unit.name}`}
                     >
                       View
                     </button>
@@ -356,7 +359,7 @@ function Units() {
                       className={`Owner-Units-edit-btn ${unit.status.toLowerCase() === 'occupied' ? 'Owner-Units-edit-btn-disabled' : ''}`}
                       onClick={() => unit.status.toLowerCase() !== 'occupied' && handleOpenEditModal(unit)}
                       disabled={unit.status.toLowerCase() === 'occupied'}
-                      title={unit.status.toLowerCase() === 'occupied' ? 'Cannot edit occupied units' : 'Edit unit'}
+                      title={unit.status.toLowerCase() === 'occupied' ? 'Cannot edit occupied units' : `Edit ${unit.name}`}
                     >
                       <Edit size={16} />
                       Edit
@@ -381,7 +384,7 @@ function Units() {
           <div className="Owner-Units-modal Owner-Units-add-modal">
             <div className="Owner-Units-modal-header">
               <h3>Add New Unit</h3>
-              <button className="Owner-Units-close-btn" onClick={handleCloseModal}>
+              <button className="Owner-Units-close-btn" onClick={handleCloseModal} title="Close add unit modal">
                 <X size={20} />
               </button>
             </div>
@@ -396,6 +399,7 @@ function Units() {
                   onChange={handleInputChange}
                   placeholder="e.g. Unit 101 - Studio"
                   className="Owner-Units-form-input"
+                  title="Enter a name for the unit"
                 />
               </div>
 
@@ -408,6 +412,7 @@ function Units() {
                   placeholder="e.g. Spacious studio with balcony and city view..."
                   className="Owner-Units-form-textarea"
                   rows="3"
+                  title="Enter a description for the unit"
                 ></textarea>
               </div>
 
@@ -421,6 +426,7 @@ function Units() {
                     onChange={handleInputChange}
                     placeholder="15000"
                     className="Owner-Units-form-input"
+                    title="Enter the monthly rental price"
                   />
                 </div>
 
@@ -431,11 +437,12 @@ function Units() {
                     value={formData.status}
                     onChange={handleInputChange}
                     className="Owner-Units-form-select"
+                    title="Select the current status of the unit"
                   >
-                    <option value="Available">Available</option>
-                    <option value="Occupied">Occupied</option>
-                    <option value="Maintenance">Under Maintenance</option>
-                    <option value="Renovation">Under Renovation</option>
+                    <option value="Available" title="Unit is available for rent">Available</option>
+                    <option value="Occupied" title="Unit is currently occupied">Occupied</option>
+                    <option value="Maintenance" title="Unit is under maintenance">Under Maintenance</option>
+                    <option value="Renovation" title="Unit is under renovation">Under Renovation</option>
                   </select>
                 </div>
               </div>
@@ -448,8 +455,9 @@ function Units() {
                     accept="image/*"
                     onChange={handleImageChange}
                     className="Owner-Units-file-input"
+                    title="Select an image for the unit"
                   />
-                  <div className="Owner-Units-file-label">
+                  <div className="Owner-Units-file-label" title="Click to choose an image">
                     <Plus size={16} />
                     Choose Image
                   </div>
@@ -457,17 +465,17 @@ function Units() {
 
                 {previewImage && (
                   <div className="Owner-Units-preview-container">
-                    <img src={previewImage} alt="Preview" className="Owner-Units-preview-image" />
+                    <img src={previewImage} alt="Preview" className="Owner-Units-preview-image" title="Image preview" />
                   </div>
                 )}
               </div>
             </div>
 
             <div className="Owner-Units-modal-footer">
-              <button className="Owner-Units-cancel-btn" onClick={handleCloseModal}>
+              <button className="Owner-Units-cancel-btn" onClick={handleCloseModal} title="Cancel adding unit">
                 Cancel
               </button>
-              <button className="Owner-Units-save-btn" onClick={handleAddUnit}>
+              <button className="Owner-Units-save-btn" onClick={handleAddUnit} title="Save new unit">
                 Save Unit
               </button>
             </div>
@@ -481,7 +489,7 @@ function Units() {
           <div className="Owner-Units-modal Owner-Units-edit-modal">
             <div className="Owner-Units-modal-header">
               <h3>Edit Unit</h3>
-              <button className="Owner-Units-close-btn" onClick={handleCloseModal}>
+              <button className="Owner-Units-close-btn" onClick={handleCloseModal} title="Close edit modal">
                 <X size={20} />
               </button>
             </div>
@@ -496,6 +504,7 @@ function Units() {
                   onChange={handleInputChange}
                   placeholder="e.g. Unit 101 - Studio"
                   className="Owner-Units-form-input"
+                  title="Edit the unit name"
                 />
               </div>
 
@@ -508,6 +517,7 @@ function Units() {
                   placeholder="e.g. Spacious studio with balcony and city view..."
                   className="Owner-Units-form-textarea"
                   rows="3"
+                  title="Edit the unit description"
                 ></textarea>
               </div>
 
@@ -521,6 +531,7 @@ function Units() {
                     onChange={handleInputChange}
                     placeholder="15000"
                     className="Owner-Units-form-input"
+                    title="Edit the monthly rental price"
                   />
                 </div>
 
@@ -531,11 +542,12 @@ function Units() {
                     value={formData.status}
                     onChange={handleInputChange}
                     className="Owner-Units-form-select"
+                    title="Update the unit status"
                   >
-                    <option value="Available">Available</option>
-                    <option value="Occupied">Occupied</option>
-                    <option value="Maintenance">Under Maintenance</option>
-                    <option value="Renovation">Under Renovation</option>
+                    <option value="Available" title="Unit is available for rent">Available</option>
+                    <option value="Occupied" title="Unit is currently occupied">Occupied</option>
+                    <option value="Maintenance" title="Unit is under maintenance">Under Maintenance</option>
+                    <option value="Renovation" title="Unit is under renovation">Under Renovation</option>
                   </select>
                 </div>
               </div>
@@ -548,8 +560,9 @@ function Units() {
                     accept="image/*"
                     onChange={handleImageChange}
                     className="Owner-Units-file-input"
+                    title="Select a new image for the unit"
                   />
-                  <div className="Owner-Units-file-label">
+                  <div className="Owner-Units-file-label" title="Click to change the image">
                     <Plus size={16} />
                     {previewImage ? "Change Image" : "Choose Image"}
                   </div>
@@ -557,7 +570,7 @@ function Units() {
 
                 {previewImage && (
                   <div className="Owner-Units-preview-container">
-                    <img src={previewImage} alt="Preview" className="Owner-Units-preview-image" />
+                    <img src={previewImage} alt="Preview" className="Owner-Units-preview-image" title="New image preview" />
                     <p className="Owner-Units-preview-note">New image selected</p>
                   </div>
                 )}
@@ -570,6 +583,7 @@ function Units() {
                       src={selectedUnit.imagepath}
                       alt={selectedUnit.name}
                       className="Owner-Units-preview-image"
+                      title="Current unit image"
                     />
                   </div>
                 )}
@@ -577,10 +591,10 @@ function Units() {
             </div>
 
             <div className="Owner-Units-modal-footer">
-              <button className="Owner-Units-cancel-btn" onClick={handleCloseModal}>
+              <button className="Owner-Units-cancel-btn" onClick={handleCloseModal} title="Cancel editing">
                 Cancel
               </button>
-              <button className="Owner-Units-save-btn" onClick={handleEditUnit}>
+              <button className="Owner-Units-save-btn" onClick={handleEditUnit} title="Update unit information">
                 Update Unit
               </button>
             </div>
@@ -594,7 +608,7 @@ function Units() {
           <div className="Owner-Units-modal Owner-Units-view-modal">
             <div className="Owner-Units-modal-header">
               <h3>Unit Details</h3>
-              <button className="Owner-Units-close-btn" onClick={handleCloseModal}>
+              <button className="Owner-Units-close-btn" onClick={handleCloseModal} title="Close details modal">
                 <X size={20} />
               </button>
             </div>
@@ -607,9 +621,10 @@ function Units() {
                     src={selectedUnit.imagepath}
                     alt={selectedUnit.name}
                     className="Owner-Units-detail-thumbnail"
+                    title={`Image of ${selectedUnit.name}`}
                   />
                 ) : (
-                  <div className="Owner-Units-detail-placeholder">
+                  <div className="Owner-Units-detail-placeholder" title="No image available">
                     <Home size={48} className="Owner-Units-detail-icon" />
                     <p>No Image Available</p>
                   </div>
@@ -617,26 +632,26 @@ function Units() {
               </div>
 
               <div className="Owner-Units-detail-info">
-                <div className="Owner-Units-detail-row">
+                <div className="Owner-Units-detail-row" title={`Unit name: ${selectedUnit.name}`}>
                   <span className="Owner-Units-detail-label">Unit Name</span>
                   <span className="Owner-Units-detail-value">{selectedUnit.name}</span>
                 </div>
 
-                <div className="Owner-Units-detail-row">
+                <div className="Owner-Units-detail-row" title={`Description: ${selectedUnit.description || "No description provided"}`}>
                   <span className="Owner-Units-detail-label">Description</span>
                   <span className="Owner-Units-detail-value">
                     {selectedUnit.description || "No description provided"}
                   </span>
                 </div>
 
-                <div className="Owner-Units-detail-row">
+                <div className="Owner-Units-detail-row" title={`Monthly price: ₱${Number(selectedUnit.price).toLocaleString()}`}>
                   <span className="Owner-Units-detail-label">Monthly Price</span>
                   <span className="Owner-Units-detail-value Owner-Units-detail-price">
                     ₱{Number(selectedUnit.price).toLocaleString()}
                   </span>
                 </div>
 
-                <div className="Owner-Units-detail-row">
+                <div className="Owner-Units-detail-row" title={`Status: ${selectedUnit.status}`}>
                   <span className="Owner-Units-detail-label">Status</span>
                   <span className={`Owner-Units-detail-status ${selectedUnit.status.toLowerCase()}`}>
                     {selectedUnit.status}
@@ -646,7 +661,7 @@ function Units() {
             </div>
 
             <div className="Owner-Units-modal-footer">
-              <button className="Owner-Units-close-detail-btn" onClick={handleCloseModal}>
+              <button className="Owner-Units-close-detail-btn" onClick={handleCloseModal} title="Close this view">
                 Close
               </button>
             </div>
@@ -658,7 +673,7 @@ function Units() {
       {showSuccessModal && (
         <div className="modal-overlay-transactions success-modal-overlay-transactions">
           <div className="modal-content-transactions success-modal-transactions">
-            <button className="close-btn-transactions" onClick={closeAllModals}>
+            <button className="close-btn-transactions" onClick={closeAllModals} title="Close success message">
               <X size={20} />
             </button>
             <div className="modal-icon-transactions">
@@ -667,7 +682,7 @@ function Units() {
             <h3 className="modal-title-transactions">{modalConfig.title}</h3>
             <p className="modal-message-transactions">{modalConfig.message}</p>
             <div className="modal-actions-transactions">
-              <button className="modal-btn-transactions modal-btn-success" onClick={closeAllModals}>
+              <button className="modal-btn-transactions modal-btn-success" onClick={closeAllModals} title="Continue managing units">
                 Continue
               </button>
             </div>
@@ -679,7 +694,7 @@ function Units() {
       {showErrorModal && (
         <div className="modal-overlay-transactions">
           <div className="modal-content-transactions">
-            <button className="close-btn-transactions" onClick={closeAllModals}>
+            <button className="close-btn-transactions" onClick={closeAllModals} title="Close error message">
               <X size={20} />
             </button>
             <div className="modal-icon-transactions">
@@ -688,10 +703,10 @@ function Units() {
             <h3 className="modal-title-transactions">{modalConfig.title}</h3>
             <p className="modal-message-transactions">{modalConfig.message}</p>
             <div className="modal-actions-transactions">
-              <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals}>
+              <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals} title="Close this message">
                 Close
               </button>
-              <button className="modal-btn-transactions modal-btn-confirm" onClick={closeAllModals}>
+              <button className="modal-btn-transactions modal-btn-confirm" onClick={closeAllModals} title="Try the action again">
                 Try Again
               </button>
             </div>
@@ -703,7 +718,7 @@ function Units() {
       {showConfirmModal && (
         <div className="modal-overlay-transactions">
           <div className="modal-content-transactions">
-            <button className="close-btn-transactions" onClick={closeAllModals}>
+            <button className="close-btn-transactions" onClick={closeAllModals} title="Close confirmation modal">
               <X size={20} />
             </button>
             <div className="modal-icon-transactions">
@@ -712,10 +727,10 @@ function Units() {
             <h3 className="modal-title-transactions">{modalConfig.title}</h3>
             <p className="modal-message-transactions">{modalConfig.message}</p>
             <div className="modal-actions-transactions">
-              <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals}>
+              <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals} title="Cancel the action">
                 Cancel
               </button>
-              <button className="modal-btn-transactions modal-btn-confirm" onClick={closeAllModals}>
+              <button className="modal-btn-transactions modal-btn-confirm" onClick={closeAllModals} title="Confirm and proceed">
                 Confirm
               </button>
             </div>

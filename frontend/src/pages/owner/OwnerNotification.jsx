@@ -372,7 +372,7 @@ const OwnerNotifications = () => {
           <div className="send-notification-modal-Owner-Notifications" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-Owner-Notifications">
               <h2>Send Notification</h2>
-              <button className="close-modal-btn-Owner-Notifications" onClick={closeSendNotification}>
+              <button className="close-modal-btn-Owner-Notifications" onClick={closeSendNotification} title="Close send notification modal">
                 <X size={20} />
               </button>
             </div>
@@ -386,6 +386,7 @@ const OwnerNotifications = () => {
                   value={newNotification.title}
                   onChange={(e) => setNewNotification(prev => ({ ...prev, title: e.target.value }))}
                   className="form-input-Owner-Notifications"
+                  title="Enter a title for your notification"
                 />
               </div>
 
@@ -397,13 +398,14 @@ const OwnerNotifications = () => {
                   onChange={(e) => setNewNotification(prev => ({ ...prev, message: e.target.value }))}
                   className="form-textarea-Owner-Notifications"
                   rows="4"
+                  title="Enter the message content for your notification"
                 />
               </div>
 
               <div className="form-group-Owner-Notifications">
                 <label>Send To</label>
                 <div className="target-options-Owner-Notifications">
-                  <label className="radio-option-Owner-Notifications">
+                  <label className="radio-option-Owner-Notifications" title="Send notification to all tenants">
                     <input
                       type="radio"
                       value="all"
@@ -412,7 +414,7 @@ const OwnerNotifications = () => {
                     />
                     <span>All Tenants</span>
                   </label>
-                  <label className="radio-option-Owner-Notifications">
+                  <label className="radio-option-Owner-Notifications" title="Send notification to a specific tenant">
                     <input
                       type="radio"
                       value="specific"
@@ -431,10 +433,11 @@ const OwnerNotifications = () => {
                     value={newNotification.targetTenantId}
                     onChange={(e) => setNewNotification(prev => ({ ...prev, targetTenantId: e.target.value }))}
                     className="form-select-Owner-Notifications"
+                    title="Select a specific tenant to receive this notification"
                   >
                     <option value="">Select a tenant</option>
                     {tenants.map(tenant => (
-                      <option key={tenant.applicationid} value={tenant.applicationid}>
+                      <option key={tenant.applicationid} value={tenant.applicationid} title={`${tenant.fullname} - ${tenant.unit_name}`}>
                         {tenant.fullname} - {tenant.unit_name}
                       </option>
                     ))}
@@ -448,10 +451,11 @@ const OwnerNotifications = () => {
                   value={newNotification.priority}
                   onChange={(e) => setNewNotification(prev => ({ ...prev, priority: e.target.value }))}
                   className="form-select-Owner-Notifications"
+                  title="Set the priority level for this notification"
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  <option value="low" title="Low priority notification">Low</option>
+                  <option value="medium" title="Medium priority notification">Medium</option>
+                  <option value="high" title="High priority notification">High</option>
                 </select>
               </div>
             </div>
@@ -461,6 +465,7 @@ const OwnerNotifications = () => {
                 className="cancel-btn-Owner-Notifications"
                 onClick={closeSendNotification}
                 disabled={sending}
+                title="Cancel sending notification"
               >
                 Cancel
               </button>
@@ -468,6 +473,7 @@ const OwnerNotifications = () => {
                 className="send-btn-Owner-Notifications"
                 onClick={sendNotification}
                 disabled={sending}
+                title={sending ? "Sending notification..." : "Send notification to selected recipients"}
               >
                 {sending ? (
                   <>
@@ -499,6 +505,7 @@ const OwnerNotifications = () => {
         <button
           className="send-notification-btn-Owner-Notifications"
           onClick={openSendNotification}
+          title="Create and send a new notification to tenants"
         >
           <Plus size={20} />
           Send Notification
@@ -511,32 +518,37 @@ const OwnerNotifications = () => {
           <button
             className={`Owner-Notifications-tab-btn ${filter === "all" ? "Owner-Notifications-tab-active" : ""}`}
             onClick={() => setFilter("all")}
+            title={`View all notifications (${totalCount} total)`}
           >
             All
-            <span className="Owner-Notifications-tab-badge">{totalCount}</span>
+            <span className="Owner-Notifications-tab-badge" title={`${totalCount} total notifications`}>{totalCount}</span>
           </button>
           <button
             className={`Owner-Notifications-tab-btn ${filter === "unread" ? "Owner-Notifications-tab-active" : ""}`}
             onClick={() => setFilter("unread")}
+            title={`View unread notifications (${unreadCount} unread)`}
           >
             Unread
-            <span className="Owner-Notifications-tab-badge">{unreadCount}</span>
+            <span className="Owner-Notifications-tab-badge" title={`${unreadCount} unread notifications`}>{unreadCount}</span>
           </button>
           <button
             className={`Owner-Notifications-tab-btn ${filter === "payment" ? "Owner-Notifications-tab-active" : ""}`}
             onClick={() => setFilter("payment")}
+            title="View payment-related notifications"
           >
             Payments
           </button>
           <button
             className={`Owner-Notifications-tab-btn ${filter === "maintenance" ? "Owner-Notifications-tab-active" : ""}`}
             onClick={() => setFilter("maintenance")}
+            title="View maintenance-related notifications"
           >
             Maintenance
           </button>
           <button
             className={`Owner-Notifications-tab-btn ${filter === "tenant" ? "Owner-Notifications-tab-active" : ""}`}
             onClick={() => setFilter("tenant")}
+            title="View tenant-related notifications"
           >
             Tenants
           </button>
@@ -551,12 +563,14 @@ const OwnerNotifications = () => {
               className="Owner-Notifications-search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              title="Search through notification titles and messages"
             />
           </div>
           {unreadCount > 0 && (
             <button
               className="Owner-Notifications-mark-all-btn"
               onClick={markAllAsRead}
+              title="Mark all notifications as read"
             >
               <Check size={16} />
               Mark All Read
@@ -585,9 +599,10 @@ const OwnerNotifications = () => {
             <div
               key={notification.notificationid}
               className={`Owner-Notifications-card ${notification.status === "unread" ? "Owner-Notifications-unread" : ""}`}
+              title={`${notification.title} - ${formatDate(notification.creationdate)}`}
             >
               <div className="Owner-Notifications-card-header">
-                <div className="Owner-Notifications-type-badge">
+                <div className="Owner-Notifications-type-badge" title={`Notification type: ${getTypeLabel(notification)}`}>
                   <span className="Owner-Notifications-type-icon">
                     {getTypeIcon(notification)}
                   </span>
@@ -603,24 +618,24 @@ const OwnerNotifications = () => {
               </div>
 
               <div className="Owner-Notifications-card-content">
-                <h3 className="Owner-Notifications-card-title">
+                <h3 className="Owner-Notifications-card-title" title={notification.title}>
                   {notification.title}
                 </h3>
-                <p className="Owner-Notifications-card-description">
+                <p className="Owner-Notifications-card-description" title={notification.message}>
                   {notification.message}
                 </p>
               </div>
 
               <div className="Owner-Notifications-card-footer">
                 <div className="Owner-Notifications-meta">
-                  <div className="Owner-Notifications-meta-item">
+                  <div className="Owner-Notifications-meta-item" title={`Created: ${formatDate(notification.creationdate)}`}>
                     <span className="Owner-Notifications-meta-label">Date</span>
                     <span className="Owner-Notifications-meta-value">
                       <Clock size={14} />
                       {formatDate(notification.creationdate)}
                     </span>
                   </div>
-                  <div className="Owner-Notifications-meta-item">
+                  <div className="Owner-Notifications-meta-item" title={`Status: ${notification.status === "unread" ? "Unread" : "Read"}`}>
                     <span className="Owner-Notifications-meta-label">Status</span>
                     <span className={`Owner-Notifications-status-badge ${notification.status === "unread" ? "Owner-Notifications-status-unread" : "Owner-Notifications-status-read"}`}>
                       {notification.status === "unread" ? "Unread" : "Read"}
@@ -633,7 +648,7 @@ const OwnerNotifications = () => {
                     <button
                       className="Owner-Notifications-read-btn"
                       onClick={() => markAsRead(notification.notificationid)}
-                      title="Mark as read"
+                      title="Mark this notification as read"
                     >
                       <Check size={16} />
                     </button>
@@ -641,7 +656,7 @@ const OwnerNotifications = () => {
                   <button
                     className="Owner-Notifications-delete-btn"
                     onClick={() => deleteNotification(notification.notificationid)}
-                    title="Delete notification"
+                    title="Delete this notification"
                   >
                     <Trash2 size={16} />
                   </button>

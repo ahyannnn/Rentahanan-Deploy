@@ -125,7 +125,7 @@ const Dashboard = () => {
 
       {/* ==== STATS CARDS ==== */}
       <div className="stats-grid-Owner-Dashboard">
-        <div className="stat-card-Owner-Dashboard">
+        <div className="stat-card-Owner-Dashboard" title="Total number of active tenants">
           <div className="stat-icon-container-Owner-Dashboard stat-icon-blue-Owner-Dashboard">
             <Users className="stat-icon-Owner-Dashboard" size={28} />
           </div>
@@ -139,7 +139,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card-Owner-Dashboard">
+        <div className="stat-card-Owner-Dashboard" title="Number of currently vacant rental units">
           <div className="stat-icon-container-Owner-Dashboard stat-icon-green-Owner-Dashboard">
             <Home className="stat-icon-Owner-Dashboard" size={28} />
           </div>
@@ -152,7 +152,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card-Owner-Dashboard">
+        <div className="stat-card-Owner-Dashboard" title="Number of rental applications pending review">
           <div className="stat-icon-container-Owner-Dashboard stat-icon-orange-Owner-Dashboard">
             <FileWarning className="stat-icon-Owner-Dashboard" size={28} />
           </div>
@@ -165,13 +165,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card-Owner-Dashboard">
+        <div className="stat-card-Owner-Dashboard" title="Total monthly rental income">
           <div className="stat-icon-container-Owner-Dashboard stat-icon-gold-Owner-Dashboard">
             <Wallet className="stat-icon-Owner-Dashboard" size={28} />
           </div>
           <div className="stat-info-Owner-Dashboard">
             <p className="stat-label-Owner-Dashboard">Monthly Income</p>
-            <h2 className="stat-value-Owner-Dashboard">₱{monthlyIncome.toLocaleString('en-PH')}</h2>
+            <h2 className="stat-value-Owner-Dashboard">{monthlyIncome.toLocaleString('en-PH')}</h2>
             <div className="stat-trend-Owner-Dashboard stat-trend-up-Owner-Dashboard">
               <TrendingUp className="trend-icon-Owner-Dashboard" size={16} />
               <span className="trend-text-Owner-Dashboard">This month's revenue</span>
@@ -205,12 +205,13 @@ const Dashboard = () => {
                           <div 
                             className="bar-fill-Owner-Dashboard" 
                             style={{ height: `${height}%` }}
-                            data-amount={`₱${item.revenue.toLocaleString('en-PH')}`}
+                            data-amount={`${item.revenue.toLocaleString('en-PH')}`}
+                            title={`${item.month}: ${item.revenue.toLocaleString('en-PH')}`}
                           >
-                            <div className="bar-value-Owner-Dashboard">₱{item.revenue.toLocaleString('en-PH')}</div>
+                            <div className="bar-value-Owner-Dashboard">{item.revenue.toLocaleString('en-PH')}</div>
                           </div>
                         </div>
-                        <div className="bar-label-Owner-Dashboard">{item.month}</div>
+                        <div className="bar-label-Owner-Dashboard" title={`Revenue for ${item.month}`}>{item.month}</div>
                       </div>
                     );
                   })}
@@ -242,7 +243,7 @@ const Dashboard = () => {
           <div className="chart-container-Owner-Dashboard">
             {propertyStatusData.length > 0 ? (
               <div className="donut-chart-Owner-Dashboard">
-                <div className="donut-chart-visual-Owner-Dashboard">
+                <div className="donut-chart-visual-Owner-Dashboard" title={`Total properties: ${totalProperties}`}>
                   <svg width="160" height="160" viewBox="0 0 160 160" className="donut-svg-Owner-Dashboard">
                     {/* Background circle */}
                     <circle cx="80" cy="80" r="70" fill="none" stroke="#f3f4f6" strokeWidth="20" />
@@ -271,6 +272,7 @@ const Dashboard = () => {
                           strokeLinecap="round"
                           transform="rotate(-90 80 80)"
                           className="donut-segment-Owner-Dashboard"
+                          title={`${item.status}: ${item.count} units (${item.percentage}%)`}
                         />
                       );
                     })}
@@ -285,7 +287,7 @@ const Dashboard = () => {
                 
                 <div className="donut-legend-Owner-Dashboard">
                   {propertyStatusData.map((item, index) => (
-                    <div key={index} className="legend-item-Owner-Dashboard">
+                    <div key={index} className="legend-item-Owner-Dashboard" title={`${item.status}: ${item.count} units (${item.percentage}%)`}>
                       <div 
                         className="legend-color-Owner-Dashboard" 
                         style={{ backgroundColor: getStatusColor(item.status) }}
@@ -319,7 +321,7 @@ const Dashboard = () => {
             {dashboardData.recentActivity && dashboardData.recentActivity.length > 0 ? (
               <div className="activity-list-Owner-Dashboard">
                 {dashboardData.recentActivity.slice(0, 5).map((activity, index) => (
-                  <div key={index} className="activity-item-Owner-Dashboard">
+                  <div key={index} className="activity-item-Owner-Dashboard" title={`Payment received from ${activity.tenant_name} on ${activity.payment_date}`}>
                     <div className="activity-dot-Owner-Dashboard"></div>
                     <div className="activity-info-Owner-Dashboard">
                       <p className="activity-text-Owner-Dashboard">
@@ -329,8 +331,8 @@ const Dashboard = () => {
                         {activity.payment_date}
                       </span>
                     </div>
-                    <div className="activity-amount-Owner-Dashboard">
-                      ₱{activity.amount_paid?.toLocaleString('en-PH') || '0'}
+                    <div className="activity-amount-Owner-Dashboard" title={`Payment amount: ${activity.amount_paid?.toLocaleString('en-PH') || '0'}`}>
+                      {activity.amount_paid?.toLocaleString('en-PH') || '0'}
                     </div>
                   </div>
                 ))}
@@ -349,22 +351,22 @@ const Dashboard = () => {
           </div>
           <div className="overview-content-Owner-Dashboard">
             <div className="stats-list-Owner-Dashboard">
-              <div className="stat-item-Owner-Dashboard">
+              <div className="stat-item-Owner-Dashboard" title={`Current property occupancy rate: ${occupancyRate}%`}>
                 <span className="stat-item-label-Owner-Dashboard">Occupancy Rate</span>
                 <span className="stat-item-value-Owner-Dashboard">
                   {occupancyRate}%
                 </span>
               </div>
-              <div className="stat-item-Owner-Dashboard">
+              <div className="stat-item-Owner-Dashboard" title={`Average monthly revenue: ${dashboardData?.dashboardStats?.averageMonthlyRevenue?.toLocaleString('en-PH') || '0'}`}>
                 <span className="stat-item-label-Owner-Dashboard">Avg. Monthly Revenue</span>
                 <span className="stat-item-value-Owner-Dashboard">
-                  ₱{dashboardData?.dashboardStats?.averageMonthlyRevenue?.toLocaleString('en-PH') || '0'}
+                  {dashboardData?.dashboardStats?.averageMonthlyRevenue?.toLocaleString('en-PH') || '0'}
                 </span>
               </div>
-              <div className="stat-item-Owner-Dashboard">
+              <div className="stat-item-Owner-Dashboard" title={`Year-to-date total revenue: ${dashboardData?.dashboardStats?.ytdRevenue?.toLocaleString('en-PH') || '0'}`}>
                 <span className="stat-item-label-Owner-Dashboard">YTD Revenue</span>
                 <span className="stat-item-value-Owner-Dashboard">
-                  ₱{dashboardData?.dashboardStats?.ytdRevenue?.toLocaleString('en-PH') || '0'}
+                  {dashboardData?.dashboardStats?.ytdRevenue?.toLocaleString('en-PH') || '0'}
                 </span>
               </div>
             </div>

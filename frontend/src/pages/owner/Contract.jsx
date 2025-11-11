@@ -401,7 +401,7 @@ const OwnerContract = () => {
                 
                 {/* Statistics Cards */}
                 <div className="Owner-Contract-stats">
-                    <div className="Owner-Contract-stat-card">
+                    <div className="Owner-Contract-stat-card" title="Total number of contracts">
                         <div className="Owner-Contract-stat-icon total">
                             <FileText size={20} />
                         </div>
@@ -410,7 +410,7 @@ const OwnerContract = () => {
                             <span className="Owner-Contract-stat-label">Total Contracts</span>
                         </div>
                     </div>
-                    <div className="Owner-Contract-stat-card">
+                    <div className="Owner-Contract-stat-card" title="Number of active contracts">
                         <div className="Owner-Contract-stat-icon active">
                             <Users size={20} />
                         </div>
@@ -419,7 +419,7 @@ const OwnerContract = () => {
                             <span className="Owner-Contract-stat-label">Active</span>
                         </div>
                     </div>
-                    <div className="Owner-Contract-stat-card">
+                    <div className="Owner-Contract-stat-card" title="Number of pending contract issuances">
                         <div className="Owner-Contract-stat-icon pending">
                             <Clock size={20} />
                         </div>
@@ -428,7 +428,7 @@ const OwnerContract = () => {
                             <span className="Owner-Contract-stat-label">Pending</span>
                         </div>
                     </div>
-                    <div className="Owner-Contract-stat-card">
+                    <div className="Owner-Contract-stat-card" title="Number of termination requests pending review">
                         <div className="Owner-Contract-stat-icon termination">
                             <AlertTriangle size={20} />
                         </div>
@@ -446,18 +446,20 @@ const OwnerContract = () => {
                     <button
                         className={`Owner-Contract-tab-btn ${activeTab === "tenants" ? "Owner-Contract-tab-active" : ""}`}
                         onClick={() => setActiveTab("tenants")}
+                        title="View and manage active tenant contracts"
                     >
                         <FileText size={16} />
                         Active Contracts
-                        <span className="Owner-Contract-tab-badge">{stats.total}</span>
+                        <span className="Owner-Contract-tab-badge" title={`${stats.total} total contracts`}>{stats.total}</span>
                     </button>
                     <button
                         className={`Owner-Contract-tab-btn ${activeTab === "issue" ? "Owner-Contract-tab-active" : ""}`}
                         onClick={() => setActiveTab("issue")}
+                        title="Issue new contracts to approved applicants"
                     >
                         <User size={16} />
                         Issue New Contracts
-                        <span className="Owner-Contract-tab-badge">{stats.pending}</span>
+                        <span className="Owner-Contract-tab-badge" title={`${stats.pending} applicants ready for contract issuance`}>{stats.pending}</span>
                     </button>
                 </div>
             </div>
@@ -514,7 +516,7 @@ const OwnerContract = () => {
                                                 <div className="Owner-Contract-tenant-info">
                                                     <h3>{contract.fullname}</h3>
                                                     <span className="Owner-Contract-tenant-email">{contract.email}</span>
-                                                    <div className={`Owner-Contract-status-badge ${contract.status.toLowerCase().replace(' ', '-')}`}>
+                                                    <div className={`Owner-Contract-status-badge ${contract.status.toLowerCase().replace(' ', '-')}`} title={`Contract status: ${contract.status}`}>
                                                         {contract.status}
                                                     </div>
                                                 </div>
@@ -523,20 +525,20 @@ const OwnerContract = () => {
                                             <div className="Owner-Contract-card-details">
                                                 <div className="Owner-Contract-detail-item">
                                                     <Home size={16} />
-                                                    <span>{contract.unit_name}</span>
+                                                    <span title={`Rental unit: ${contract.unit_name}`}>{contract.unit_name}</span>
                                                 </div>
                                                 <div className="Owner-Contract-detail-item">
                                                     <DollarSign size={16} />
-                                                    <span>₱{contract.unit_price}/month</span>
+                                                    <span title={`Monthly rent: ${parseFloat(contract.unit_price || 0).toLocaleString()}`}>{parseFloat(contract.unit_price || 0).toLocaleString()}/month</span>
                                                 </div>
                                                 <div className="Owner-Contract-detail-item">
                                                     <Calendar size={16} />
-                                                    <span>Started {new Date(contract.start_date).toLocaleDateString()}</span>
+                                                    <span title={`Contract start date: ${new Date(contract.start_date).toLocaleDateString()}`}>Started {new Date(contract.start_date).toLocaleDateString()}</span>
                                                 </div>
                                                 {contract.end_date && (
                                                     <div className="Owner-Contract-detail-item">
                                                         <Calendar size={16} />
-                                                        <span>Ends {new Date(contract.end_date).toLocaleDateString()}</span>
+                                                        <span title={`Contract end date: ${new Date(contract.end_date).toLocaleDateString()}`}>Ends {new Date(contract.end_date).toLocaleDateString()}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -545,6 +547,7 @@ const OwnerContract = () => {
                                                 <button
                                                     className="Owner-Contract-view-btn"
                                                     onClick={() => handleViewExistingContract(contract)}
+                                                    title={`View contract document for ${contract.fullname}`}
                                                 >
                                                     <Eye size={16} />
                                                     View
@@ -554,6 +557,7 @@ const OwnerContract = () => {
                                                     <button
                                                         className="Owner-Contract-terminate-btn"
                                                         onClick={() => openTerminateModal(contract)}
+                                                        title={`Initiate tenancy termination for ${contract.fullname}`}
                                                     >
                                                         <FileX size={16} />
                                                         End Tenancy
@@ -565,6 +569,7 @@ const OwnerContract = () => {
                                                         <button
                                                             className="Owner-Contract-approve-btn"
                                                             onClick={() => openApproveModal(contract)}
+                                                            title={`Review termination request from ${contract.fullname}`}
                                                         >
                                                             <FileCheck size={16} />
                                                             Review Request
@@ -599,11 +604,11 @@ const OwnerContract = () => {
                             <table className="Owner-Contract-table">
                                 <thead>
                                     <tr>
-                                        <th>Applicant</th>
-                                        <th>Contact Information</th>
-                                        <th>Unit Details</th>
-                                        <th>Monthly Rent</th>
-                                        <th>Actions</th>
+                                        <th title="Applicant name">Applicant</th>
+                                        <th title="Contact information including email and phone">Contact Information</th>
+                                        <th title="Requested rental unit details">Unit Details</th>
+                                        <th title="Monthly rental amount">Monthly Rent</th>
+                                        <th title="Available actions for contract issuance">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -615,12 +620,12 @@ const OwnerContract = () => {
                                                     key={i}
                                                     className={`Owner-Contract-table-row ${highlightedApplicantId === app.applicationid ? "Owner-Contract-highlight-row" : ""}`}
                                                 >
-                                                    <td>
+                                                    <td title={`Applicant: ${app.fullname}`}>
                                                         <div className="Owner-Contract-applicant-info">
                                                             <span className="Owner-Contract-applicant-name">{app.fullname}</span>
                                                         </div>
                                                     </td>
-                                                    <td>
+                                                    <td title={`Email: ${app.email}\nPhone: ${app.phone}`}>
                                                         <div className="Owner-Contract-contact-info">
                                                             <span className="Owner-Contract-contact-email">
                                                                 <Mail size={12} />
@@ -632,19 +637,20 @@ const OwnerContract = () => {
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td>
+                                                    <td title={`Unit: ${app.unit_name}`}>
                                                         <div className="Owner-Contract-unit-info">
                                                             <Home size={12} />
                                                             {app.unit_name}
                                                         </div>
                                                     </td>
-                                                    <td className="Owner-Contract-amount">
-                                                        ₱{parseFloat(app.unit_price || 0).toLocaleString()}
+                                                    <td className="Owner-Contract-amount" title={`Monthly rent: ${parseFloat(app.unit_price || 0).toLocaleString()}`}>
+                                                        {parseFloat(app.unit_price || 0).toLocaleString()}
                                                     </td>
                                                     <td>
                                                         <button 
                                                             className="Owner-Contract-issue-btn"
                                                             onClick={() => openIssueModal(app)}
+                                                            title={`Issue contract to ${app.fullname}`}
                                                         >
                                                             <FileText size={14} />
                                                             Issue Contract
@@ -674,7 +680,7 @@ const OwnerContract = () => {
                     <div className="Owner-Contract-modal Owner-Contract-issue-modal">
                         <div className="Owner-Contract-modal-header">
                             <h3>Issue Rental Contract</h3>
-                            <button className="Owner-Contract-close-btn" onClick={() => setShowAddModal(false)}>
+                            <button className="Owner-Contract-close-btn" onClick={() => setShowAddModal(false)} title="Close contract issuance modal">
                                 <X size={20} />
                             </button>
                         </div>
@@ -717,39 +723,43 @@ const OwnerContract = () => {
                                         value={formData.startdate}
                                         onChange={handleInputChange}
                                         className="Owner-Contract-form-input"
+                                        title="Select the contract start date"
                                     />
                                 </div>
 
                                 <div className="Owner-Contract-form-group">
-                                    <label className="Owner-Contract-form-label">Monthly Rent (₱)</label>
+                                    <label className="Owner-Contract-form-label">Monthly Rent</label>
                                     <input
                                         type="number"
                                         name="monthlyrent"
                                         value={formData.monthlyrent}
                                         onChange={handleInputChange}
                                         className="Owner-Contract-form-input"
+                                        title="Enter the monthly rental amount"
                                     />
                                 </div>
 
                                 <div className="Owner-Contract-form-group">
-                                    <label className="Owner-Contract-form-label">Security Deposit (₱)</label>
+                                    <label className="Owner-Contract-form-label">Security Deposit</label>
                                     <input
                                         type="number"
                                         name="deposit"
                                         value={formData.deposit}
                                         onChange={handleInputChange}
                                         className="Owner-Contract-form-input"
+                                        title="Enter the security deposit amount"
                                     />
                                 </div>
 
                                 <div className="Owner-Contract-form-group">
-                                    <label className="Owner-Contract-form-label">Advance Payment (₱)</label>
+                                    <label className="Owner-Contract-form-label">Advance Payment</label>
                                     <input
                                         type="number"
                                         name="advancepayment"
                                         value={formData.advancepayment}
                                         onChange={handleInputChange}
                                         className="Owner-Contract-form-input"
+                                        title="Enter the advance payment amount"
                                     />
                                 </div>
                             </div>
@@ -763,6 +773,7 @@ const OwnerContract = () => {
                                     className="Owner-Contract-form-textarea"
                                     placeholder="Additional contract notes..."
                                     rows="3"
+                                    title="Enter any additional contract notes or remarks"
                                 />
                             </div>
 
@@ -779,7 +790,7 @@ const OwnerContract = () => {
                                             className: "Owner-Contract-sigCanvas",
                                         }}
                                     />
-                                    <button className="Owner-Contract-clear-btn" onClick={clearSignature}>
+                                    <button className="Owner-Contract-clear-btn" onClick={clearSignature} title="Clear the signature">
                                         Clear Signature
                                     </button>
                                 </div>
@@ -787,10 +798,10 @@ const OwnerContract = () => {
                         </div>
 
                         <div className="Owner-Contract-modal-footer">
-                            <button className="Owner-Contract-cancel-btn" onClick={() => setShowAddModal(false)}>
+                            <button className="Owner-Contract-cancel-btn" onClick={() => setShowAddModal(false)} title="Cancel contract issuance">
                                 Cancel
                             </button>
-                            <button className="Owner-Contract-generate-btn" onClick={handleGeneratePDF}>
+                            <button className="Owner-Contract-generate-btn" onClick={handleGeneratePDF} title="Generate and save contract PDF">
                                 <FileText size={16} />
                                 Generate Contract PDF
                             </button>
@@ -805,7 +816,7 @@ const OwnerContract = () => {
                     <div className="Owner-Contract-modal Owner-Contract-terminate-modal">
                         <div className="Owner-Contract-modal-header">
                             <h3>End Tenancy</h3>
-                            <button className="Owner-Contract-close-btn" onClick={() => setShowTerminateModal(false)}>
+                            <button className="Owner-Contract-close-btn" onClick={() => setShowTerminateModal(false)} title="Close termination modal">
                                 <X size={20} />
                             </button>
                         </div>
@@ -832,7 +843,7 @@ const OwnerContract = () => {
                                 </div>
                                 <div className="Owner-Contract-detail-row">
                                     <span className="Owner-Contract-detail-label">Current Rent:</span>
-                                    <span className="Owner-Contract-detail-value">₱{parseFloat(selectedContract.unit_price || 0).toLocaleString()}</span>
+                                    <span className="Owner-Contract-detail-value">{parseFloat(selectedContract.unit_price || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="Owner-Contract-detail-row">
                                     <span className="Owner-Contract-detail-label">Current Status:</span>
@@ -852,6 +863,7 @@ const OwnerContract = () => {
                                     className="Owner-Contract-form-input"
                                     min={minDateString}
                                     max={maxDateString}
+                                    title="Select the termination date (between 2 weeks and 30 days from today)"
                                 />
                                 <div className="Owner-Contract-date-info">
                                     <Calendar size={14} />
@@ -864,6 +876,7 @@ const OwnerContract = () => {
                             <button 
                                 className="Owner-Contract-cancel-btn" 
                                 onClick={() => setShowTerminateModal(false)}
+                                title="Cancel termination process"
                             >
                                 Cancel
                             </button>
@@ -871,6 +884,7 @@ const OwnerContract = () => {
                                 className="Owner-Contract-terminate-confirm-btn"
                                 onClick={showConfirmation}
                                 disabled={!terminationDate}
+                                title="Proceed to confirm termination"
                             >
                                 <ArrowRight size={16} />
                                 Proceed to Confirm
@@ -886,7 +900,7 @@ const OwnerContract = () => {
                     <div className="Owner-Contract-modal Owner-Contract-confirm-modal">
                         <div className="Owner-Contract-modal-header">
                             <h3>Confirm Termination</h3>
-                            <button className="Owner-Contract-close-btn" onClick={() => setShowConfirmModal(false)}>
+                            <button className="Owner-Contract-close-btn" onClick={() => setShowConfirmModal(false)} title="Close confirmation modal">
                                 <X size={20} />
                             </button>
                         </div>
@@ -914,12 +928,14 @@ const OwnerContract = () => {
                             <button 
                                 className="Owner-Contract-cancel-btn" 
                                 onClick={() => setShowConfirmModal(false)}
+                                title="Cancel termination"
                             >
                                 No, Go Back
                             </button>
                             <button 
                                 className="Owner-Contract-terminate-final-btn"
                                 onClick={handleTerminateContract}
+                                title="Confirm and terminate the contract"
                             >
                                 <FileX size={16} />
                                 Yes, Terminate Contract
@@ -973,7 +989,7 @@ const OwnerContract = () => {
                                 <div className="Owner-Contract-success-detail-item">
                                     <span className="Owner-Contract-detail-label">Monthly Rent:</span>
                                     <span className="Owner-Contract-detail-value">
-                                        ₱{parseFloat(successModalData.monthlyRent || 0).toLocaleString()}
+                                        {parseFloat(successModalData.monthlyRent || 0).toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="Owner-Contract-success-detail-item">
@@ -988,6 +1004,7 @@ const OwnerContract = () => {
                                 <button 
                                     className="Owner-Contract-view-contract-btn"
                                     onClick={handleViewContract}
+                                    title="View the generated contract PDF"
                                 >
                                     <FileText size={16} />
                                     View Contract
@@ -995,6 +1012,7 @@ const OwnerContract = () => {
                                 <button 
                                     className="Owner-Contract-success-close-btn"
                                     onClick={handleCloseSuccessModal}
+                                    title="Continue to contract management"
                                 >
                                     <Check size={16} />
                                     Continue
@@ -1011,7 +1029,7 @@ const OwnerContract = () => {
                     <div className="Owner-Contract-modal Owner-Contract-approve-modal">
                         <div className="Owner-Contract-modal-header">
                             <h3>Review Termination Request</h3>
-                            <button className="Owner-Contract-close-btn" onClick={() => setShowApproveModal(false)}>
+                            <button className="Owner-Contract-close-btn" onClick={() => setShowApproveModal(false)} title="Close approval modal">
                                 <X size={20} />
                             </button>
                         </div>
@@ -1038,7 +1056,7 @@ const OwnerContract = () => {
                                 </div>
                                 <div className="Owner-Contract-detail-row">
                                     <span className="Owner-Contract-detail-label">Current Rent:</span>
-                                    <span className="Owner-Contract-detail-value">₱{parseFloat(selectedContract.unit_price || 0).toLocaleString()}</span>
+                                    <span className="Owner-Contract-detail-value">{parseFloat(selectedContract.unit_price || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="Owner-Contract-detail-row">
                                     <span className="Owner-Contract-detail-label">Requested Move-out:</span>
@@ -1058,6 +1076,7 @@ const OwnerContract = () => {
                             <button 
                                 className="Owner-Contract-reject-btn" 
                                 onClick={handleRejectTermination}
+                                title="Reject the termination request"
                             >
                                 <X size={16} />
                                 Reject Request
@@ -1065,6 +1084,7 @@ const OwnerContract = () => {
                             <button 
                                 className="Owner-Contract-approve-final-btn"
                                 onClick={handleApproveTermination}
+                                title="Approve the termination request"
                             >
                                 <Check size={16} />
                                 Approve Termination

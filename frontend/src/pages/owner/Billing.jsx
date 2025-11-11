@@ -613,7 +613,7 @@ function Billing() {
 
                 {/* Statistics Cards */}
                 <div className="Owner-Billing-stats">
-                    <div className="Owner-Billing-stat-card">
+                    <div className="Owner-Billing-stat-card" title="Total number of invoices created">
                         <div className="Owner-Billing-stat-icon total">
                             <FileText size={20} />
                         </div>
@@ -622,7 +622,7 @@ function Billing() {
                             <span className="Owner-Billing-stat-label">Total Invoices</span>
                         </div>
                     </div>
-                    <div className="Owner-Billing-stat-card">
+                    <div className="Owner-Billing-stat-card" title="Number of paid invoices">
                         <div className="Owner-Billing-stat-icon paid">
                             <DollarSign size={20} />
                         </div>
@@ -631,7 +631,7 @@ function Billing() {
                             <span className="Owner-Billing-stat-label">Paid</span>
                         </div>
                     </div>
-                    <div className="Owner-Billing-stat-card">
+                    <div className="Owner-Billing-stat-card" title="Number of unpaid invoices">
                         <div className="Owner-Billing-stat-icon unpaid">
                             <Calendar size={20} />
                         </div>
@@ -650,18 +650,20 @@ function Billing() {
                     <button
                         className={`Owner-Billing-tab-btn ${activeTab === "tenants" ? "Owner-Billing-tab-active" : ""}`}
                         onClick={() => setActiveTab("tenants")}
+                        title="View and manage tenant invoices"
                     >
                         <FileText size={16} />
                         Tenant Invoices
-                        <span className="Owner-Billing-tab-badge">{stats.total}</span>
+                        <span className="Owner-Billing-tab-badge" title={`${stats.total} total invoices`}>{stats.total}</span>
                     </button>
                     <button
                         className={`Owner-Billing-tab-btn ${activeTab === "applicants" ? "Owner-Billing-tab-active" : ""}`}
                         onClick={() => setActiveTab("applicants")}
+                        title="Issue initial payment invoices for new applicants"
                     >
                         <User size={16} />
                         Applicant Invoices
-                        <span className="Owner-Billing-tab-badge">{filteredApplicants.length}</span>
+                        <span className="Owner-Billing-tab-badge" title={`${filteredApplicants.length} applicants requiring initial payment`}>{filteredApplicants.length}</span>
                     </button>
                 </div>
 
@@ -674,15 +676,17 @@ function Billing() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="Owner-Billing-search-input"
+                            title="Search through invoices by tenant name, invoice number, or unit name"
                         />
                         <button
                             className="Owner-Billing-add-btn"
                             onClick={openTenantInvoiceModal}
+                            title="Create a new invoice for a tenant"
                         >
                             <Plus size={16} />
                             New Invoice
                             {automatedBills.length > 0 && (
-                                <span className="Owner-Billing-automated-badge">
+                                <span className="Owner-Billing-automated-badge" title={`${automatedBills.length} automated bills ready to create`}>
                                     {automatedBills.length}
                                 </span>
                             )}
@@ -697,7 +701,7 @@ function Billing() {
                     <div className="Owner-Billing-modal Owner-Billing-automated-modal">
                         <div className="Owner-Billing-modal-header">
                             <h3>📋 Automated Bill Detection</h3>
-                            <button className="Owner-Billing-close-btn" onClick={() => setShowAutomatedModal(false)}>
+                            <button className="Owner-Billing-close-btn" onClick={() => setShowAutomatedModal(false)} title="Close automated bills notification">
                                 <X size={20} />
                             </button>
                         </div>
@@ -717,11 +721,12 @@ function Billing() {
                                             <span className="Owner-Billing-bill-type">{bill.billType}</span>
                                         </div>
                                         <div className="Owner-Billing-automated-amount">
-                                            ₱{parseFloat(bill.amount || 0).toLocaleString()}
+                                            {parseFloat(bill.amount || 0).toLocaleString()}
                                         </div>
                                         <button 
                                             className="Owner-Billing-auto-create-btn"
                                             onClick={() => createAutomatedBill(bill)}
+                                            title={`Create ${bill.billType} bill for ${bill.tenantName}`}
                                         >
                                             Create
                                         </button>
@@ -734,12 +739,14 @@ function Billing() {
                             <button 
                                 className="Owner-Billing-cancel-btn" 
                                 onClick={() => setShowAutomatedModal(false)}
+                                title="Skip creating automated bills for now"
                             >
                                 Skip
                             </button>
                             <button 
                                 className="Owner-Billing-save-btn"
                                 onClick={createAllAutomatedBills}
+                                title="Create all automated bills at once"
                             >
                                 Create All Bills
                             </button>
@@ -760,38 +767,38 @@ function Billing() {
                         <table className="Owner-Billing-table">
                             <thead>
                                 <tr>
-                                    <th>Invoice No.</th>
-                                    <th>Tenant</th>
-                                    <th>Unit</th>
-                                    <th>Amount</th>
-                                    <th>Issued Date</th>
-                                    <th>Due Date</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+                                    <th title="Unique identifier for each invoice">Invoice No.</th>
+                                    <th title="Tenant associated with the invoice">Tenant</th>
+                                    <th title="Rental unit associated with the invoice">Unit</th>
+                                    <th title="Invoice amount">Amount</th>
+                                    <th title="Date when invoice was issued">Issued Date</th>
+                                    <th title="Due date for payment">Due Date</th>
+                                    <th title="Current payment status">Status</th>
+                                    <th title="Available actions for this invoice">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredTenants.length > 0 ? (
                                     filteredTenants.map((tenant, i) => (
                                         <tr key={i} className="Owner-Billing-table-row">
-                                            <td className="Owner-Billing-invoice-no">
+                                            <td className="Owner-Billing-invoice-no" title={`Invoice number: ${tenant.invoiceno || `INV-${tenant.billid}`}`}>
                                                 <FileText size={14} />
                                                 {tenant.invoiceno || `INV-${tenant.billid}`}
                                             </td>
-                                            <td>
+                                            <td title={`Tenant: ${tenant.tenant_name}\nEmail: ${tenant.email}`}>
                                                 <div className="Owner-Billing-tenant-info">
                                                     <span className="Owner-Billing-tenant-name">{tenant.tenant_name}</span>
                                                     <span className="Owner-Billing-tenant-email">{tenant.email}</span>
                                                 </div>
                                             </td>
-                                            <td>{tenant.unit_name}</td>
-                                            <td className="Owner-Billing-amount">
-                                                ₱{parseFloat(tenant.amount || 0).toLocaleString()}
+                                            <td title={`Unit: ${tenant.unit_name}`}>{tenant.unit_name}</td>
+                                            <td className="Owner-Billing-amount" title={`Amount: ${parseFloat(tenant.amount || 0).toLocaleString()}`}>
+                                                {parseFloat(tenant.amount || 0).toLocaleString()}
                                             </td>
-                                            <td>{new Date(tenant.issuedate).toLocaleDateString()}</td>
-                                            <td>{tenant.duedate ? new Date(tenant.duedate).toLocaleDateString() : 'N/A'}</td>
+                                            <td title={`Issued: ${new Date(tenant.issuedate).toLocaleDateString()}`}>{new Date(tenant.issuedate).toLocaleDateString()}</td>
+                                            <td title={`Due: ${tenant.duedate ? new Date(tenant.duedate).toLocaleDateString() : 'N/A'}`}>{tenant.duedate ? new Date(tenant.duedate).toLocaleDateString() : 'N/A'}</td>
                                             <td>
-                                                <span className={`Owner-Billing-status-badge ${tenant.status?.toLowerCase()}`}>
+                                                <span className={`Owner-Billing-status-badge ${tenant.status?.toLowerCase()}`} title={`Payment status: ${tenant.status}`}>
                                                     {tenant.status}
                                                 </span>
                                             </td>
@@ -800,6 +807,7 @@ function Billing() {
                                                     <button
                                                         className="Owner-Billing-view-btn"
                                                         onClick={() => openViewModal(tenant)}
+                                                        title={`View details of invoice ${tenant.invoiceno || `INV-${tenant.billid}`}`}
                                                     >
                                                         <Eye size={14} />
                                                         View
@@ -835,24 +843,24 @@ function Billing() {
                         <table className="Owner-Billing-table">
                             <thead>
                                 <tr>
-                                    <th>Applicant</th>
-                                    <th>Contact Info</th>
-                                    <th>Unit</th>
-                                    <th>Monthly Rent</th>
-                                    <th>Initial Payment</th>
-                                    <th>Actions</th>
+                                    <th title="Applicant name">Applicant</th>
+                                    <th title="Contact information">Contact Info</th>
+                                    <th title="Requested rental unit">Unit</th>
+                                    <th title="Monthly rental amount">Monthly Rent</th>
+                                    <th title="Initial payment amount (3x monthly rent)">Initial Payment</th>
+                                    <th title="Available actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredApplicants.length > 0 ? (
                                     filteredApplicants.map((app, i) => (
                                         <tr key={i} className="Owner-Billing-table-row">
-                                            <td>
+                                            <td title={`Applicant: ${app.fullname}`}>
                                                 <div className="Owner-Billing-applicant-info">
                                                     <span className="Owner-Billing-applicant-name">{app.fullname}</span>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td title={`Email: ${app.email}\nPhone: ${app.phone}`}>
                                                 <div className="Owner-Billing-contact-info">
                                                     <span className="Owner-Billing-contact-email">
                                                         <Mail size={12} />
@@ -864,22 +872,23 @@ function Billing() {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td title={`Unit: ${app.unit_name}`}>
                                                 <div className="Owner-Billing-unit-info">
                                                     <Home size={12} />
                                                     {app.unit_name}
                                                 </div>
                                             </td>
-                                            <td className="Owner-Billing-amount">
-                                                ₱{parseFloat(app.unit_price || 0).toLocaleString()}
+                                            <td className="Owner-Billing-amount" title={`Monthly rent: ${parseFloat(app.unit_price || 0).toLocaleString()}`}>
+                                                {parseFloat(app.unit_price || 0).toLocaleString()}
                                             </td>
-                                            <td className="Owner-Billing-initial-payment">
-                                                ₱{parseFloat(app.unit_price * 3 || 0).toLocaleString()}
+                                            <td className="Owner-Billing-initial-payment" title={`Initial payment (3 months): ${parseFloat(app.unit_price * 3 || 0).toLocaleString()}`}>
+                                                {parseFloat(app.unit_price * 3 || 0).toLocaleString()}
                                             </td>
                                             <td>
                                                 <button
                                                     className="Owner-Billing-issue-btn"
                                                     onClick={() => openInvoiceModal(app)}
+                                                    title={`Issue initial payment invoice for ${app.fullname}`}
                                                 >
                                                     <Plus size={14} />
                                                     Issue Invoice
@@ -907,7 +916,7 @@ function Billing() {
                     <div className="Owner-Billing-modal Owner-Billing-add-modal">
                         <div className="Owner-Billing-modal-header">
                             <h3>Issue Initial Payment Invoice</h3>
-                            <button className="Owner-Billing-close-btn" onClick={() => setShowAddModal(false)}>
+                            <button className="Owner-Billing-close-btn" onClick={() => setShowAddModal(false)} title="Close modal">
                                 <X size={20} />
                             </button>
                         </div>
@@ -931,6 +940,7 @@ function Billing() {
                                         value={formData.billType}
                                         onChange={handleInputChange}
                                         className="Owner-Billing-form-select"
+                                        title="Select the type of bill to issue"
                                     >
                                         <option>Security Deposit & Advance Payment</option>
                                         <option>Advance Rent Only</option>
@@ -942,7 +952,7 @@ function Billing() {
                                 </div>
 
                                 <div className="Owner-Billing-form-group">
-                                    <label className="Owner-Billing-form-label">Amount (₱) *</label>
+                                    <label className="Owner-Billing-form-label">Amount *</label>
                                     <input
                                         type="number"
                                         name="amount"
@@ -950,6 +960,7 @@ function Billing() {
                                         onChange={handleInputChange}
                                         className={`Owner-Billing-form-input ${formErrors.amount ? 'error' : ''}`}
                                         placeholder="Enter amount"
+                                        title="Enter the invoice amount"
                                     />
                                     {formErrors.amount && (
                                         <span className="Owner-Billing-error-text">{formErrors.amount}</span>
@@ -964,6 +975,7 @@ function Billing() {
                                         value={formData.issuedDate}
                                         onChange={handleInputChange}
                                         className={`Owner-Billing-form-input ${formErrors.issuedDate ? 'error' : ''}`}
+                                        title="Select the date when invoice is issued"
                                     />
                                     {formErrors.issuedDate && (
                                         <span className="Owner-Billing-error-text">{formErrors.issuedDate}</span>
@@ -980,6 +992,7 @@ function Billing() {
                                         className={`Owner-Billing-form-input ${formErrors.dueDate ? 'error' : ''}`}
                                         min={formData.issuedDate}
                                         required
+                                        title="Select the payment due date"
                                     />
                                     {formErrors.dueDate && (
                                         <span className="Owner-Billing-error-text">{formErrors.dueDate}</span>
@@ -996,15 +1009,16 @@ function Billing() {
                                     className="Owner-Billing-form-textarea"
                                     placeholder="Enter invoice description..."
                                     rows="3"
+                                    title="Enter a description for this invoice"
                                 />
                             </div>
                         </div>
 
                         <div className="Owner-Billing-modal-footer">
-                            <button className="Owner-Billing-cancel-btn" onClick={() => setShowAddModal(false)}>
+                            <button className="Owner-Billing-cancel-btn" onClick={() => setShowAddModal(false)} title="Cancel and close modal">
                                 Cancel
                             </button>
-                            <button className="Owner-Billing-save-btn" onClick={handleSaveInvoice}>
+                            <button className="Owner-Billing-save-btn" onClick={handleSaveInvoice} title="Create and save the invoice">
                                 <FileText size={16} />
                                 Create Invoice
                             </button>
@@ -1019,7 +1033,7 @@ function Billing() {
                     <div className="Owner-Billing-modal Owner-Billing-add-modal">
                         <div className="Owner-Billing-modal-header">
                             <h3>Create New Invoice</h3>
-                            <button className="Owner-Billing-close-btn" onClick={() => setShowTenantInvoiceModal(false)}>
+                            <button className="Owner-Billing-close-btn" onClick={() => setShowTenantInvoiceModal(false)} title="Close modal">
                                 <X size={20} />
                             </button>
                         </div>
@@ -1034,6 +1048,7 @@ function Billing() {
                                         onChange={handleTenantInputChange}
                                         className={`Owner-Billing-form-select ${tenantFormErrors.tenantId ? 'error' : ''}`}
                                         required
+                                        title="Select the tenant for this invoice"
                                     >
                                         <option value="">Select a tenant</option>
                                         {tenantContracts.map((contract) => (
@@ -1056,6 +1071,7 @@ function Billing() {
                                         className="Owner-Billing-form-input"
                                         readOnly
                                         placeholder="Will auto-fill when tenant is selected"
+                                        title="Associated rental unit (auto-filled)"
                                     />
                                 </div>
 
@@ -1066,6 +1082,7 @@ function Billing() {
                                         value={tenantFormData.billType}
                                         onChange={handleTenantInputChange}
                                         className={`Owner-Billing-form-select ${tenantFormErrors.billType ? 'error' : ''}`}
+                                        title="Select the type of bill"
                                     >
                                         <option value="Rent">Rent</option>
                                         <option value="Water">Water</option>
@@ -1079,7 +1096,7 @@ function Billing() {
                                 </div>
 
                                 <div className="Owner-Billing-form-group">
-                                    <label className="Owner-Billing-form-label">Amount (₱) *</label>
+                                    <label className="Owner-Billing-form-label">Amount *</label>
                                     <input
                                         type="number"
                                         name="amount"
@@ -1088,6 +1105,7 @@ function Billing() {
                                         className={`Owner-Billing-form-input ${tenantFormErrors.amount ? 'error' : ''}`}
                                         placeholder="Enter amount"
                                         required
+                                        title="Enter the invoice amount"
                                     />
                                     {tenantFormErrors.amount && (
                                         <span className="Owner-Billing-error-text">{tenantFormErrors.amount}</span>
@@ -1103,6 +1121,7 @@ function Billing() {
                                         onChange={handleTenantInputChange}
                                         className={`Owner-Billing-form-input ${tenantFormErrors.issuedDate ? 'error' : ''}`}
                                         required
+                                        title="Select the date when invoice is issued"
                                     />
                                     {tenantFormErrors.issuedDate && (
                                         <span className="Owner-Billing-error-text">{tenantFormErrors.issuedDate}</span>
@@ -1119,6 +1138,7 @@ function Billing() {
                                         className={`Owner-Billing-form-input ${tenantFormErrors.dueDate ? 'error' : ''}`}
                                         min={tenantFormData.issuedDate}
                                         required
+                                        title="Select the payment due date"
                                     />
                                     {tenantFormErrors.dueDate && (
                                         <span className="Owner-Billing-error-text">{tenantFormErrors.dueDate}</span>
@@ -1140,15 +1160,16 @@ function Billing() {
                                     className="Owner-Billing-form-textarea"
                                     placeholder="Enter invoice description..."
                                     rows="3"
+                                    title="Enter a description for this invoice"
                                 />
                             </div>
                         </div>
 
                         <div className="Owner-Billing-modal-footer">
-                            <button className="Owner-Billing-cancel-btn" onClick={() => setShowTenantInvoiceModal(false)}>
+                            <button className="Owner-Billing-cancel-btn" onClick={() => setShowTenantInvoiceModal(false)} title="Cancel and close modal">
                                 Cancel
                             </button>
-                            <button className="Owner-Billing-save-btn" onClick={handleSaveTenantInvoice}>
+                            <button className="Owner-Billing-save-btn" onClick={handleSaveTenantInvoice} title="Create and save the invoice">
                                 <FileText size={16} />
                                 Create Invoice
                             </button>
@@ -1163,7 +1184,7 @@ function Billing() {
                     <div className="Owner-Billing-modal Owner-Billing-view-modal">
                         <div className="Owner-Billing-modal-header">
                             <h3>Invoice Details</h3>
-                            <button className="Owner-Billing-close-btn" onClick={() => setShowViewModal(false)}>
+                            <button className="Owner-Billing-close-btn" onClick={() => setShowViewModal(false)} title="Close modal">
                                 <X size={20} />
                             </button>
                         </div>
@@ -1177,7 +1198,7 @@ function Billing() {
                                     </span>
                                 </div>
                                 <div className="Owner-Billing-invoice-amount">
-                                    ₱{parseFloat(selectedInvoice.amount || 0).toLocaleString()}
+                                    {parseFloat(selectedInvoice.amount || 0).toLocaleString()}
                                 </div>
                             </div>
 
@@ -1214,7 +1235,7 @@ function Billing() {
                         </div>
 
                         <div className="Owner-Billing-modal-footer">
-                            <button className="Owner-Billing-close-detail-btn" onClick={() => setShowViewModal(false)}>
+                            <button className="Owner-Billing-close-detail-btn" onClick={() => setShowViewModal(false)} title="Close invoice details">
                                 Close
                             </button>
                         </div>
@@ -1254,7 +1275,7 @@ function Billing() {
                                 <div className="Owner-Billing-success-detail-item">
                                     <span className="Owner-Billing-detail-label">Amount:</span>
                                     <span className="Owner-Billing-detail-value">
-                                        ₱{parseFloat(successModalData.amount || 0).toLocaleString()}
+                                        {parseFloat(successModalData.amount || 0).toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="Owner-Billing-success-detail-item">
@@ -1274,6 +1295,7 @@ function Billing() {
                             <button
                                 className="Owner-Billing-success-close-btn"
                                 onClick={handleCloseSuccessModal}
+                                title="Continue to billing dashboard"
                             >
                                 Continue
                             </button>
@@ -1286,7 +1308,7 @@ function Billing() {
             {showErrorModal && (
                 <div className="modal-overlay-transactions">
                     <div className="modal-content-transactions">
-                        <button className="close-btn-transactions" onClick={closeAllModals}>
+                        <button className="close-btn-transactions" onClick={closeAllModals} title="Close error modal">
                             <X size={20} />
                         </button>
                         <div className="modal-icon-transactions">
@@ -1295,10 +1317,10 @@ function Billing() {
                         <h3 className="modal-title-transactions">{modalConfig.title}</h3>
                         <p className="modal-message-transactions">{modalConfig.message}</p>
                         <div className="modal-actions-transactions">
-                            <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals}>
+                            <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals} title="Close this message">
                                 Close
                             </button>
-                            <button className="modal-btn-transactions modal-btn-confirm" onClick={closeAllModals}>
+                            <button className="modal-btn-transactions modal-btn-confirm" onClick={closeAllModals} title="Try the action again">
                                 Try Again
                             </button>
                         </div>
@@ -1310,7 +1332,7 @@ function Billing() {
             {showConfirmModal && (
                 <div className="modal-overlay-transactions">
                     <div className="modal-content-transactions">
-                        <button className="close-btn-transactions" onClick={closeAllModals}>
+                        <button className="close-btn-transactions" onClick={closeAllModals} title="Close confirmation modal">
                             <X size={20} />
                         </button>
                         <div className="modal-icon-transactions">
@@ -1319,10 +1341,10 @@ function Billing() {
                         <h3 className="modal-title-transactions">{modalConfig.title}</h3>
                         <p className="modal-message-transactions">{modalConfig.message}</p>
                         <div className="modal-actions-transactions">
-                            <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals}>
+                            <button className="modal-btn-transactions modal-btn-cancel" onClick={closeAllModals} title="Cancel the action">
                                 Cancel
                             </button>
-                            <button className="modal-btn-transactions modal-btn-confirm" onClick={confirmMarkAsPaid}>
+                            <button className="modal-btn-transactions modal-btn-confirm" onClick={confirmMarkAsPaid} title="Confirm and proceed">
                                 Confirm
                             </button>
                         </div>
