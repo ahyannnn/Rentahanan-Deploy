@@ -1004,12 +1004,6 @@
     }
 }
 
-/* --- Simple Tooltips --- */
-[title] {
-  cursor: help;
-  position: relative;
-}
-
 .form-tooltip-Browse,
 .form-tooltip-Contract {
     display: inline-flex;
