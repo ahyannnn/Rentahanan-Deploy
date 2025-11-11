@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../styles/LandingPage.css";
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Clock, Home, Menu, X, Wrench, Hammer, PaintBucket, Drill } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Menu, X } from "lucide-react";
 
 function LandingPage() {
   const [houses, setHouses] = useState([]);
@@ -316,53 +316,6 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Toolkit Section */}
-      <section className="toolkit-section-Layout">
-        <h2 className="section-title-Layout">Our Services</h2>
-        <div className="toolkit-container-Layout">
-          <div 
-            className="toolkit-card-Layout"
-            title="Professional maintenance services"
-          >
-            <div className="toolkit-icon-Layout">
-              <Wrench size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">Maintenance</h3>
-            <p className="toolkit-description-Layout">Professional maintenance services to keep your property in perfect condition.</p>
-          </div>
-          <div 
-            className="toolkit-card-Layout"
-            title="Construction and renovation services"
-          >
-            <div className="toolkit-icon-Layout">
-              <Hammer size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">Renovation</h3>
-            <p className="toolkit-description-Layout">Complete renovation and construction services for your property.</p>
-          </div>
-          <div 
-            className="toolkit-card-Layout"
-            title="Painting and finishing services"
-          >
-            <div className="toolkit-icon-Layout">
-              <PaintBucket size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">Painting</h3>
-            <p className="toolkit-description-Layout">Professional painting services to refresh and enhance your property.</p>
-          </div>
-          <div 
-            className="toolkit-card-Layout"
-            title="Installation and repair services"
-          >
-            <div className="toolkit-icon-Layout">
-              <Drill size={48} />
-            </div>
-            <h3 className="toolkit-title-Layout">Installation</h3>
-            <p className="toolkit-description-Layout">Expert installation and repair services for all your property needs.</p>
-          </div>
-        </div>
-      </section>
-
       {/* Location & Contact Section */}
       <section className="contact-section-Layout">
         <div className="contact-container-Layout">
@@ -472,19 +425,6 @@ function LandingPage() {
           >
             <h3>RenTahanan</h3>
             <p>Your trusted partner in finding the perfect home. We connect tenants with quality rental properties across Metro Manila.</p>
-          </div>
-          
-          <div 
-            className="footer-section-Layout"
-            title="Quick links"
-          >
-            <h4>Quick Links</h4>
-            <div className="footer-links-Layout">
-              <Link to="/" onClick={closeMobileMenu}>Home</Link>
-              <Link to="/properties" onClick={closeMobileMenu}>Properties</Link>
-              <Link to="/about" onClick={closeMobileMenu}>About Us</Link>
-              <Link to="/contact" onClick={closeMobileMenu}>Contact</Link>
-            </div>
           </div>
           
           <div 
