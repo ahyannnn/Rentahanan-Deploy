@@ -1318,3 +1318,15 @@
         justify-content: center;
     }
 }
+
+.form-tooltip-Tenant-Support {
+    display: inline-flex;
+    margin-left: 6px;
+    color: #666;
+    cursor: help;
+    transition: color 0.3s ease;
+}
+
+.form-tooltip-Tenant-Support:hover {
+    color: #0a2d8d;
+}

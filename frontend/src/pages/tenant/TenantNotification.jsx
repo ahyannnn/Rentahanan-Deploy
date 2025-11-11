@@ -11,7 +11,8 @@ import {
   FileText, 
   Calendar,
   MessageCircle,
-  Home
+  Home,
+  Info
 } from "lucide-react";
 import "../../styles/tenant/TenantNotification.css";
 
@@ -232,8 +233,16 @@ const TenantNotifications = () => {
       {/* ===== Page Header ===== */}
       <div className="page-header-Tenant-Notifications">
         <div className="header-content-Tenant-Notifications">
-          <h1 className="page-title-Tenant-Notifications">Notifications</h1>
-          <p className="page-description-Tenant-Notifications">
+          <h1 
+            className="page-title-Tenant-Notifications"
+            title="View all your rental-related notifications and updates"
+          >
+            Notifications
+          </h1>
+          <p 
+            className="page-description-Tenant-Notifications"
+            title="Stay informed about payments, maintenance, contracts, and other important updates"
+          >
             Stay updated with your rental activities and important announcements
           </p>
         </div>
@@ -250,6 +259,7 @@ const TenantNotifications = () => {
               className="search-input-Tenant-Notifications"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              title="Search through notification titles and messages"
             />
           </div>
         </div>
@@ -259,6 +269,7 @@ const TenantNotifications = () => {
             <button
               className={`filter-btn-Tenant-Notifications ${filter === "all" ? "filter-btn-active-Tenant-Notifications" : ""}`}
               onClick={() => setFilter("all")}
+              title="Show all notifications regardless of type or status"
             >
               All
               <span className="filter-count-Tenant-Notifications">{totalCount}</span>
@@ -266,6 +277,7 @@ const TenantNotifications = () => {
             <button
               className={`filter-btn-Tenant-Notifications ${filter === "unread" ? "filter-btn-active-Tenant-Notifications" : ""}`}
               onClick={() => setFilter("unread")}
+              title="Show only unread notifications"
             >
               Unread
               <span className="filter-count-Tenant-Notifications">{unreadCount}</span>
@@ -273,12 +285,14 @@ const TenantNotifications = () => {
             <button
               className={`filter-btn-Tenant-Notifications ${filter === "payment" ? "filter-btn-active-Tenant-Notifications" : ""}`}
               onClick={() => setFilter("payment")}
+              title="Show payment-related notifications"
             >
               Payments
             </button>
             <button
               className={`filter-btn-Tenant-Notifications ${filter === "maintenance" ? "filter-btn-active-Tenant-Notifications" : ""}`}
               onClick={() => setFilter("maintenance")}
+              title="Show maintenance and repair notifications"
             >
               Maintenance
             </button>
@@ -288,6 +302,7 @@ const TenantNotifications = () => {
             <button
               className="mark-all-read-btn-Tenant-Notifications"
               onClick={markAllAsRead}
+              title="Mark all unread notifications as read"
             >
               <Check size={16} />
               Mark All Read
@@ -318,9 +333,13 @@ const TenantNotifications = () => {
             <div
               key={notification.notificationid}
               className={`notification-card-Tenant-Notifications ${notification.status === "unread" ? "unread-Tenant-Notifications" : ""}`}
+              title={`${notification.title} - ${formatDate(notification.creationdate)}`}
             >
               <div className="card-header-Tenant-Notifications">
-                <div className="notification-type-Tenant-Notifications">
+                <div 
+                  className="notification-type-Tenant-Notifications"
+                  title={`Notification type: ${getTypeLabel(notification)}`}
+                >
                   <span className="type-icon-Tenant-Notifications">
                     {getTypeIcon(notification)}
                   </span>
@@ -331,15 +350,21 @@ const TenantNotifications = () => {
                 <div
                   className="notification-priority-Tenant-Notifications"
                   style={{ backgroundColor: getPriorityColor(notification.priority || 'medium') }}
-                  title={`${notification.priority || 'medium'} priority`}
+                  title={`${(notification.priority || 'medium').toUpperCase()} priority - ${notification.priority === 'high' ? 'Requires immediate attention' : notification.priority === 'medium' ? 'Important but not urgent' : 'Informational'}`}
                 />
               </div>
 
               <div className="notification-content-Tenant-Notifications">
-                <h3 className="notification-title-Tenant-Notifications">
+                <h3 
+                  className="notification-title-Tenant-Notifications"
+                  title={notification.title}
+                >
                   {notification.title}
                 </h3>
-                <p className="notification-message-Tenant-Notifications">
+                <p 
+                  className="notification-message-Tenant-Notifications"
+                  title={notification.message}
+                >
                   {notification.message}
                 </p>
               </div>
@@ -348,14 +373,20 @@ const TenantNotifications = () => {
                 <div className="notification-meta-Tenant-Notifications">
                   <div className="meta-item-Tenant-Notifications">
                     <span className="meta-label-Tenant-Notifications">Date</span>
-                    <span className="meta-value-Tenant-Notifications date-value-Tenant-Notifications">
+                    <span 
+                      className="meta-value-Tenant-Notifications date-value-Tenant-Notifications"
+                      title={`Notification received: ${formatDate(notification.creationdate)}`}
+                    >
                       <Clock size={14} />
                       {formatDate(notification.creationdate)}
                     </span>
                   </div>
                   <div className="meta-item-Tenant-Notifications">
                     <span className="meta-label-Tenant-Notifications">Status</span>
-                    <span className={`status-badge-Tenant-Notifications ${notification.status === "unread" ? "status-unread-Tenant-Notifications" : "status-read-Tenant-Notifications"}`}>
+                    <span 
+                      className={`status-badge-Tenant-Notifications ${notification.status === "unread" ? "status-unread-Tenant-Notifications" : "status-read-Tenant-Notifications"}`}
+                      title={notification.status === "unread" ? "This notification hasn't been read yet" : "You've already read this notification"}
+                    >
                       {notification.status === "unread" ? "Unread" : "Read"}
                     </span>
                   </div>
@@ -366,7 +397,7 @@ const TenantNotifications = () => {
                     <button
                       className="mark-read-btn-Tenant-Notifications"
                       onClick={() => markAsRead(notification.notificationid)}
-                      title="Mark as read"
+                      title="Mark this notification as read"
                     >
                       <Check size={16} />
                     </button>
@@ -374,7 +405,7 @@ const TenantNotifications = () => {
                   <button
                     className="delete-notification-btn-Tenant-Notifications"
                     onClick={() => deleteNotification(notification.notificationid)}
-                    title="Delete notification"
+                    title="Delete this notification permanently"
                   >
                     <X size={16} />
                   </button>

@@ -11,7 +11,8 @@ import {
   Banknote,
   Building,
   Download,
-  Eye
+  Eye,
+  Info
 } from "lucide-react";
 import "../../styles/tenant/Payment.css";
 
@@ -195,7 +196,11 @@ const Payment = () => {
                     <div className="error-icon-tenant-p">⚠️</div>
                     <h3 className="error-title-tenant-p">Error Loading Payment History</h3>
                     <p className="error-message-tenant-p">{error}</p>
-                    <button onClick={fetchPaidBills} className="retry-btn-tenant-p">
+                    <button 
+                        onClick={fetchPaidBills} 
+                        className="retry-btn-tenant-p"
+                        title="Retry loading payment history"
+                    >
                         Try Again
                     </button>
                 </div>
@@ -209,8 +214,18 @@ const Payment = () => {
         <div className="payment-history-container-tenant-p">
             {/* Header Section */}
             <div className="page-header-section-tenant-p">
-                <h2 className="page-header-tenant-p">Payment History</h2>
-                <p className="page-subtext-tenant-p">View all your past successful payment records</p>
+                <h2 
+                    className="page-header-tenant-p" 
+                    title="View your complete payment transaction history"
+                >
+                    Payment History
+                </h2>
+                <p 
+                    className="page-subtext-tenant-p" 
+                    title="Track and review all your successful payments"
+                >
+                    View all your past successful payment records
+                </p>
             </div>
 
             {/* Controls Section */}
@@ -224,6 +239,7 @@ const Payment = () => {
                             className="search-input-tenant-p"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            title="Search payments by type, status, reference number, or amount"
                         />
                     </div>
                 </div>
@@ -233,24 +249,28 @@ const Payment = () => {
                         <button
                             className={`time-filter-btn-tenant-p ${timeFilter === "all" ? "time-filter-btn-active-tenant-p" : ""}`}
                             onClick={() => handleTimeFilterChange("all")}
+                            title="Show all payments regardless of date"
                         >
                             All Time
                         </button>
                         <button
                             className={`time-filter-btn-tenant-p ${timeFilter === "week" ? "time-filter-btn-active-tenant-p" : ""}`}
                             onClick={() => handleTimeFilterChange("week")}
+                            title="Show payments from the last 7 days"
                         >
                             This Week
                         </button>
                         <button
                             className={`time-filter-btn-tenant-p ${timeFilter === "month" ? "time-filter-btn-active-tenant-p" : ""}`}
                             onClick={() => handleTimeFilterChange("month")}
+                            title="Show payments from the last 30 days"
                         >
                             This Month
                         </button>
                         <button
                             className={`time-filter-btn-tenant-p ${timeFilter === "year" ? "time-filter-btn-active-tenant-p" : ""}`}
                             onClick={() => handleTimeFilterChange("year")}
+                            title="Show payments from the last 12 months"
                         >
                             This Year
                         </button>
@@ -263,13 +283,23 @@ const Payment = () => {
                 <div className="payments-list-tenant-p">
                     {currentItems.length > 0 ? (
                         currentItems.map((payment) => (
-                            <div key={payment.id} className="payment-card-tenant-p">
+                            <div 
+                                key={payment.id} 
+                                className="payment-card-tenant-p"
+                                title={`Payment for ${payment.billType} - ₱${payment.amount}`}
+                            >
                                 <div className="payment-card-header-tenant-p">
-                                    <div className="payment-type-badge-tenant-p">
+                                    <div 
+                                        className="payment-type-badge-tenant-p"
+                                        title={`Bill type: ${payment.billType || "General Payment"}`}
+                                    >
                                         <FileText size={16} className="payment-type-icon-tenant-p" />
                                         <span className="payment-type-text-tenant-p">{payment.billType || "Bill Payment"}</span>
                                     </div>
-                                    <span className={`payment-status-tenant-p payment-status-${payment.status?.toLowerCase()}-tenant-p`}>
+                                    <span 
+                                        className={`payment-status-tenant-p payment-status-${payment.status?.toLowerCase()}-tenant-p`}
+                                        title={`Payment status: ${payment.status}`}
+                                    >
                                         {getStatusIcon(payment.status)}
                                         <span className="status-text-tenant-p">{payment.status}</span>
                                     </span>
@@ -277,10 +307,16 @@ const Payment = () => {
 
                                 <div className="payment-card-content-tenant-p">
                                     <div className="payment-main-info-tenant-p">
-                                        <h3 className="payment-amount-tenant-p">
-                                            {payment.amount?.toLocaleString() || '0.00'}
+                                        <h3 
+                                            className="payment-amount-tenant-p"
+                                            title={`Payment amount: ₱${payment.amount?.toLocaleString() || '0.00'}`}
+                                        >
+                                            ₱{payment.amount?.toLocaleString() || '0.00'}
                                         </h3>
-                                        <p className="payment-description-tenant-p">
+                                        <p 
+                                            className="payment-description-tenant-p"
+                                            title={payment.description || `Payment details for ${payment.billType}`}
+                                        >
                                             {payment.description || `Payment for ${payment.billType}`}
                                         </p>
                                     </div>
@@ -291,7 +327,10 @@ const Payment = () => {
                                                 <Calendar size={14} className="detail-icon-tenant-p" />
                                                 <span className="detail-label-tenant-p">Payment Date</span>
                                             </div>
-                                            <span className="detail-value-tenant-p">
+                                            <span 
+                                                className="detail-value-tenant-p"
+                                                title={`Payment processed on ${new Date(payment.date).toLocaleDateString()}`}
+                                            >
                                                 {new Date(payment.date).toLocaleDateString()}
                                             </span>
                                         </div>
@@ -300,7 +339,10 @@ const Payment = () => {
                                                 {getPaymentMethodIcon(payment.paymentType)}
                                                 <span className="detail-label-tenant-p">Payment Method</span>
                                             </div>
-                                            <span className="detail-value-tenant-p">
+                                            <span 
+                                                className="detail-value-tenant-p"
+                                                title={`Paid using ${payment.paymentType}`}
+                                            >
                                                 {payment.paymentType}
                                             </span>
                                         </div>
@@ -310,7 +352,10 @@ const Payment = () => {
                                                     <FileText size={14} className="detail-icon-tenant-p" />
                                                     <span className="detail-label-tenant-p">Reference No.</span>
                                                 </div>
-                                                <span className="detail-value-tenant-p ref-value-tenant-p">
+                                                <span 
+                                                    className="detail-value-tenant-p ref-value-tenant-p"
+                                                    title={`GCash reference number: ${payment.gcashRef}`}
+                                                >
                                                     #{payment.gcashRef}
                                                 </span>
                                             </div>
@@ -319,16 +364,18 @@ const Payment = () => {
                                 </div>
 
                                 <div className="payment-card-footer-tenant-p">
-                                    <div className="payment-id-tenant-p">
+                                    <div 
+                                        className="payment-id-tenant-p"
+                                        title={`Unique payment identifier: #${payment.id || payment.billid}`}
+                                    >
                                         <span className="id-label-tenant-p">Payment ID:</span>
                                         <span className="id-value-tenant-p">#{payment.id || payment.billid}</span>
                                     </div>
                                     <div className="payment-actions-tenant-p">
-                                        {/* ✅ UPDATED: Consistent with Transactions component */}
                                         <button 
                                             className="view-receipt-btn-tenant-p"
                                             onClick={() => handleViewReceipt(payment.id || payment.billid)}
-                                            title="View payment receipt"
+                                            title="View and download payment receipt"
                                         >
                                             <Eye size={16} className="receipt-icon-tenant-p" />
                                             <span className="receipt-text-tenant-p">View Receipt</span>
@@ -359,11 +406,15 @@ const Payment = () => {
                             className="pagination-btn-tenant-p" 
                             onClick={handlePrevPage}
                             disabled={currentPage === 1}
+                            title={currentPage === 1 ? "You're on the first page" : "Go to previous page"}
                         >
                             ← Previous
                         </button>
                         
-                        <span className="pagination-info-tenant-p">
+                        <span 
+                            className="pagination-info-tenant-p"
+                            title={`Current page ${currentPage} of ${totalPages}`}
+                        >
                             Page {currentPage} of {totalPages}
                         </span>
                         
@@ -371,6 +422,7 @@ const Payment = () => {
                             className="pagination-btn-tenant-p" 
                             onClick={handleNextPage}
                             disabled={currentPage === totalPages}
+                            title={currentPage === totalPages ? "You're on the last page" : "Go to next page"}
                         >
                             Next →
                         </button>
@@ -380,7 +432,10 @@ const Payment = () => {
 
             {/* Results Count */}
             <div className="results-count-tenant-p">
-                <p className="results-text-tenant-p">
+                <p 
+                    className="results-text-tenant-p"
+                    title={`Displaying ${currentItems.length} out of ${filteredPayments.length} total payments`}
+                >
                     Showing {currentItems.length} of {filteredPayments.length} payments
                     {(searchTerm || timeFilter !== "all") && " (filtered)"}
                 </p>
