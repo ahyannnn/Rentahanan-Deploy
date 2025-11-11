@@ -1102,7 +1102,425 @@
 }
 
 /* --- Responsive Design --- */
-/* --- Tooltips --- */
+@media (max-width: 1024px) {
+    .units-grid-Browse {
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .browse-units-container-Browse {
+        padding: 20px 15px;
+    }
+    
+    .page-header-Browse {
+        font-size: 2.2rem;
+    }
+    
+    .page-subtext-Browse {
+        font-size: 1.1rem;
+    }
+    
+    .stats-container-Browse {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .stat-card-Browse {
+        padding: 25px;
+    }
+    
+    .controls-container-Browse {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 25px;
+        padding: 25px;
+    }
+    
+    .search-container-Browse {
+        min-width: auto;
+    }
+    
+    .status-filters-Browse {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .units-grid-Browse {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .form-row-Browse {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .form-buttons-container-Browse {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .form-submit-btn-Browse, .form-cancel-btn-Browse {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .modal-content-Browse {
+        padding: 30px 25px;
+        margin: 10px;
+    }
+    
+    .success-modal-Browse {
+        width: 95%;
+    }
+}
+
+@media (max-width: 480px) {
+    .browse-units-container-Browse {
+        padding: 15px 10px;
+    }
+    
+    .page-header-Browse {
+        font-size: 1.8rem;
+    }
+    
+    .page-subtext-Browse {
+        font-size: 1rem;
+    }
+    
+    .section-title-Browse {
+        font-size: 1.5rem;
+    }
+    
+    .modal-content-Browse {
+        padding: 25px 20px;
+    }
+    
+    .modal-header-Browse {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .success-modal-content-Browse {
+        padding: 30px 20px 20px;
+    }
+    
+    .success-checkmark-Browse {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .check-icon-Browse {
+        size: 60px;
+    }
+    
+    .success-title-Browse {
+        font-size: 1.6rem;
+    }
+    
+    .success-message-Browse {
+        font-size: 1rem;
+    }
+}
+
+/* --- Success Modal --- */
+.success-modal-overlay-Browse {
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.success-modal-Browse {
+  background: white;
+  border-radius: 28px;
+  box-shadow: 0 35px 60px rgba(0, 0, 0, 0.4);
+  max-width: 450px;
+  width: 90%;
+  animation: slideUpSuccess-Browse 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUpSuccess-Browse {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.success-modal-content-Browse {
+  padding: 40px 30px 30px;
+  text-align: center;
+}
+
+.success-animation-container-Browse {
+  margin-bottom: 25px;
+}
+
+.success-checkmark-Browse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  margin: 0 auto 15px;
+  animation: scaleIn-Browse 0.6s ease-out, bounce-Browse 1s ease-in-out 0.6s;
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+}
+
+.check-icon-Browse {
+  animation: checkmark-Browse 0.6s ease-out 0.3s both;
+}
+
+.success-title-Browse {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #065f46;
+  margin: 0 0 15px 0;
+  background: linear-gradient(135deg, #065f46 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.success-message-Browse {
+  color: #374151;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0 0 25px 0;
+}
+
+.success-details-Browse {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 0 0 25px 0;
+}
+
+.success-detail-item-Browse {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.success-detail-item-Browse:not(:last-child) {
+  border-bottom: 1px solid #dcfce7;
+}
+
+.detail-label-Browse {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.detail-value-Browse {
+  font-weight: 700;
+  color: #065f46;
+  font-size: 0.95rem;
+}
+
+.success-close-btn-Browse {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+  width: 100%;
+  max-width: 200px;
+}
+
+.success-close-btn-Browse:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+/* --- Success Modal Animations --- */
+@keyframes scaleIn-Browse {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-Browse {
+  0%, 20%, 50%, 80%, 100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.1);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes checkmark-Browse {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-45deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(-45deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* --- Modal Header Section --- */
+.modal-header-section-Browse {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  gap: 20px;
+  position: relative;
+}
+
+.modal-header-Browse {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex: 1;
+}
+
+.modal-title-Browse {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e1e2f;
+  margin: 0;
+  flex: 1;
+}
+
+/* Fix for status badge in modal */
+.modal-status-Browse {
+  position: static;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Adjust close button position */
+.close-btn-Browse {
+  position: static;
+  background: #f8faff;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+.close-btn-Browse:hover {
+  background: #0a2d8d;
+  color: white;
+  transform: rotate(90deg);
+}
+
+/* Form header adjustment */
+.form-header-Browse {
+  margin-bottom: 0;
+  text-align: left;
+  flex: 1;
+}
+
+.form-title-Browse {
+  color: #1e1e2f;
+  margin: 0 0 8px 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.form-subtitle-Browse {
+  color: #666;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Ensure status badges are visible */
+.unit-status-Browse {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  backdrop-filter: blur(10px);
+  z-index: 2;
+}
+
+.unit-status-available-Browse {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.unit-status-occupied-Browse {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.unit-status-pending-Browse {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-header-section-Browse {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .modal-header-Browse {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .modal-status-Browse {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+  
+  .close-btn-Browse {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin-left: 0;
+  }
+}
+
 .form-tooltip-Browse {
     display: inline-flex;
     margin-left: 6px;
@@ -1113,445 +1531,4 @@
 
 .form-tooltip-Browse:hover {
     color: #0a2d8d;
-}
-
-/* --- Available Badge --- */
-.available-badge-Browse {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #dcfce7;
-    color: #166534;
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    border: 1px solid #bbf7d0;
-    cursor: help;
-    transition: all 0.3s ease;
-}
-
-.available-badge-Browse:hover {
-    background: #bbf7d0;
-    transform: translateY(-1px);
-}
-
-/* --- Mobile Responsive Improvements --- */
-@media (max-width: 768px) {
-    .browse-units-container-Browse {
-        padding: 15px 10px;
-    }
-    
-    .page-header-Browse {
-        font-size: 2rem;
-        text-align: center;
-        line-height: 1.2;
-    }
-    
-    .page-subtext-Browse {
-        font-size: 1rem;
-        text-align: center;
-        line-height: 1.4;
-    }
-    
-    .controls-container-Browse {
-        flex-direction: column;
-        gap: 20px;
-        padding: 20px;
-    }
-    
-    .search-container-Browse {
-        width: 100%;
-        min-width: auto;
-    }
-    
-    .search-input-Browse {
-        font-size: 16px; /* Prevents zoom on iOS */
-        padding: 14px 16px 14px 44px;
-    }
-    
-    .search-icon-Browse {
-        left: 16px;
-    }
-    
-    .units-grid-Browse {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .unit-card-Browse {
-        margin: 0 auto;
-        max-width: 100%;
-        border-radius: 16px;
-    }
-    
-    .unit-image-container-Browse {
-        height: 220px;
-    }
-    
-    .unit-info-Browse {
-        padding: 20px;
-    }
-    
-    .unit-name-Browse {
-        font-size: 1.3rem;
-    }
-    
-    .unit-price-Browse {
-        font-size: 1.1rem;
-    }
-    
-    .modal-content-Browse {
-        margin: 10px;
-        padding: 25px;
-        max-height: 85vh;
-        border-radius: 20px;
-    }
-    
-    .form-row-Browse {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .form-buttons-container-Browse {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .form-submit-btn-Browse,
-    .form-cancel-btn-Browse {
-        width: 100%;
-        min-width: auto;
-        padding: 14px 20px;
-    }
-    
-    .success-modal-Browse {
-        width: 95%;
-        margin: 10px;
-    }
-    
-    .modal-header-section-Browse {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .modal-header-Browse {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .modal-status-Browse {
-        align-self: flex-start;
-        margin-left: 0;
-    }
-    
-    .close-btn-Browse {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        margin-left: 0;
-        width: 40px;
-        height: 40px;
-    }
-    
-    /* Mobile form improvements */
-    .form-section-Browse {
-        padding: 20px;
-        border-radius: 16px;
-    }
-    
-    .form-section-title-Browse {
-        font-size: 1.1rem;
-        margin-bottom: 20px;
-    }
-    
-    .document-upload-Browse {
-        gap: 10px;
-    }
-    
-    .document-file-input-Browse {
-        padding: 14px;
-        font-size: 14px;
-    }
-}
-
-@media (max-width: 480px) {
-    .browse-units-container-Browse {
-        padding: 10px 8px;
-    }
-    
-    .page-header-Browse {
-        font-size: 1.7rem;
-    }
-    
-    .page-subtext-Browse {
-        font-size: 0.95rem;
-    }
-    
-    .section-title-Browse {
-        font-size: 1.4rem;
-        margin-bottom: 20px;
-    }
-    
-    .controls-container-Browse {
-        padding: 15px;
-    }
-    
-    .modal-content-Browse {
-        padding: 20px 15px;
-    }
-    
-    .modal-title-Browse {
-        font-size: 1.4rem;
-    }
-    
-    .modal-image-container-Browse {
-        height: 200px;
-        margin-bottom: 20px;
-    }
-    
-    .success-modal-content-Browse {
-        padding: 25px 15px 15px;
-    }
-    
-    .success-checkmark-Browse {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .check-icon-Browse {
-        width: 50px;
-        height: 50px;
-    }
-    
-    .success-title-Browse {
-        font-size: 1.4rem;
-    }
-    
-    .success-message-Browse {
-        font-size: 0.9rem;
-    }
-    
-    .success-details-Browse {
-        padding: 15px;
-    }
-    
-    .feature-tag-Browse {
-        font-size: 0.8rem;
-        padding: 6px 12px;
-    }
-}
-
-/* --- Touch-friendly improvements --- */
-.unit-card-Browse {
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-.apply-btn-Browse,
-.form-submit-btn-Browse,
-.form-cancel-btn-Browse,
-.success-close-btn-Browse {
-    min-height: 44px; /* Minimum touch target size */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    touch-action: manipulation;
-}
-
-.close-btn-Browse {
-    width: 44px;
-    height: 44px;
-    touch-action: manipulation;
-}
-
-/* Button hover effects for mobile */
-@media (hover: hover) {
-    .apply-btn-Browse:hover:not(:disabled),
-    .form-submit-btn-Browse:hover:not(:disabled),
-    .form-cancel-btn-Browse:hover:not(:disabled),
-    .success-close-btn-Browse:hover:not(:disabled) {
-        transform: translateY(-2px);
-    }
-}
-
-/* --- Prevent horizontal scroll on mobile --- */
-.units-grid-container-Browse {
-    overflow-x: hidden;
-}
-
-.units-grid-Browse {
-    overflow: visible;
-}
-
-/* --- Improve form inputs on mobile --- */
-.form-input-Browse,
-.document-file-input-Browse,
-.search-input-Browse {
-    font-size: 16px; /* Prevents zoom on iOS */
-    border-radius: 10px;
-}
-
-/* Remove default focus styles and add custom */
-.form-input-Browse:focus,
-.document-file-input-Browse:focus,
-.search-input-Browse:focus {
-    outline: none;
-    border-color: #0a2d8d;
-    box-shadow: 0 0 0 3px rgba(10, 45, 141, 0.15);
-}
-
-/* --- Loading state improvements --- */
-.form-submit-btn-Browse:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-/* --- Success modal mobile adjustments --- */
-.success-modal-content-Browse {
-    padding: 30px 20px;
-}
-
-.success-checkmark-Browse {
-    width: 80px;
-    height: 80px;
-}
-
-.check-icon-Browse {
-    width: 60px;
-    height: 60px;
-}
-
-.success-title-Browse {
-    font-size: 1.5rem;
-}
-
-.success-message-Browse {
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-/* --- Mobile-specific utility classes --- */
-.mobile-only-Browse {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    .mobile-only-Browse {
-        display: block;
-    }
-    
-    .desktop-only-Browse {
-        display: none;
-    }
-}
-
-/* --- Improved scrollbars for mobile --- */
-.modal-content-Browse::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal-content-Browse::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-.modal-content-Browse::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-.modal-content-Browse::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* --- Safe area insets for notch phones --- */
-@supports(padding: max(0px)) {
-    .browse-units-container-Browse {
-        padding-left: max(20px, env(safe-area-inset-left));
-        padding-right: max(20px, env(safe-area-inset-right));
-        padding-bottom: max(20px, env(safe-area-inset-bottom));
-    }
-    
-    @media (max-width: 768px) {
-        .browse-units-container-Browse {
-            padding-left: max(10px, env(safe-area-inset-left));
-            padding-right: max(10px, env(safe-area-inset-right));
-        }
-    }
-}
-
-/* --- Improved focus indicators for accessibility --- */
-.apply-btn-Browse:focus-visible,
-.form-submit-btn-Browse:focus-visible,
-.form-cancel-btn-Browse:focus-visible,
-.close-btn-Browse:focus-visible {
-    outline: 2px solid #0a2d8d;
-    outline-offset: 2px;
-}
-
-/* --- Reduced motion support --- */
-@media (prefers-reduced-motion: reduce) {
-    .unit-card-Browse,
-    .apply-btn-Browse,
-    .form-submit-btn-Browse,
-    .form-cancel-btn-Browse,
-    .success-close-btn-Browse,
-    .close-btn-Browse {
-        transition: none;
-    }
-    
-    .unit-card-Browse:hover {
-        transform: none;
-    }
-    
-    .success-checkmark-Browse,
-    .check-icon-Browse,
-    .confetti-piece-Browse {
-        animation: none;
-    }
-}
-
-/* --- High contrast mode support --- */
-@media (prefers-contrast: high) {
-    .unit-card-Browse {
-        border: 2px solid #000;
-    }
-    
-    .apply-btn-Browse:disabled {
-        background: #666;
-        color: #fff;
-    }
-}
-
-/* --- Dark mode support (optional) --- */
-@media (prefers-color-scheme: dark) {
-    .browse-units-container-Browse {
-        background: linear-gradient(135deg, #1e1e2f 0%, #2d2d4f 100%);
-    }
-    
-    .unit-card-Browse,
-    .controls-container-Browse,
-    .modal-content-Browse,
-    .success-modal-Browse {
-        background: #2d2d4f;
-        color: #ffffff;
-    }
-    
-    .unit-name-Browse,
-    .modal-title-Browse,
-    .form-title-Browse,
-    .success-title-Browse {
-        color: #ffffff;
-    }
-    
-    .page-subtext-Browse,
-    .unit-description-Browse,
-    .form-subtitle-Browse,
-    .success-message-Browse {
-        color: #cccccc;
-    }
 }
