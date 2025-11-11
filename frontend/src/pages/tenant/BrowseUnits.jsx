@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Search, Home, Users, CheckCircle, X, Upload, FileText, User, Mail, Phone } from "lucide-react";
+import { Search, Home, Users, CheckCircle, X, Upload, FileText, User, Mail, Phone, Info } from "lucide-react";
 import "../../styles/tenant/BrowseUnits.css";
 
 const BrowseUnits = () => {
   const [units, setUnits] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Available"); // ✅ CHANGED: Default to "Available"
+  const [filterStatus, setFilterStatus] = useState("Available");
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState({});
@@ -19,7 +19,6 @@ const BrowseUnits = () => {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const tenantId = storedUser.userid;
 
-  // ✅ CHANGED: Only show "Available" status option
   const statusOptions = ["Available"];
 
   const getImageUrl = (imagepath) => {
@@ -60,13 +59,11 @@ const BrowseUnits = () => {
     fetchApplication();
   }, [tenantId]);
 
-  // ✅ FIXED: Fetch tenant details from USER endpoint, not application endpoint
   useEffect(() => {
     if (!tenantId) return;
 
     const fetchTenantDetails = async () => {
       try {
-        // Try to fetch from user endpoint first
         const res = await fetch(`${API_BASE}/api/users/${tenantId}`);
         if (res.ok) {
           const userData = await res.json();
@@ -76,7 +73,6 @@ const BrowseUnits = () => {
             phone: userData.phone || ''
           });
         } else {
-          // Fallback to localStorage data
           setTenantDetails({
             fullName: storedUser.name || `${storedUser.firstname || ''} ${storedUser.lastname || ''}`.trim(),
             email: storedUser.email || '',
@@ -85,7 +81,6 @@ const BrowseUnits = () => {
         }
       } catch (err) {
         console.error("Error fetching tenant details:", err);
-        // Final fallback to localStorage
         setTenantDetails({
           fullName: storedUser.name || "User",
           email: storedUser.email || "",
@@ -97,7 +92,6 @@ const BrowseUnits = () => {
     fetchTenantDetails();
   }, [tenantId]);
 
-  // ✅ CHANGED: Only show available units
   const filteredUnits = useMemo(() => {
     const statusMap = {
       "Available": (unit) => unit.status === "Available",
@@ -115,7 +109,6 @@ const BrowseUnits = () => {
 
   const handleApply = () => setShowApplyForm(true);
 
-  // ✅ FIXED: Use correct unit ID field and add loading state
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -145,7 +138,7 @@ const BrowseUnits = () => {
     try {
       const formData = new FormData();
       formData.append("tenant_id", tenantId);
-      formData.append("unit_id", selectedUnit.unitid); // ✅ FIXED: Use unitid instead of id
+      formData.append("unit_id", selectedUnit.unitid);
       formData.append("validId", validIdFile);
       formData.append("brgyClearance", brgyClearanceFile);
       formData.append("proofOfIncome", proofOfIncomeFile);
@@ -182,8 +175,10 @@ const BrowseUnits = () => {
       {/* Header Section */}
       <div className="page-header-section-Browse">
         <div className="header-content-Browse">
-          <h2 className="page-header-Browse">Browse Units 🏘️</h2>
-          <p className="page-subtext-Browse">Discover available rental units that match your lifestyle and budget</p>
+          <h2 className="page-header-Browse" title="Browse Available Rental Units">Browse Units 🏘️</h2>
+          <p className="page-subtext-Browse" title="Find your perfect rental property">
+            Discover available rental units that match your lifestyle and budget
+          </p>
         </div>
       </div>
 
@@ -198,13 +193,13 @@ const BrowseUnits = () => {
               className="search-input-Browse"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              title="Search for specific units or features"
             />
           </div>
         </div>
 
-        {/* ✅ CHANGED: Remove status filters since we only show available units */}
         <div className="status-filters-container-Browse">
-          <div className="available-badge-Browse">
+          <div className="available-badge-Browse" title="Currently showing only available units">
             <CheckCircle size={16} />
             <span>Showing Available Units Only</span>
           </div>
@@ -213,7 +208,9 @@ const BrowseUnits = () => {
 
       {/* Units Grid Section */}
       <div className="units-grid-container-Browse">
-        <h2 className="section-title-Browse">Available Properties</h2>
+        <h2 className="section-title-Browse" title="List of available properties">
+          Available Properties ({filteredUnits.length})
+        </h2>
 
         <div className="units-grid-Browse">
           {filteredUnits.length > 0 ? (
@@ -222,6 +219,7 @@ const BrowseUnits = () => {
                 key={unit.unitid}
                 className="unit-card-Browse"
                 onClick={() => setSelectedUnit(unit)}
+                title={`Click to view details of ${unit.name}`}
               >
                 <div className="unit-image-container-Browse">
                   {unit.imagepath ? (
@@ -229,6 +227,7 @@ const BrowseUnits = () => {
                       src={getImageUrl(unit.imagepath)}
                       alt={unit.name}
                       className="unit-image-Browse"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="unit-image-placeholder-Browse">
@@ -246,23 +245,25 @@ const BrowseUnits = () => {
 
                 <div className="unit-info-Browse">
                   <div className="unit-header-Browse">
-                    <h3 className="unit-name-Browse">{unit.name}</h3>
-                    <div className="unit-price-Browse">
+                    <h3 className="unit-name-Browse" title={unit.name}>{unit.name}</h3>
+                    <div className="unit-price-Browse" title={`Monthly rent: ₱${unit.price?.toLocaleString() || '0'}`}>
                       ₱{unit.price?.toLocaleString() || '0'}/month
                     </div>
                   </div>
 
-                  <p className="unit-description-Browse">{unit.description}</p>
+                  <p className="unit-description-Browse" title="Unit description">
+                    {unit.description}
+                  </p>
 
                   {unit.features && (
                     <div className="unit-features-Browse">
                       {unit.features.split(',').slice(0, 3).map((feature, index) => (
-                        <span key={index} className="feature-tag-Browse">
+                        <span key={index} className="feature-tag-Browse" title={`Feature: ${feature.trim()}`}>
                           {feature.trim()}
                         </span>
                       ))}
                       {unit.features.split(',').length > 3 && (
-                        <span className="feature-more-Browse">
+                        <span className="feature-more-Browse" title={`${unit.features.split(',').length - 3} more features`}>
                           +{unit.features.split(',').length - 3} more
                         </span>
                       )}
@@ -292,12 +293,16 @@ const BrowseUnits = () => {
           <div className="modal-content-Browse" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-section-Browse">
               <div className="modal-header-Browse">
-                <h2 className="modal-title-Browse">{selectedUnit.name}</h2>
+                <h2 className="modal-title-Browse" title={selectedUnit.name}>{selectedUnit.name}</h2>
                 <div className={`unit-status-Browse unit-status-${selectedUnit.status.toLowerCase()}-Browse modal-status-Browse`}>
                   {selectedUnit.status}
                 </div>
               </div>
-              <button className="close-btn-Browse" onClick={() => setSelectedUnit(null)}>
+              <button 
+                className="close-btn-Browse" 
+                onClick={() => setSelectedUnit(null)}
+                title="Close details"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -308,6 +313,7 @@ const BrowseUnits = () => {
                   src={getImageUrl(selectedUnit.imagepath)}
                   alt={selectedUnit.name}
                   className="modal-image-Browse"
+                  title={`Image of ${selectedUnit.name}`}
                 />
               ) : (
                 <div className="modal-image-placeholder-Browse">
@@ -322,14 +328,18 @@ const BrowseUnits = () => {
                 <div className="detail-item-Browse">
                   <div className="detail-content-Browse">
                     <span className="detail-label-Browse">Monthly Rent</span>
-                    <span className="detail-price-Browse">₱{selectedUnit.price?.toLocaleString() || '0'}</span>
+                    <span className="detail-price-Browse" title="Monthly rental price">
+                      ₱{selectedUnit.price?.toLocaleString() || '0'}
+                    </span>
                   </div>
                 </div>
 
                 <div className="detail-item-Browse">
                   <div className="detail-content-Browse">
                     <span className="detail-label-Browse">Description</span>
-                    <p className="detail-description-Browse">{selectedUnit.description}</p>
+                    <p className="detail-description-Browse" title="Property description">
+                      {selectedUnit.description}
+                    </p>
                   </div>
                 </div>
 
@@ -339,7 +349,11 @@ const BrowseUnits = () => {
                       <span className="detail-label-Browse">Features & Amenities</span>
                       <div className="features-list-Browse">
                         {selectedUnit.features.split(',').map((feature, index) => (
-                          <span key={index} className="feature-tag-Browse feature-tag-large-Browse">
+                          <span 
+                            key={index} 
+                            className="feature-tag-Browse feature-tag-large-Browse"
+                            title={`Amenity: ${feature.trim()}`}
+                          >
                             {feature.trim()}
                           </span>
                         ))}
@@ -355,6 +369,13 @@ const BrowseUnits = () => {
                 className="apply-btn-Browse"
                 disabled={hasApplied || selectedUnit.status.toLowerCase() !== "available"}
                 onClick={handleApply}
+                title={
+                  selectedUnit.status.toLowerCase() !== "available"
+                    ? "This unit is not available for application"
+                    : hasApplied
+                      ? "You have already applied for a unit"
+                      : "Apply for this unit"
+                }
               >
                 {selectedUnit.status.toLowerCase() !== "available"
                   ? selectedUnit.status === "Occupied" ? "Not Available" : `Status: ${selectedUnit.status}`
@@ -373,10 +394,16 @@ const BrowseUnits = () => {
           <div className="modal-content-Browse form-modal-Browse" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-section-Browse">
               <div className="form-header-Browse">
-                <h2 className="form-title-Browse">Application for {selectedUnit.name}</h2>
-                <p className="form-subtitle-Browse">Please fill out the application form below</p>
+                <h2 className="form-title-Browse" title="Application Form">Application for {selectedUnit.name}</h2>
+                <p className="form-subtitle-Browse" title="Fill out the required information">
+                  Please fill out the application form below
+                </p>
               </div>
-              <button className="close-btn-Browse" onClick={() => setShowApplyForm(false)}>
+              <button 
+                className="close-btn-Browse" 
+                onClick={() => setShowApplyForm(false)}
+                title="Close application form"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -390,7 +417,12 @@ const BrowseUnits = () => {
 
                 <div className="form-row-Browse">
                   <div className="form-field-Browse">
-                    <label className="form-label-Browse">Full Name</label>
+                    <label className="form-label-Browse">
+                      Full Name
+                      <span className="form-tooltip-Browse" title="Your full name as registered">
+                        <Info size={14} />
+                      </span>
+                    </label>
                     <div className="input-with-icon-Browse">
                       <User size={18} className="input-icon-Browse" />
                       <input
@@ -400,12 +432,18 @@ const BrowseUnits = () => {
                         value={tenantDetails.fullName || ""}
                         readOnly
                         required
+                        title="Your registered full name"
                       />
                     </div>
                   </div>
 
                   <div className="form-field-Browse">
-                    <label className="form-label-Browse">Email Address</label>
+                    <label className="form-label-Browse">
+                      Email Address
+                      <span className="form-tooltip-Browse" title="Your email address for communication">
+                        <Info size={14} />
+                      </span>
+                    </label>
                     <div className="input-with-icon-Browse">
                       <Mail size={18} className="input-icon-Browse" />
                       <input
@@ -415,13 +453,19 @@ const BrowseUnits = () => {
                         value={tenantDetails.email || ""}
                         readOnly
                         required
+                        title="Your email address"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="form-field-Browse">
-                  <label className="form-label-Browse">Phone Number</label>
+                  <label className="form-label-Browse">
+                    Phone Number
+                    <span className="form-tooltip-Browse" title="Your contact number">
+                      <Info size={14} />
+                    </span>
+                  </label>
                   <div className="input-with-icon-Browse">
                     <Phone size={18} className="input-icon-Browse" />
                     <input
@@ -431,6 +475,7 @@ const BrowseUnits = () => {
                       value={tenantDetails.phone || ""}
                       readOnly
                       required
+                      title="Your phone number"
                     />
                   </div>
                 </div>
@@ -441,13 +486,18 @@ const BrowseUnits = () => {
                   <FileText size={20} />
                   Required Documents
                 </h3>
-                <p className="form-help-text-Browse">Please upload clear photos or scans of the following documents:</p>
+                <p className="form-help-text-Browse" title="Upload clear photos or scans of documents">
+                  Please upload clear photos or scans of the following documents:
+                </p>
 
                 <div className="document-upload-grid-Browse">
                   <div className="document-upload-Browse">
                     <label className="document-label-Browse">
                       <Upload size={20} />
                       Valid ID (Government Issued)
+                      <span className="form-tooltip-Browse" title="Driver's license, passport, or any government-issued ID">
+                        <Info size={14} />
+                      </span>
                     </label>
                     <input
                       type="file"
@@ -455,6 +505,7 @@ const BrowseUnits = () => {
                       className="document-file-input-Browse"
                       accept="image/*,.pdf"
                       required
+                      title="Upload valid government ID"
                     />
                   </div>
 
@@ -462,6 +513,9 @@ const BrowseUnits = () => {
                     <label className="document-label-Browse">
                       <Upload size={20} />
                       Barangay Clearance
+                      <span className="form-tooltip-Browse" title="Clearance from your local barangay">
+                        <Info size={14} />
+                      </span>
                     </label>
                     <input
                       type="file"
@@ -469,6 +523,7 @@ const BrowseUnits = () => {
                       className="document-file-input-Browse"
                       accept="image/*,.pdf"
                       required
+                      title="Upload barangay clearance"
                     />
                   </div>
 
@@ -476,6 +531,9 @@ const BrowseUnits = () => {
                     <label className="document-label-Browse">
                       <Upload size={20} />
                       Proof of Income
+                      <span className="form-tooltip-Browse" title="Payslip, certificate of employment, or business documents">
+                        <Info size={14} />
+                      </span>
                     </label>
                     <input
                       type="file"
@@ -483,16 +541,27 @@ const BrowseUnits = () => {
                       className="document-file-input-Browse"
                       accept="image/*,.pdf"
                       required
+                      title="Upload proof of income"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="form-buttons-container-Browse">
-                <button type="button" className="form-cancel-btn-Browse" onClick={() => setShowApplyForm(false)}>
+                <button 
+                  type="button" 
+                  className="form-cancel-btn-Browse" 
+                  onClick={() => setShowApplyForm(false)}
+                  title="Cancel application"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="form-submit-btn-Browse" disabled={loading}>
+                <button 
+                  type="submit" 
+                  className="form-submit-btn-Browse" 
+                  disabled={loading}
+                  title={loading ? "Submitting application..." : "Submit your application"}
+                >
                   {loading ? "Submitting..." : "Submit Application"}
                 </button>
               </div>
@@ -510,9 +579,11 @@ const BrowseUnits = () => {
                 <CheckCircle size={80} className="check-icon-Browse" />
               </div>
 
-              <h2 className="success-title-Browse">Application Submitted!</h2>
+              <h2 className="success-title-Browse" title="Application Submitted Successfully">
+                Application Submitted!
+              </h2>
 
-              <p className="success-message-Browse">
+              <p className="success-message-Browse" title="Next steps information">
                 Your application has been submitted successfully. We will review your
                 application and contact you within 2–3 business days.
               </p>
@@ -520,17 +591,22 @@ const BrowseUnits = () => {
               <div className="success-details-Browse">
                 <div className="success-detail-item-Browse">
                   <strong>Property:</strong>
-                  <span className="detail-value-Browse">{selectedUnit?.name || "Unit Name"}</span>
+                  <span className="detail-value-Browse" title="Applied property">
+                    {selectedUnit?.name || "Unit Name"}
+                  </span>
                 </div>
                 <div className="success-detail-item-Browse">
                   <strong>Monthly Rent:</strong>
-                  <span className="detail-value-Browse">₱{selectedUnit?.price?.toLocaleString() || '0'}</span>
+                  <span className="detail-value-Browse" title="Monthly rental amount">
+                    ₱{selectedUnit?.price?.toLocaleString() || '0'}
+                  </span>
                 </div>
               </div>
 
               <button
                 className="success-close-btn-Browse"
                 onClick={handleCloseSuccessModal}
+                title="Return to browsing units"
               >
                 Continue Browsing
               </button>
