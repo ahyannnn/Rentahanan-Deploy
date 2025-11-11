@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CreditCard, DollarSign, Upload, CheckCircle, Clock, AlertCircle, ChevronLeft, Search, X, FileText, Receipt, Loader, Eye} from "lucide-react";
+import { CreditCard, Upload, CheckCircle, Clock, AlertCircle, ChevronLeft, Search, X, FileText, Receipt, Loader, Eye, Info } from "lucide-react";
 import "../../styles/tenant/MyBills.css";
 
 const MyBills = () => {
@@ -220,8 +220,10 @@ const MyBills = () => {
       {/* Header Section */}
       <div className="bills-header-Tenant-Bills">
         <div className="header-content-Tenant-Bills">
-          <h1 className="page-title-Tenant-Bills">My Bills & Invoices</h1>
-          <p className="page-description-Tenant-Bills">View, manage, and pay your bills in one place</p>
+          <h1 className="page-title-Tenant-Bills" title="View and manage your rental bills">My Bills & Invoices</h1>
+          <p className="page-description-Tenant-Bills" title="Pay your bills and track payment status">
+            View, manage, and pay your bills in one place
+          </p>
         </div>
       </div>
 
@@ -235,6 +237,7 @@ const MyBills = () => {
             className="search-input-Tenant-Bills"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            title="Search through your bills by ID or type"
           />
         </div>
 
@@ -243,6 +246,7 @@ const MyBills = () => {
             <button
               className={`filter-btn-Tenant-Bills ${statusFilter === "all" ? "filter-btn-active-Tenant-Bills" : ""}`}
               onClick={() => setStatusFilter("all")}
+              title="Show all bills regardless of status"
             >
               All Bills
               <span className="filter-count-Tenant-Bills">{bills.length}</span>
@@ -250,6 +254,7 @@ const MyBills = () => {
             <button
               className={`filter-btn-Tenant-Bills ${statusFilter === "unpaid" ? "filter-btn-active-Tenant-Bills" : ""}`}
               onClick={() => setStatusFilter("unpaid")}
+              title="Show only unpaid bills that require payment"
             >
               Unpaid
               <span className="filter-count-Tenant-Bills">{statsData.unpaid}</span>
@@ -257,6 +262,7 @@ const MyBills = () => {
             <button
               className={`filter-btn-Tenant-Bills ${statusFilter === "for validation" ? "filter-btn-active-Tenant-Bills" : ""}`}
               onClick={() => setStatusFilter("for validation")}
+              title="Show bills pending payment verification"
             >
               For Validation
               <span className="filter-count-Tenant-Bills">{statsData.pending}</span>
@@ -264,6 +270,7 @@ const MyBills = () => {
             <button
               className={`filter-btn-Tenant-Bills ${statusFilter === "paid" ? "filter-btn-active-Tenant-Bills" : ""}`}
               onClick={() => setStatusFilter("paid")}
+              title="Show successfully paid bills"
             >
               Paid
               <span className="filter-count-Tenant-Bills">{statsData.paid}</span>
@@ -277,13 +284,13 @@ const MyBills = () => {
         <table className="bills-table-Tenant-Bills">
           <thead className="table-header-Tenant-Bills">
             <tr className="table-header-row-Tenant-Bills">
-              <th className="table-heading-Tenant-Bills">Select</th>
-              <th className="table-heading-Tenant-Bills">Bill ID</th>
-              <th className="table-heading-Tenant-Bills">Type</th>
-              <th className="table-heading-Tenant-Bills">Amount</th>
-              <th className="table-heading-Tenant-Bills">Due Date</th>
-              <th className="table-heading-Tenant-Bills">Status</th>
-              <th className="table-heading-Tenant-Bills">Action</th>
+              <th className="table-heading-Tenant-Bills" title="Select bills for batch payment">Select</th>
+              <th className="table-heading-Tenant-Bills" title="Unique identifier for each bill">Bill ID</th>
+              <th className="table-heading-Tenant-Bills" title="Type of bill (rent, utilities, etc.)">Type</th>
+              <th className="table-heading-Tenant-Bills" title="Amount due for this bill">Amount</th>
+              <th className="table-heading-Tenant-Bills" title="Payment due date">Due Date</th>
+              <th className="table-heading-Tenant-Bills" title="Current payment status">Status</th>
+              <th className="table-heading-Tenant-Bills" title="Available actions for this bill">Action</th>
             </tr>
           </thead>
           <tbody className="table-body-Tenant-Bills">
@@ -309,28 +316,36 @@ const MyBills = () => {
                           }
                         }}
                         disabled={!isSelectable}
+                        title={
+                          isSelectable 
+                            ? "Select this bill for payment" 
+                            : "Only unpaid bills can be selected for payment"
+                        }
                       />
                     </td>
-                    <td className="table-data-Tenant-Bills bill-id-Tenant-Bills">
+                    <td className="table-data-Tenant-Bills bill-id-Tenant-Bills" title={`Bill ID: #${bill.billid}`}>
                       #{bill.billid}
                     </td>
-                    <td className="table-data-Tenant-Bills bill-type-Tenant-Bills">
+                    <td className="table-data-Tenant-Bills bill-type-Tenant-Bills" title={`Bill type: ${bill.billtype}`}>
                       <div className="bill-type-content-Tenant-Bills">
                         <FileText size={16} />
                         {bill.billtype}
                       </div>
                     </td>
-                    <td className="table-data-Tenant-Bills bill-amount-Tenant-Bills">
+                    <td className="table-data-Tenant-Bills bill-amount-Tenant-Bills" title={`Amount due: ${formatCurrency(bill.amount)}`}>
                       {formatCurrency(bill.amount)}
                     </td>
-                    <td className="table-data-Tenant-Bills due-date-Tenant-Bills">
+                    <td className="table-data-Tenant-Bills due-date-Tenant-Bills" title={`Due date: ${bill.duedate}`}>
                       <div className="due-date-content-Tenant-Bills">
                         <Clock size={14} />
                         {bill.duedate}
                       </div>
                     </td>
                     <td className="table-data-Tenant-Bills">
-                      <span className={`status-badge-Tenant-Bills status-${bill.status?.toLowerCase()}`}>
+                      <span 
+                        className={`status-badge-Tenant-Bills status-${bill.status?.toLowerCase()}`}
+                        title={`Payment status: ${bill.status}`}
+                      >
                         {getStatusIcon(bill.status)}
                         {bill.status}
                       </span>
@@ -340,11 +355,16 @@ const MyBills = () => {
                         <button 
                           className="action-btn-Tenant-Bills pay-now-btn-Tenant-Bills"
                           onClick={() => handlePayNow(bill.billid)}
+                          title="Pay this bill now"
                         >
                           Pay Now
                         </button>
                       ) : isForValidation ? (
-                        <button className="action-btn-Tenant-Bills pending-btn-Tenant-Bills" disabled>
+                        <button 
+                          className="action-btn-Tenant-Bills pending-btn-Tenant-Bills" 
+                          disabled
+                          title="Payment is being verified by the owner"
+                        >
                           <Clock size={14} />
                           For Validation
                         </button>
@@ -352,9 +372,9 @@ const MyBills = () => {
                         <button
                           className="action-btn-Tenant-Bills receipt-btn-Tenant-Bills"
                           onClick={() => handleViewReceipt(bill.billid)}
-                          title="View payment receipt" // ✅ ADDED: Tooltip like Payment component
+                          title="View payment receipt and details"
                         >
-                          <Eye size={14} /> {/* ✅ UPDATED: Changed from Receipt to Eye icon */}
+                          <Eye size={14} />
                           View Receipt
                         </button>
                       )}
@@ -391,11 +411,15 @@ const MyBills = () => {
             const isSelectable = isUnpaid;
 
             return (
-              <div key={bill.billid} className="mobile-bill-card-Tenant-Bills">
+              <div 
+                key={bill.billid} 
+                className="mobile-bill-card-Tenant-Bills"
+                title={`${bill.billtype} - ${formatCurrency(bill.amount)} - Due: ${bill.duedate}`}
+              >
                 <div className="mobile-bill-header-Tenant-Bills">
                   <div className="mobile-bill-info-Tenant-Bills">
-                    <span className="mobile-bill-id-Tenant-Bills">#{bill.billid}</span>
-                    <div className="mobile-bill-type-Tenant-Bills">
+                    <span className="mobile-bill-id-Tenant-Bills" title={`Bill ID: #${bill.billid}`}>#{bill.billid}</span>
+                    <div className="mobile-bill-type-Tenant-Bills" title={`Bill type: ${bill.billtype}`}>
                       <FileText size={14} />
                       {bill.billtype}
                     </div>
@@ -412,18 +436,28 @@ const MyBills = () => {
                       }
                     }}
                     disabled={!isSelectable}
+                    title={
+                      isSelectable 
+                        ? "Select this bill for payment" 
+                        : "Only unpaid bills can be selected for payment"
+                    }
                   />
                 </div>
                 <div className="mobile-bill-content-Tenant-Bills">
                   <div className="mobile-bill-main-Tenant-Bills">
                     <div className="mobile-amount-section-Tenant-Bills">
-                      <span className="mobile-bill-amount-Tenant-Bills">{formatCurrency(bill.amount)}</span>
-                      <span className="mobile-due-date-Tenant-Bills">
+                      <span className="mobile-bill-amount-Tenant-Bills" title={`Amount due: ${formatCurrency(bill.amount)}`}>
+                        {formatCurrency(bill.amount)}
+                      </span>
+                      <span className="mobile-due-date-Tenant-Bills" title={`Due date: ${bill.duedate}`}>
                         <Clock size={12} />
                         Due {bill.duedate}
                       </span>
                     </div>
-                    <span className={`mobile-status-badge-Tenant-Bills status-${bill.status?.toLowerCase()}`}>
+                    <span 
+                      className={`mobile-status-badge-Tenant-Bills status-${bill.status?.toLowerCase()}`}
+                      title={`Payment status: ${bill.status}`}
+                    >
                       {getStatusIcon(bill.status)}
                       {bill.status}
                     </span>
@@ -434,12 +468,17 @@ const MyBills = () => {
                     <button 
                       className="mobile-action-btn-Tenant-Bills pay-now-btn-Tenant-Bills"
                       onClick={() => handlePayNow(bill.billid)}
+                      title="Pay this bill now"
                     >
                       <CreditCard size={16} />
                       Pay Now
                     </button>
                   ) : isForValidation ? (
-                    <button className="mobile-action-btn-Tenant-Bills mobile-pending-btn-Tenant-Bills" disabled>
+                    <button 
+                      className="mobile-action-btn-Tenant-Bills mobile-pending-btn-Tenant-Bills" 
+                      disabled
+                      title="Payment is being verified by the owner"
+                    >
                       <Clock size={16} />
                       For Validation
                     </button>
@@ -447,9 +486,9 @@ const MyBills = () => {
                     <button
                       className="mobile-action-btn-Tenant-Bills mobile-receipt-btn-Tenant-Bills"
                       onClick={() => handleViewReceipt(bill.billid)}
-                      title="View payment receipt" // ✅ ADDED: Tooltip like Payment component
+                      title="View payment receipt and details"
                     >
-                      <Eye size={16} /> {/* ✅ UPDATED: Changed from Receipt to Eye icon */}
+                      <Eye size={16} />
                       View Receipt
                     </button>
                   )}
@@ -475,14 +514,23 @@ const MyBills = () => {
         <div className="bottom-actions-Tenant-Bills">
           <div className="payment-summary-Tenant-Bills">
             <div className="selected-bills-info-Tenant-Bills">
-              <span className="selected-count-Tenant-Bills">
+              <span 
+                className="selected-count-Tenant-Bills"
+                title={`${selectedBills.length} bill${selectedBills.length > 1 ? 's' : ''} selected for payment`}
+              >
                 {selectedBills.length} bill{selectedBills.length > 1 ? 's' : ''} selected
               </span>
-              <span className="total-amount-Tenant-Bills">{formatCurrency(selectedTotalAmount)}</span>
+              <span 
+                className="total-amount-Tenant-Bills"
+                title={`Total amount due: ${formatCurrency(selectedTotalAmount)}`}
+              >
+                {formatCurrency(selectedTotalAmount)}
+              </span>
             </div>
             <button
               className="proceed-btn-Tenant-Bills"
               onClick={handleOpenModal}
+              title="Proceed to payment for selected bills"
             >
               <CreditCard size={20} />
               Proceed to Payment
@@ -496,48 +544,58 @@ const MyBills = () => {
         <div className="modal-overlay-Tenant-Bills" onClick={handleCloseModal}>
           <div className="payments-modal-Tenant-Bills" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-Tenant-Bills">
-              <button className="back-btn-Tenant-Bills" onClick={handleCloseModal}>
+              <button 
+                className="back-btn-Tenant-Bills" 
+                onClick={handleCloseModal}
+                title="Close payment modal"
+              >
                 <ChevronLeft size={24} />
               </button>
-              <h3 className="modal-title-Tenant-Bills">Payment Method</h3>
+              <h3 className="modal-title-Tenant-Bills" title="Choose your payment method">Payment Method</h3>
               <div className="modal-header-spacer-Tenant-Bills"></div>
             </div>
 
             <div className="modal-content-Tenant-Bills">
               {/* Bill Summary */}
               <div className="bill-summary-Tenant-Bills">
-                <h4 className="summary-title-Tenant-Bills">Selected Bills</h4>
+                <h4 className="summary-title-Tenant-Bills" title="Bills selected for payment">Selected Bills</h4>
                 <div className="bill-list-Tenant-Bills">
                   {bills
                     .filter((bill) => selectedBills.includes(bill.billid))
                     .map((bill) => (
                       <div key={bill.billid} className="bill-item-Tenant-Bills">
                         <div className="bill-info-Tenant-Bills">
-                          <span className="bill-id-Tenant-Bills">#{bill.billid}</span>
-                          <span className="bill-type-Tenant-Bills">{bill.billtype}</span>
+                          <span className="bill-id-Tenant-Bills" title={`Bill ID: #${bill.billid}`}>#{bill.billid}</span>
+                          <span className="bill-type-Tenant-Bills" title={`Bill type: ${bill.billtype}`}>{bill.billtype}</span>
                         </div>
-                        <span className="bill-amount-Tenant-Bills">{formatCurrency(bill.amount)}</span>
+                        <span className="bill-amount-Tenant-Bills" title={`Amount: ${formatCurrency(bill.amount)}`}>
+                          {formatCurrency(bill.amount)}
+                        </span>
                       </div>
                     ))}
                 </div>
                 <div className="total-amount-section-Tenant-Bills">
-                  <span className="total-label-Tenant-Bills">Total Amount Due</span>
-                  <span className="total-amount-value-Tenant-Bills">{formatCurrency(selectedTotalAmount)}</span>
+                  <span className="total-label-Tenant-Bills" title="Total amount to be paid">Total Amount Due</span>
+                  <span className="total-amount-value-Tenant-Bills" title={`Total: ${formatCurrency(selectedTotalAmount)}`}>
+                    {formatCurrency(selectedTotalAmount)}
+                  </span>
                 </div>
               </div>
 
               {/* Payment Methods */}
               <div className="payment-methods-Tenant-Bills">
-                <h4 className="methods-title-Tenant-Bills">Choose Payment Method</h4>
+                <h4 className="methods-title-Tenant-Bills" title="Select how you want to pay">Choose Payment Method</h4>
 
                 {/* Cash Option */}
                 <div
                   className={`payment-method-card-Tenant-Bills ${paymentMethod === "cash" ? "method-selected-Tenant-Bills" : ""}`}
                   onClick={() => setPaymentMethod("cash")}
+                  title="Pay with cash directly to the owner"
                 >
                   <div className="method-header-Tenant-Bills">
                     <div className="method-icon-Tenant-Bills cash">
-                      <DollarSign size={24} />
+                      {/* Removed DollarSign icon */}
+                      <FileText size={24} />
                     </div>
                     <div className="method-info-Tenant-Bills">
                       <h5 className="method-title-Tenant-Bills">Cash Payment</h5>
@@ -551,6 +609,7 @@ const MyBills = () => {
                 <div
                   className={`payment-method-card-Tenant-Bills ${paymentMethod === "gcash" ? "method-selected-Tenant-Bills" : ""}`}
                   onClick={() => setPaymentMethod("gcash")}
+                  title="Pay via GCash mobile wallet"
                 >
                   <div className="method-header-Tenant-Bills">
                     <div className="method-icon-Tenant-Bills gcash">
@@ -587,7 +646,12 @@ const MyBills = () => {
 
                       <div className="gcash-form-Tenant-Bills">
                         <div className="form-group-Tenant-Bills">
-                          <label className="form-label-Tenant-Bills">GCash Reference Number *</label>
+                          <label className="form-label-Tenant-Bills">
+                            GCash Reference Number *
+                            <span className="form-tooltip-Tenant-Bills" title="13-digit reference number from your GCash transaction">
+                              <Info size={14} />
+                            </span>
+                          </label>
                           <input
                             type="text"
                             placeholder="Enter 13-digit reference number"
@@ -595,12 +659,21 @@ const MyBills = () => {
                             value={gcashRef}
                             onChange={(e) => setGcashRef(e.target.value)}
                             maxLength={13}
+                            title="Enter the 13-digit reference number from your GCash transaction"
                           />
                         </div>
 
                         <div className="form-group-Tenant-Bills">
-                          <label className="form-label-Tenant-Bills">Upload Receipt *</label>
-                          <div className="file-upload-area-Tenant-Bills">
+                          <label className="form-label-Tenant-Bills">
+                            Upload Receipt *
+                            <span className="form-tooltip-Tenant-Bills" title="Screenshot or photo of your GCash transaction receipt">
+                              <Info size={14} />
+                            </span>
+                          </label>
+                          <div 
+                            className="file-upload-area-Tenant-Bills"
+                            title="Click to upload your GCash receipt screenshot"
+                          >
                             <Upload size={20} className="upload-icon-Tenant-Bills" />
                             <div className="upload-text-Tenant-Bills">
                               <p>Click to upload receipt screenshot</p>
@@ -611,10 +684,13 @@ const MyBills = () => {
                               accept="image/*"
                               className="file-input-Tenant-Bills"
                               onChange={(e) => setGcashReceipt(e.target.files[0])}
+                              title="Upload GCash transaction receipt"
                             />
                             {gcashReceipt && (
                               <div className="file-preview-Tenant-Bills">
-                                <span className="file-name-Tenant-Bills">{gcashReceipt.name}</span>
+                                <span className="file-name-Tenant-Bills" title={`Uploaded file: ${gcashReceipt.name}`}>
+                                  {gcashReceipt.name}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -631,6 +707,11 @@ const MyBills = () => {
                 className="submit-payment-btn-Tenant-Bills"
                 onClick={handleSubmitPayment}
                 disabled={isSubmitting}
+                title={
+                  isSubmitting 
+                    ? "Processing your payment..." 
+                    : "Submit your payment for processing"
+                }
               >
                 {isSubmitting ? (
                   <>
@@ -665,9 +746,9 @@ const MyBills = () => {
                 </div>
               </div>
 
-              <h2 className="success-title-Tenant-Bills">Payment Submitted Successfully!</h2>
+              <h2 className="success-title-Tenant-Bills" title="Payment submitted successfully">Payment Submitted Successfully!</h2>
 
-              <p className="success-message-Tenant-Bills">
+              <p className="success-message-Tenant-Bills" title="Payment processing information">
                 Your payment of <strong>{formatCurrency(successModalData.totalAmount)}</strong> has been submitted for validation.
                 {successModalData.paymentMethod === "gcash"
                   ? " Your GCash payment is being processed and will be verified shortly."
@@ -705,6 +786,7 @@ const MyBills = () => {
               <button
                 className="success-close-btn-Tenant-Bills"
                 onClick={handleCloseSuccessModal}
+                title="Return to bills overview"
               >
                 Continue
               </button>

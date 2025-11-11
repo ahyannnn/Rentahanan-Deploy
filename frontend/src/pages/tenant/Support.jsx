@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Plus, FileText, Clock, CheckCircle, AlertCircle, Home, DollarSign, Settings, HelpCircle, X, Upload, Image, Trash2 } from "lucide-react";
+import { Search, Plus, FileText, Clock, CheckCircle, AlertCircle, Home, DollarSign, Settings, HelpCircle, X, Upload, Image, Trash2, Info } from "lucide-react";
 import "../../styles/tenant/Support.css";
 
 const Support = () => {
@@ -200,8 +200,16 @@ const Support = () => {
             {/* Header */}
             <div className="page-header-Tenant-Support">
                 <div className="header-content-Tenant-Support">
-                    <h2 className="page-title-Tenant-Support">Support & Concerns</h2>
-                    <p className="page-description-Tenant-Support">
+                    <h2 
+                        className="page-title-Tenant-Support"
+                        title="Manage and track your reported issues and concerns"
+                    >
+                        Support & Concerns
+                    </h2>
+                    <p 
+                        className="page-description-Tenant-Support"
+                        title="Report new issues and monitor the status of existing concerns"
+                    >
                         Track the status of your reported issues and create new concerns
                     </p>
                 </div>
@@ -218,6 +226,7 @@ const Support = () => {
                             className="search-input-Tenant-Support"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            title="Search through your concerns by ID, subject, or type"
                         />
                     </div>
                 </div>
@@ -229,6 +238,7 @@ const Support = () => {
                                 activeFilter === "all" ? "filter-btn-active-Tenant-Support" : ""
                             }`}
                             onClick={() => setActiveFilter("all")}
+                            title="Show all concerns regardless of status"
                         >
                             All
                             <span className="filter-count-Tenant-Support">{concerns.length}</span>
@@ -238,6 +248,7 @@ const Support = () => {
                                 activeFilter === "pending" ? "filter-btn-active-Tenant-Support" : ""
                             }`}
                             onClick={() => setActiveFilter("pending")}
+                            title="Show only pending concerns awaiting resolution"
                         >
                             Pending
                             <span className="filter-count-Tenant-Support">
@@ -249,6 +260,7 @@ const Support = () => {
                                 activeFilter === "completed" ? "filter-btn-active-Tenant-Support" : ""
                             }`}
                             onClick={() => setActiveFilter("completed")}
+                            title="Show resolved concerns"
                         >
                             Resolved
                             <span className="filter-count-Tenant-Support">
@@ -257,7 +269,11 @@ const Support = () => {
                         </button>
                     </div>
 
-                    <button className="new-concern-btn-Tenant-Support" onClick={handleOpenNewConcernModal}>
+                    <button 
+                        className="new-concern-btn-Tenant-Support" 
+                        onClick={handleOpenNewConcernModal}
+                        title="Report a new issue or concern"
+                    >
                         <Plus size={20} />
                         New Concern
                     </button>
@@ -268,9 +284,16 @@ const Support = () => {
             <div className="concerns-list-Tenant-Support">
                 {filteredConcerns.length > 0 ? (
                     filteredConcerns.map((concern) => (
-                        <div key={concern.concernid} className="concern-card-Tenant-Support">
+                        <div 
+                            key={concern.concernid} 
+                            className="concern-card-Tenant-Support"
+                            title={`${concern.concerntype}: ${concern.subject}`}
+                        >
                             <div className="card-header-Tenant-Support">
-                                <div className="category-badge-Tenant-Support">
+                                <div 
+                                    className="category-badge-Tenant-Support"
+                                    title={`Concern type: ${concern.concerntype}`}
+                                >
                                     <span className="category-icon-Tenant-Support">
                                         {getCategoryIcon(concern.concerntype)}
                                     </span>
@@ -278,6 +301,7 @@ const Support = () => {
                                 </div>
                                 <span
                                     className={`concern-status-Tenant-Support status-${concern.status.toLowerCase()}-Tenant-Support`}
+                                    title={`Current status: ${concern.status}`}
                                 >
                                     <span className="status-icon-Tenant-Support">
                                         {getStatusIcon(concern.status)}
@@ -287,19 +311,37 @@ const Support = () => {
                             </div>
 
                             <div className="concern-content-Tenant-Support">
-                                <h4 className="concern-title-Tenant-Support">{concern.subject}</h4>
-                                <p className="concern-description-Tenant-Support">{concern.description}</p>
+                                <h4 
+                                    className="concern-title-Tenant-Support"
+                                    title={`Subject: ${concern.subject}`}
+                                >
+                                    {concern.subject}
+                                </h4>
+                                <p 
+                                    className="concern-description-Tenant-Support"
+                                    title={`Description: ${concern.description}`}
+                                >
+                                    {concern.description}
+                                </p>
                             </div>
 
                             <div className="card-footer-Tenant-Support">
                                 <div className="concern-meta-Tenant-Support">
                                     <div className="meta-item-Tenant-Support">
                                         <span className="meta-label-Tenant-Support">Concern ID</span>
-                                        <span className="meta-value-Tenant-Support">#{concern.concernid}</span>
+                                        <span 
+                                            className="meta-value-Tenant-Support"
+                                            title={`Unique concern identifier: #${concern.concernid}`}
+                                        >
+                                            #{concern.concernid}
+                                        </span>
                                     </div>
                                     <div className="meta-item-Tenant-Support">
                                         <span className="meta-label-Tenant-Support">Date Reported</span>
-                                        <span className="meta-value-Tenant-Support date-value-Tenant-Support">
+                                        <span 
+                                            className="meta-value-Tenant-Support date-value-Tenant-Support"
+                                            title={`Reported on: ${concern.creationdate}`}
+                                        >
                                             <Clock size={14} />
                                             {concern.creationdate}
                                         </span>
@@ -310,10 +352,10 @@ const Support = () => {
                                     {concern.tenantimage && (
                                         <button
                                             className="view-image-btn-Tenant-Support"
-                                            // ✅ FIXED: Use the helper function
                                             onClick={() =>
                                                 window.open(getImageUrl(concern.tenantimage, 'concerns'), "_blank")
                                             }
+                                            title="View the image you attached to this concern"
                                         >
                                             <Image size={16} />
                                             View Image
@@ -322,10 +364,10 @@ const Support = () => {
                                     {concern.landlordimage && (
                                         <button
                                             className="view-image-btn-Tenant-Support landlord"
-                                            // ✅ FIXED: Use the helper function
                                             onClick={() =>
                                                 window.open(getImageUrl(concern.landlordimage, 'concerns'), "_blank")
                                             }
+                                            title="View the property owner's response image"
                                         >
                                             <Image size={16} />
                                             Owner's Response
@@ -337,6 +379,7 @@ const Support = () => {
                                             className="delete-concern-btn-Tenant-Support"
                                             onClick={(e) => handleDeleteClick(concern.concernid, e)}
                                             disabled={isDeleting}
+                                            title="Remove this concern from your view (owner will still see it)"
                                         >
                                             <Trash2 size={16} />
                                             {isDeleting ? "Deleting..." : "Delete"}
@@ -358,7 +401,11 @@ const Support = () => {
                                 : "You haven't reported any concerns yet."}
                         </p>
                         {!searchTerm && (
-                            <button className="no-concerns-btn-Tenant-Support" onClick={handleOpenNewConcernModal}>
+                            <button 
+                                className="no-concerns-btn-Tenant-Support" 
+                                onClick={handleOpenNewConcernModal}
+                                title="Start reporting your first issue or concern"
+                            >
                                 <Plus size={20} />
                                 Report Your First Concern
                             </button>
@@ -372,10 +419,19 @@ const Support = () => {
                 <div className="modal-overlay-Tenant-Support" onClick={handleCloseNewConcernModal}>
                     <div className="concern-modal-Tenant-Support" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header-Tenant-Support">
-                            <button className="back-btn-Tenant-Support" onClick={handleCloseNewConcernModal}>
+                            <button 
+                                className="back-btn-Tenant-Support" 
+                                onClick={handleCloseNewConcernModal}
+                                title="Close concern form"
+                            >
                                 <X size={20} />
                             </button>
-                            <h3 className="modal-title-Tenant-Support">Create New Concern</h3>
+                            <h3 
+                                className="modal-title-Tenant-Support"
+                                title="Fill out the form to report a new issue"
+                            >
+                                Create New Concern
+                            </h3>
                             <div className="modal-header-spacer-Tenant-Support"></div>
                         </div>
 
@@ -385,6 +441,9 @@ const Support = () => {
                                     <label htmlFor="concerntype" className="form-label-Tenant-Support">
                                         <Settings size={18} />
                                         Concern Type *
+                                        <span className="form-tooltip-Tenant-Support" title="Select the category that best describes your issue">
+                                            <Info size={14} />
+                                        </span>
                                     </label>
                                     <select 
                                         id="concerntype" 
@@ -392,6 +451,7 @@ const Support = () => {
                                         required 
                                         onChange={handleInputChange}
                                         value={formData.concerntype}
+                                        title="Choose the type of concern you're reporting"
                                     >
                                         <option value="">Select Category</option>
                                         <option value="Maintenance">Maintenance</option>
@@ -405,6 +465,9 @@ const Support = () => {
                                     <label htmlFor="subject" className="form-label-Tenant-Support">
                                         <FileText size={18} />
                                         Subject / Title *
+                                        <span className="form-tooltip-Tenant-Support" title="Brief summary of your concern">
+                                            <Info size={14} />
+                                        </span>
                                     </label>
                                     <input
                                         type="text"
@@ -414,6 +477,7 @@ const Support = () => {
                                         required
                                         onChange={handleInputChange}
                                         value={formData.subject}
+                                        title="Enter a clear and concise subject for your concern"
                                     />
                                 </div>
 
@@ -421,6 +485,9 @@ const Support = () => {
                                     <label htmlFor="description" className="form-label-Tenant-Support">
                                         <HelpCircle size={18} />
                                         Details / Description *
+                                        <span className="form-tooltip-Tenant-Support" title="Provide detailed information about the issue">
+                                            <Info size={14} />
+                                        </span>
                                     </label>
                                     <textarea
                                         id="description"
@@ -430,6 +497,7 @@ const Support = () => {
                                         required
                                         onChange={handleInputChange}
                                         value={formData.description}
+                                        title="Describe your concern in detail including location, time, and any relevant information"
                                     ></textarea>
                                 </div>
 
@@ -437,9 +505,15 @@ const Support = () => {
                                     <label className="form-label-Tenant-Support">
                                         <Upload size={18} />
                                         Attachment *
+                                        <span className="form-tooltip-Tenant-Support" title="Upload an image that shows the issue">
+                                            <Info size={14} />
+                                        </span>
                                     </label>
                                     <div className="upload-container-Tenant-Support">
-                                        <div className="upload-box-Tenant-Support">
+                                        <div 
+                                            className="upload-box-Tenant-Support"
+                                            title="Click to upload an image of the issue"
+                                        >
                                             <div className="upload-icon-Tenant-Support">
                                                 <Image size={32} />
                                             </div>
@@ -457,10 +531,14 @@ const Support = () => {
                                                     onChange={handleFileChange}
                                                     required
                                                     accept="image/*"
+                                                    title="Select an image file to upload"
                                                 />
                                             </label>
                                             {formData.tenantimage && (
-                                                <div className="file-preview-Tenant-Support">
+                                                <div 
+                                                    className="file-preview-Tenant-Support"
+                                                    title={`Selected file: ${formData.tenantimage.name}`}
+                                                >
                                                     Selected: {formData.tenantimage.name}
                                                 </div>
                                             )}
@@ -474,6 +552,7 @@ const Support = () => {
                                             type="button"
                                             className="cancel-btn-Tenant-Support"
                                             onClick={handleCloseNewConcernModal}
+                                            title="Cancel and close the form"
                                         >
                                             Cancel
                                         </button>
@@ -481,6 +560,7 @@ const Support = () => {
                                             type="submit" 
                                             className="submit-btn-Tenant-Support"
                                             disabled={isSubmitting}
+                                            title={isSubmitting ? "Submitting your concern..." : "Submit your concern for review"}
                                         >
                                             {isSubmitting ? (
                                                 <>
@@ -517,9 +597,17 @@ const Support = () => {
                                 </div>
                             </div>
                             
-                            <h2 className="success-title-Tenant-Support">Concern Submitted Successfully!</h2>
+                            <h2 
+                                className="success-title-Tenant-Support"
+                                title="Your concern has been successfully submitted"
+                            >
+                                Concern Submitted Successfully!
+                            </h2>
                             
-                            <p className="success-message-Tenant-Support">
+                            <p 
+                                className="success-message-Tenant-Support"
+                                title="Expected response time and next steps"
+                            >
                                 Your concern has been submitted and is now under review. We'll get back to you within 24-48 hours.
                             </p>
 
@@ -527,7 +615,10 @@ const Support = () => {
                                 <div className="success-detail-item-Tenant-Support">
                                     <span className="detail-label-Tenant-Support">Status:</span>
                                     <span className="detail-value-Tenant-Support">
-                                        <span className="status-badge-pending-Tenant-Support">
+                                        <span 
+                                            className="status-badge-pending-Tenant-Support"
+                                            title="Your concern is awaiting review by the property owner"
+                                        >
                                             <Clock size={14} />
                                             Pending Review
                                         </span>
@@ -535,13 +626,19 @@ const Support = () => {
                                 </div>
                                 <div className="success-detail-item-Tenant-Support">
                                     <span className="detail-label-Tenant-Support">Submitted:</span>
-                                    <span className="detail-value-Tenant-Support">{new Date().toLocaleDateString()}</span>
+                                    <span 
+                                        className="detail-value-Tenant-Support"
+                                        title={`Submitted on ${new Date().toLocaleDateString()}`}
+                                    >
+                                        {new Date().toLocaleDateString()}
+                                    </span>
                                 </div>
                             </div>
 
                             <button 
                                 className="success-close-btn-Tenant-Support"
                                 onClick={handleCloseSuccessModal}
+                                title="Return to concerns list"
                             >
                                 Continue
                             </button>
@@ -558,8 +655,16 @@ const Support = () => {
                             <Trash2 size={48} />
                         </div>
                         <div className="delete-modal-content-Tenant-Support">
-                            <h3 className="delete-modal-title-Tenant-Support">Delete From Your View?</h3>
-                            <p className="delete-modal-message-Tenant-Support">
+                            <h3 
+                                className="delete-modal-title-Tenant-Support"
+                                title="Confirm removal of this concern from your view"
+                            >
+                                Delete From Your View?
+                            </h3>
+                            <p 
+                                className="delete-modal-message-Tenant-Support"
+                                title="This action only removes the concern from your view, not from the owner's records"
+                            >
                                 This concern will be removed from your view but the owner will still see it. 
                                 If both you and the owner delete this concern, it will be permanently deleted including all images.
                             </p>
@@ -574,6 +679,7 @@ const Support = () => {
                                 className="delete-cancel-btn-Tenant-Support" 
                                 onClick={cancelDelete}
                                 disabled={isDeleting}
+                                title="Keep this concern in your view"
                             >
                                 Cancel
                             </button>
@@ -581,6 +687,7 @@ const Support = () => {
                                 className="delete-confirm-btn-Tenant-Support" 
                                 onClick={confirmDelete}
                                 disabled={isDeleting}
+                                title={isDeleting ? "Removing concern..." : "Remove this concern from your view"}
                             >
                                 {isDeleting ? (
                                     <>
@@ -612,9 +719,17 @@ const Support = () => {
                                 </div>
                             </div>
                             
-                            <h2 className="success-title-Tenant-Support">Concern Deleted Successfully!</h2>
+                            <h2 
+                                className="success-title-Tenant-Support"
+                                title="Concern has been removed from your view"
+                            >
+                                Concern Deleted Successfully!
+                            </h2>
                             
-                            <p className="success-message-Tenant-Support">
+                            <p 
+                                className="success-message-Tenant-Support"
+                                title="The concern is still visible to the property owner"
+                            >
                                 The concern has been removed from your view. The property owner can still see it in their records.
                             </p>
 
@@ -622,7 +737,11 @@ const Support = () => {
                                 <div className="success-detail-item-Tenant-Support">
                                     <span className="detail-label-Tenant-Support">Action:</span>
                                     <span className="detail-value-Tenant-Support">
-                                        <span className="status-badge-pending-Tenant-Support" style={{background: '#d4edda', color: '#155724'}}>
+                                        <span 
+                                            className="status-badge-pending-Tenant-Support" 
+                                            style={{background: '#d4edda', color: '#155724'}}
+                                            title="Concern removed from your personal view"
+                                        >
                                             <CheckCircle size={14} />
                                             Removed From View
                                         </span>
@@ -630,13 +749,19 @@ const Support = () => {
                                 </div>
                                 <div className="success-detail-item-Tenant-Support">
                                     <span className="detail-label-Tenant-Support">Removed:</span>
-                                    <span className="detail-value-Tenant-Support">{new Date().toLocaleDateString()}</span>
+                                    <span 
+                                        className="detail-value-Tenant-Support"
+                                        title={`Removed on ${new Date().toLocaleDateString()}`}
+                                    >
+                                        {new Date().toLocaleDateString()}
+                                    </span>
                                 </div>
                             </div>
 
                             <button 
                                 className="success-close-btn-Tenant-Support"
                                 onClick={handleCloseDeleteSuccessModal}
+                                title="Return to concerns list"
                             >
                                 Continue
                             </button>

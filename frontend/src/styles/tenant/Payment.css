@@ -623,3 +623,15 @@
         text-align: left;
     }
 }
+
+.form-tooltip-tenant-p {
+    display: inline-flex;
+    margin-left: 6px;
+    color: #666;
+    cursor: help;
+    transition: color 0.3s ease;
+}
+
+.form-tooltip-tenant-p:hover {
+    color: #0a2d8d;
+}

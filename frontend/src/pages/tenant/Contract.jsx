@@ -4,7 +4,6 @@ import axios from "axios";
 import { 
   FileText, 
   Home, 
-  DollarSign, 
   Calendar, 
   CheckCircle, 
   Clock, 
@@ -36,6 +35,11 @@ const Contract = () => {
 
   // ✅ ADD API BASE
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
+  // ✅ UPDATED: Remove dollar sign from currency format
+  const formatCurrency = (amount) => {
+    return `₱${parseFloat(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   // ✅ Get image URL function (same as BrowseUnits)
   const getImageUrl = (filename, folder = 'signed_contracts') => {
@@ -345,11 +349,13 @@ const Contract = () => {
         
         <div className="summary-card-Contract summary-card-price-Contract" title="Monthly rental amount">
           <div className="summary-icon-Contract">
-            <DollarSign className="icon" />
+            {/* Removed DollarSign icon */}
+            <FileText className="icon" />
           </div>
           <div className="summary-content-Contract">
             <p className="summary-label-Contract">Monthly Price</p>
-            <p className="summary-value-Contract">₱{contract.unit_price?.toLocaleString() || "0"}</p>
+            {/* ✅ UPDATED: Remove dollar sign */}
+            <p className="summary-value-Contract">{formatCurrency(contract.unit_price)}</p>
           </div>
         </div>
         
@@ -563,7 +569,8 @@ const Contract = () => {
                 </div>
                 <div className="detail-row-Contract">
                   <span className="detail-label-Contract">Current Rent:</span>
-                  <span className="detail-value-Contract">₱{parseFloat(contract.unit_price || 0).toLocaleString()}</span>
+                  {/* ✅ UPDATED: Remove dollar sign */}
+                  <span className="detail-value-Contract">{formatCurrency(contract.unit_price)}</span>
                 </div>
                 <div className="detail-row-Contract">
                   <span className="detail-label-Contract">Current Status:</span>
@@ -689,7 +696,8 @@ const Contract = () => {
               </div>
               <div className="success-detail-item-Contract">
                 <span className="success-detail-label-Contract">Monthly Rent:</span>
-                <span className="success-detail-value-Contract">₱{contract.unit_price?.toLocaleString()}</span>
+                {/* ✅ UPDATED: Remove dollar sign */}
+                <span className="success-detail-value-Contract">{formatCurrency(contract.unit_price)}</span>
               </div>
               <div className="success-detail-item-Contract">
                 <span className="success-detail-label-Contract">Requested On:</span>
