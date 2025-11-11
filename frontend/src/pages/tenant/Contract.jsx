@@ -75,11 +75,7 @@ const Contract = () => {
         // ✅ Better error handling for missing tenant ID
         if (!tenantId) {
           console.error("No tenant ID found in localStorage.");
-          console.log("Available localStorage items:", {
-            user: localStorage.getItem("user"),
-            tenantid: localStorage.getItem("tenantid"),
-            allItems: { ...localStorage }
-          });
+          
           setLoading(false);
           return;
         }
@@ -279,7 +275,7 @@ const Contract = () => {
           <p>TenantID in localStorage: {localStorage.getItem("tenantid") || "Missing"}</p>
           <button 
             onClick={() => {
-              console.log("LocalStorage contents:");
+             
               alert("Check console for localStorage contents");
             }}
             style={{ marginTop: '10px', padding: '5px 10px' }}

@@ -143,7 +143,7 @@ function Transactions() {
       if (response.ok && receiptData.receipt_url) { // ✅ FIXED: Use receipt_url directly
         window.open(receiptData.receipt_url, '_blank'); // ✅ No need to construct URL
       } else {
-        console.log(receiptData.error || `No receipt available for bill ${billId}`);
+        
       }
     } catch (error) {
       console.error('Error fetching receipt:', error);

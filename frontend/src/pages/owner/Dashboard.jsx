@@ -65,10 +65,7 @@ const Dashboard = () => {
     return acc;
   }, {});
 
-  // Debug log to verify counts
-  console.log('Property status counts:', propertyStatusCount);
-  console.log('Total properties in data:', propertiesData.length);
-  console.log('Properties data:', propertiesData);
+  
 
   const propertyStatusData = Object.entries(propertyStatusCount).map(([status, count]) => ({
     status,

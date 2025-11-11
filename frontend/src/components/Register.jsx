@@ -312,7 +312,7 @@ const Register = () => {
       });
       
       if (res.ok) {
-        console.log("Welcome email sent successfully");
+       
         return true;
       } else {
         console.error("Failed to send welcome email");

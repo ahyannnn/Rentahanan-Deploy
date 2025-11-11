@@ -110,7 +110,7 @@ const OwnerContract = () => {
 
     // Function to handle image error
     const handleImageError = (e, user) => {
-        console.log("Image failed to load for user:", user.fullname);
+        
         e.target.style.display = 'none';
         const fallbackElement = e.target.nextSibling;
         if (fallbackElement) {
@@ -378,7 +378,7 @@ const OwnerContract = () => {
             return;
         }
         
-        console.log("Opening contract URL:", contractUrl);
+       
         window.open(contractUrl, "_blank");
     };
 

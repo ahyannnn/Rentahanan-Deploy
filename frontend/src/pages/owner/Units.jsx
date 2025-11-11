@@ -98,18 +98,18 @@ function Units() {
     newFormData.append("image", formData.image);
 
     try {
-      console.log("Sending request to:", `${API_BASE}/api/add-houses`);
+      
       
       const response = await fetch(`${API_BASE}/api/add-houses`, {
         method: "POST",
         body: newFormData,
       });
 
-      console.log("Response status:", response.status);
+      
       
       if (response.ok) {
         const result = await response.json();
-        console.log("Success:", result);
+       
         showModal("Success", "Unit added successfully!", "success");
         setShowAddModal(false);
         resetForm();
