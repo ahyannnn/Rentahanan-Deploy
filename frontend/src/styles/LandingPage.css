@@ -140,6 +140,9 @@ html, body {
     padding: 4px;
     border-radius: 4px;
     transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .mobile-close-btn-Layout:hover {
@@ -923,16 +926,19 @@ html, body {
     
     .houses-container-Layout {
         gap: 1rem;
+        justify-content: center;
     }
     
     .house-card-Layout {
         width: 100%;
         max-width: 300px;
+        margin: 0 auto;
     }
     
     .skeleton-card-Layout {
         width: 100%;
         max-width: 300px;
+        margin: 0 auto;
     }
     
     .house-image-Layout {
@@ -951,6 +957,8 @@ html, body {
     
     .feature-card-Layout {
         padding: 30px 20px;
+        margin: 0 auto;
+        max-width: 300px;
     }
     
     .feature-title-Layout {
@@ -964,6 +972,8 @@ html, body {
     .contact-info-Layout,
     .map-section-Layout {
         padding: 20px 15px;
+        margin: 0 auto;
+        max-width: 300px;
     }
     
     .contact-item-Layout {
@@ -978,11 +988,18 @@ html, body {
     
     .location-details-Layout {
         padding: 20px 15px;
+        text-align: center;
+    }
+    
+    .location-details-Layout ul {
+        text-align: left;
     }
     
     .about-description-Layout {
         font-size: 0.95rem;
         line-height: 1.7;
+        text-align: center;
+        padding: 0 10px;
     }
     
     .footer-content-Layout {
@@ -993,6 +1010,7 @@ html, body {
         padding: 20px;
         flex-direction: column;
         gap: 15px;
+        text-align: center;
     }
     
     .mobile-nav-sidebar-Layout {
@@ -1006,10 +1024,43 @@ html, body {
     
     .toolkit-card-Layout {
         padding: 30px 20px;
+        margin: 0 auto;
+        max-width: 300px;
     }
     
     .toolkit-title-Layout {
         font-size: 1.2rem;
+    }
+    
+    /* Mobile Center Alignment Improvements */
+    .hero-content-Layout {
+        text-align: center;
+        width: 100%;
+        padding: 0 1rem;
+    }
+    
+    .houses-section-Layout,
+    .features-section-Layout,
+    .about-section-Layout,
+    .contact-section-Layout,
+    .toolkit-section-Layout {
+        text-align: center;
+    }
+    
+    .loading-container-Layout {
+        justify-content: center;
+    }
+    
+    .contact-details-Layout {
+        align-items: center;
+    }
+    
+    .footer-section-Layout {
+        text-align: center;
+    }
+    
+    .social-links-Layout {
+        justify-content: center;
     }
 }
 
@@ -1029,6 +1080,7 @@ html, body {
     
     .house-info-Layout {
         padding: 0.8rem;
+        text-align: center;
     }
     
     .house-name-Layout {
@@ -1037,6 +1089,7 @@ html, body {
     
     .feature-card-Layout {
         padding: 25px 15px;
+        max-width: 280px;
     }
     
     .mobile-nav-sidebar-Layout {
@@ -1050,6 +1103,12 @@ html, body {
     
     .toolkit-card-Layout {
         padding: 25px 15px;
+        max-width: 280px;
+    }
+    
+    .contact-info-Layout,
+    .map-section-Layout {
+        max-width: 280px;
     }
 }
 

@@ -197,7 +197,7 @@ def send_welcome_email(email, user_name):
             </p>
 
             <div style="text-align: center; margin: 30px 0;">
-                <a href="http://localhost:3000/login" style="
+                <a href="https://rentahanan.vercel.app/" style="
                     display: inline-block;
                     background-color: #0048b4;
                     color: white;
