@@ -609,3 +609,185 @@
 .form-tooltip-Tenant-Notifications:hover {
     color: #0a2d8d;
 }
+
+/* ===== Mobile Responsive Improvements ===== */
+@media (max-width: 768px) {
+    .notifications-container-Tenant-Notifications {
+        padding: 20px 15px;
+    }
+    
+    .page-title-Tenant-Notifications {
+        font-size: 2rem;
+    }
+    
+    .stats-overview-Tenant-Notifications {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .notifications-top-controls-Tenant-Notifications {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+    }
+    
+    .search-container-Tenant-Notifications {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .search-input-Tenant-Notifications {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 14px 16px 14px 48px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .search-input-Tenant-Notifications::placeholder {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .controls-right-Tenant-Notifications {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+    }
+    
+    /* FIX: Filter tabs - single row with horizontal scroll */
+    .filter-tabs-container-Tenant-Notifications {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .filter-tabs-Tenant-Notifications {
+        display: flex;
+        gap: 6px;
+        padding: 6px;
+        width: max-content;
+        min-width: 100%;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+    
+    .filter-btn-Tenant-Notifications {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: max-content;
+    }
+    
+    .card-footer-Tenant-Notifications {
+        flex-direction: column;
+        gap: 20px;
+        align-items: stretch;
+    }
+    
+    .notification-meta-Tenant-Notifications {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .notification-actions-Tenant-Notifications {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .notifications-container-Tenant-Notifications {
+        padding: 15px 10px;
+    }
+    
+    .page-title-Tenant-Notifications {
+        font-size: 1.7rem;
+    }
+    
+    .stat-card-Tenant-Notifications {
+        padding: 25px;
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .stat-icon-Tenant-Notifications {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .stat-number-Tenant-Notifications {
+        font-size: 2rem;
+    }
+    
+    /* Better search placeholder for very small screens */
+    .search-input-Tenant-Notifications::placeholder {
+        font-size: 13px;
+    }
+    
+    .filter-btn-Tenant-Notifications {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .notification-card-Tenant-Notifications {
+        padding: 25px;
+    }
+    
+    .card-header-Tenant-Notifications {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .notification-actions-Tenant-Notifications {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .mark-read-btn-Tenant-Notifications,
+    .delete-notification-btn-Tenant-Notifications {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+    }
+    
+    .mark-all-read-btn-Tenant-Notifications {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+    .search-input-Tenant-Notifications {
+        font-size: 14px;
+    }
+    
+    .search-input-Tenant-Notifications::placeholder {
+        font-size: 12px;
+    }
+    
+    .filter-tabs-Tenant-Notifications {
+        gap: 4px;
+    }
+    
+    .filter-btn-Tenant-Notifications {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Hide scrollbar but keep functionality */
+.filter-tabs-container-Tenant-Notifications::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-tabs-container-Tenant-Notifications {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
