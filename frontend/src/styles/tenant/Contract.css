@@ -1196,3 +1196,15 @@
   line-height: 1.5;
   margin-bottom: 15px;
 }
+
+.form-tooltip-Contract {
+    display: inline-flex;
+    margin-left: 6px;
+    color: #666;
+    cursor: help;
+    transition: color 0.3s ease;
+}
+
+.form-tooltip-Contract:hover {
+    color: #0a2d8d;
+}

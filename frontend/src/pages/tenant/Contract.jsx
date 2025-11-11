@@ -17,7 +17,8 @@ import {
   X,
   Download,
   Loader,
-  AlertTriangle
+  AlertTriangle,
+  Info
 } from "lucide-react";
 import "../../styles/tenant/Contract.css";
 
@@ -278,6 +279,7 @@ const Contract = () => {
               alert("Check console for localStorage contents");
             }}
             style={{ marginTop: '10px', padding: '5px 10px' }}
+            title="Show detailed localStorage information"
           >
             Show LocalStorage Details
           </button>
@@ -320,16 +322,18 @@ const Contract = () => {
     <div className="contract-container-Contract">
       {/* Header Section */}
       <div className="contract-header-Contract">
-        <h1 className="contract-title-Contract">
+        <h1 className="contract-title-Contract" title="Your rental contract management">
           <FileText className="header-icon" />
           My Contract
         </h1>
-        <p className="contract-subtitle-Contract">Review and manage your rental agreement</p>
+        <p className="contract-subtitle-Contract" title="Review and manage your rental agreement">
+          Review and manage your rental agreement
+        </p>
       </div>
 
       {/* Contract Summary Cards */}
       <div className="contract-summary-Contract">
-        <div className="summary-card-Contract summary-card-unit-Contract">
+        <div className="summary-card-Contract summary-card-unit-Contract" title="Your rental unit information">
           <div className="summary-icon-Contract">
             <Home className="icon" />
           </div>
@@ -339,7 +343,7 @@ const Contract = () => {
           </div>
         </div>
         
-        <div className="summary-card-Contract summary-card-price-Contract">
+        <div className="summary-card-Contract summary-card-price-Contract" title="Monthly rental amount">
           <div className="summary-icon-Contract">
             <DollarSign className="icon" />
           </div>
@@ -349,7 +353,7 @@ const Contract = () => {
           </div>
         </div>
         
-        <div className="summary-card-Contract summary-card-dates-Contract">
+        <div className="summary-card-Contract summary-card-dates-Contract" title="Lease start and end dates">
           <div className="summary-icon-Contract">
             <Calendar className="icon" />
           </div>
@@ -361,7 +365,7 @@ const Contract = () => {
           </div>
         </div>
         
-        <div className="summary-card-Contract summary-card-status-Contract">
+        <div className="summary-card-Contract summary-card-status-Contract" title="Current contract status">
           <div className="summary-icon-Contract">
             {getStatusIcon(contract.status)}
           </div>
@@ -392,6 +396,7 @@ const Contract = () => {
               <button 
                 className="open-btn-Contract" 
                 onClick={() => window.open(contractURL, "_blank")}
+                title="Open contract document in new tab"
               >
                 <Eye className="btn-icon" size={18} />
                 View Contract
@@ -401,6 +406,7 @@ const Contract = () => {
                 <button
                   className="terminate-btn-Contract"
                   onClick={openTerminateModal}
+                  title="Request to end your tenancy"
                 >
                   <X className="btn-icon" size={18} />
                   End Tenancy
@@ -424,7 +430,11 @@ const Contract = () => {
                 </p>
               </div>
             </div>
-            <button className="sign-btn-Contract" onClick={handleSignClick}>
+            <button 
+              className="sign-btn-Contract" 
+              onClick={handleSignClick}
+              title="Start digital signature process"
+            >
               <Pen className="btn-icon" size={18} />
               Sign Contract
             </button>
@@ -435,7 +445,9 @@ const Contract = () => {
           <div className="signature-area-Contract">
             <div className="signature-header-Contract">
               <h3 className="signature-title-Contract">Digital Signature</h3>
-              <p className="signature-instruction-Contract">Sign in the box below using your mouse or touchscreen</p>
+              <p className="signature-instruction-Contract" title="Use mouse or touch to sign in the box">
+                Sign in the box below using your mouse or touchscreen
+              </p>
             </div>
             
             <div className="signature-canvas-container-Contract">
@@ -452,16 +464,28 @@ const Contract = () => {
             </div>
             
             <div className="signature-buttons-Contract">
-              <button className="clear-btn-Contract" onClick={handleClear}>
+              <button 
+                className="clear-btn-Contract" 
+                onClick={handleClear}
+                title="Clear signature canvas"
+              >
                 <Trash2 className="btn-icon" size={18} />
                 Clear
               </button>
               <div className="signature-action-buttons-Contract">
-                <button className="cancel-btn-Contract" onClick={handleCancelSign}>
+                <button 
+                  className="cancel-btn-Contract" 
+                  onClick={handleCancelSign}
+                  title="Cancel signing process"
+                >
                   <X className="btn-icon" size={18} />
                   Cancel
                 </button>
-                <button className="save-signature-btn-Contract" onClick={handleSaveSignature}>
+                <button 
+                  className="save-signature-btn-Contract" 
+                  onClick={handleSaveSignature}
+                  title="Save your signature and complete signing"
+                >
                   <Save className="btn-icon" size={18} />
                   Save Signature
                 </button>
@@ -496,6 +520,7 @@ const Contract = () => {
                     "_blank"
                   )
                 }
+                title="View signed contract copy"
               >
                 <Eye className="btn-icon" size={18} />
                 View Signed Copy
@@ -505,15 +530,17 @@ const Contract = () => {
         )}
       </div>
 
-      
-
       {/* Termination Modal */}
       {showTerminateModal && contract && (
         <div className="modal-overlay-Contract" onClick={() => setShowTerminateModal(false)}>
           <div className="modal-content-Contract terminate" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-Contract">
               <h3 className="modal-title-Contract">End Tenancy</h3>
-              <button className="modal-close-btn-Contract" onClick={() => setShowTerminateModal(false)}>
+              <button 
+                className="modal-close-btn-Contract" 
+                onClick={() => setShowTerminateModal(false)}
+                title="Close termination modal"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -547,6 +574,9 @@ const Contract = () => {
               <div className="form-group-Contract">
                 <label className="form-label-Contract">
                   Preferred Move-out Date *
+                  <span className="form-tooltip-Contract" title="Select your preferred move-out date (2-30 days from today)">
+                    <Info size={14} />
+                  </span>
                   <span className="date-note-Contract">(Must be between 2 weeks and 30 days from today)</span>
                 </label>
                 <input
@@ -556,6 +586,7 @@ const Contract = () => {
                   className="form-input-Contract"
                   min={minDateString}
                   max={maxDateString}
+                  title="Select your preferred move-out date"
                 />
                 <div className="date-info-Contract">
                   <Calendar size={14} />
@@ -568,6 +599,7 @@ const Contract = () => {
               <button 
                 className="cancel-btn-Contract" 
                 onClick={() => setShowTerminateModal(false)}
+                title="Cancel termination request"
               >
                 Cancel
               </button>
@@ -575,6 +607,7 @@ const Contract = () => {
                 className="proceed-btn-Contract"
                 onClick={showConfirmation}
                 disabled={!terminationDate}
+                title={!terminationDate ? "Please select a move-out date first" : "Proceed to confirmation"}
               >
                 <X size={16} />
                 Proceed to Confirm
@@ -590,7 +623,11 @@ const Contract = () => {
           <div className="modal-content-Contract confirm" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-Contract">
               <h3 className="modal-title-Contract">Confirm Termination Request</h3>
-              <button className="modal-close-btn-Contract" onClick={() => setShowConfirmModal(false)}>
+              <button 
+                className="modal-close-btn-Contract" 
+                onClick={() => setShowConfirmModal(false)}
+                title="Close confirmation modal"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -617,12 +654,14 @@ const Contract = () => {
               <button 
                 className="cancel-btn-Contract" 
                 onClick={() => setShowConfirmModal(false)}
+                title="Cancel termination request"
               >
                 No, Go Back
               </button>
               <button 
                 className="terminate-final-btn-Contract"
                 onClick={handleTerminateContract}
+                title="Confirm and send termination request"
               >
                 <X size={16} />
                 Yes, Request Termination
@@ -663,6 +702,7 @@ const Contract = () => {
               <button 
                 className="success-modal-button-Contract"
                 onClick={() => setShowSuccessModal(false)}
+                title="Close success message"
               >
                 <Eye className="btn-icon" size={18} />
                 View Contract
@@ -684,6 +724,7 @@ const Contract = () => {
             <button 
               className="modal-button-Contract error"
               onClick={() => setShowErrorModal(false)}
+              title="Close error message and try again"
             >
               Try Again
             </button>
