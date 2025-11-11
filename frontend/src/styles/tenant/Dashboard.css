@@ -1003,3 +1003,23 @@
         min-width: 120px;
     }
 }
+
+/* --- Simple Tooltips --- */
+[title] {
+  cursor: help;
+  position: relative;
+}
+
+.form-tooltip-Browse,
+.form-tooltip-Contract {
+    display: inline-flex;
+    margin-left: 6px;
+    color: #666;
+    cursor: help;
+    transition: color 0.3s ease;
+}
+
+.form-tooltip-Browse:hover,
+.form-tooltip-Contract:hover {
+    color: #0a2d8d;
+}
