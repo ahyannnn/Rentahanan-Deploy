@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, Plus, X, FileText, Download, Eye, Calendar, DollarSign, User, Mail, Phone, Home, CheckCircle, AlertCircle, AlertTriangle, Bell } from "lucide-react";
+import { Search, Plus, X, FileText, Download, Eye, Calendar, User, Mail, Phone, Home, CheckCircle, AlertCircle, AlertTriangle, Bell } from "lucide-react";
 import "../../styles/owners/Billing.css";
 
 function Billing() {
@@ -624,7 +624,7 @@ function Billing() {
                     </div>
                     <div className="Owner-Billing-stat-card" title="Number of paid invoices">
                         <div className="Owner-Billing-stat-icon paid">
-                            <DollarSign size={20} />
+                            <FileText size={20} />
                         </div>
                         <div className="Owner-Billing-stat-info">
                             <span className="Owner-Billing-stat-number">{stats.paid}</span>

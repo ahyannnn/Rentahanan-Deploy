@@ -609,3 +609,23 @@
 .form-tooltip-Tenant-Notifications:hover {
     color: #0a2d8d;
 }
+
+/* Alternative: Keep full labels but make everything smaller */
+@media (max-width: 480px) {
+    .filter-tabs-Tenant-Notifications {
+        gap: 4px;
+        padding: 4px;
+        font-size: 0.8rem;
+    }
+    
+    .filter-btn-Tenant-Notifications {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .filter-count-Tenant-Notifications {
+        padding: 1px 4px;
+        font-size: 0.7rem;
+        margin-left: 4px;
+    }
+}
