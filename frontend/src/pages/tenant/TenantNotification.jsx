@@ -265,40 +265,37 @@ const TenantNotifications = () => {
         </div>
 
         <div className="controls-right-Tenant-Notifications">
-          {/* ✅ FIXED: Added container for horizontal scroll */}
-          <div className="filter-tabs-container-Tenant-Notifications">
-            <div className="filter-tabs-Tenant-Notifications">
-              <button
-                className={`filter-btn-Tenant-Notifications ${filter === "all" ? "filter-btn-active-Tenant-Notifications" : ""}`}
-                onClick={() => setFilter("all")}
-                title="Show all notifications regardless of type or status"
-              >
-                All
-                <span className="filter-count-Tenant-Notifications">{totalCount}</span>
-              </button>
-              <button
-                className={`filter-btn-Tenant-Notifications ${filter === "unread" ? "filter-btn-active-Tenant-Notifications" : ""}`}
-                onClick={() => setFilter("unread")}
-                title="Show only unread notifications"
-              >
-                Unread
-                <span className="filter-count-Tenant-Notifications">{unreadCount}</span>
-              </button>
-              <button
-                className={`filter-btn-Tenant-Notifications ${filter === "payment" ? "filter-btn-active-Tenant-Notifications" : ""}`}
-                onClick={() => setFilter("payment")}
-                title="Show payment-related notifications"
-              >
-                Payments
-              </button>
-              <button
-                className={`filter-btn-Tenant-Notifications ${filter === "maintenance" ? "filter-btn-active-Tenant-Notifications" : ""}`}
-                onClick={() => setFilter("maintenance")}
-                title="Show maintenance and repair notifications"
-              >
-                Maintenance
-              </button>
-            </div>
+          <div className="filter-tabs-Tenant-Notifications">
+            <button
+              className={`filter-btn-Tenant-Notifications ${filter === "all" ? "filter-btn-active-Tenant-Notifications" : ""}`}
+              onClick={() => setFilter("all")}
+              title="Show all notifications regardless of type or status"
+            >
+              All
+              <span className="filter-count-Tenant-Notifications">{totalCount}</span>
+            </button>
+            <button
+              className={`filter-btn-Tenant-Notifications ${filter === "unread" ? "filter-btn-active-Tenant-Notifications" : ""}`}
+              onClick={() => setFilter("unread")}
+              title="Show only unread notifications"
+            >
+              Unread
+              <span className="filter-count-Tenant-Notifications">{unreadCount}</span>
+            </button>
+            <button
+              className={`filter-btn-Tenant-Notifications ${filter === "payment" ? "filter-btn-active-Tenant-Notifications" : ""}`}
+              onClick={() => setFilter("payment")}
+              title="Show payment-related notifications"
+            >
+              Payments
+            </button>
+            <button
+              className={`filter-btn-Tenant-Notifications ${filter === "maintenance" ? "filter-btn-active-Tenant-Notifications" : ""}`}
+              onClick={() => setFilter("maintenance")}
+              title="Show maintenance and repair notifications"
+            >
+              Maintenance
+            </button>
           </div>
 
           {unreadCount > 0 && (
