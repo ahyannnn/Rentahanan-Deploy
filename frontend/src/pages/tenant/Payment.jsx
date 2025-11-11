@@ -286,7 +286,7 @@ const Payment = () => {
                             <div 
                                 key={payment.id} 
                                 className="payment-card-tenant-p"
-                                title={`Payment for ${payment.billType} - ₱${payment.amount}`}
+                                title={`Payment for ${payment.billType} - ${payment.amount}`}
                             >
                                 <div className="payment-card-header-tenant-p">
                                     <div 
@@ -309,9 +309,9 @@ const Payment = () => {
                                     <div className="payment-main-info-tenant-p">
                                         <h3 
                                             className="payment-amount-tenant-p"
-                                            title={`Payment amount: ₱${payment.amount?.toLocaleString() || '0.00'}`}
+                                            title={`Payment amount: ${payment.amount?.toLocaleString() || '0.00'}`}
                                         >
-                                            ₱{payment.amount?.toLocaleString() || '0.00'}
+                                            {payment.amount?.toLocaleString() || '0.00'}
                                         </h3>
                                         <p 
                                             className="payment-description-tenant-p"
