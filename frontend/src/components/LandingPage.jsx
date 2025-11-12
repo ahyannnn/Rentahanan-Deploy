@@ -9,6 +9,7 @@ function LandingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
 
   // Use environment variable or fallback to Render URL
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
@@ -29,13 +30,54 @@ function LandingPage() {
         );
         setHouses(availableHouses);
         setLoading(false);
+        
+        // Hide loading screen after a minimum time for better UX
+        setTimeout(() => {
+          setShowLoadingScreen(false);
+        }, 2000);
       })
       .catch((err) => {
         console.error("Error fetching houses:", err);
         setError("Failed to load properties. Please try again later.");
         setLoading(false);
+        setShowLoadingScreen(false);
       });
   }, [API_BASE]);
+
+  // Loading Screen Component
+  const LoadingScreen = () => (
+    <div className="loading-screen-overlay">
+      <div className="loading-screen-content">
+        {/* Logo */}
+        <div className="loading-logo-container">
+          <img
+            src="/logo.png"
+            alt="RenTahanan Logo"
+            className="loading-logo"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
+            }}
+          />
+        </div>
+        
+        {/* Loading Text */}
+        <div className="loading-text-container">
+          <h2 className="loading-title">RenTahanan</h2>
+          <p className="loading-subtitle">Finding your perfect home...</p>
+        </div>
+        
+        {/* Loading Animation */}
+        <div className="loading-animation">
+          <div className="loading-spinner"></div>
+          <div className="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   // Function to get image URL - handles both local and Cloudinary URLs
   const getImageUrl = (imagePath) => {
@@ -58,6 +100,11 @@ function LandingPage() {
     setIsMobileMenuOpen(false);
   };
 
+  // Show loading screen while data is loading and for minimum time
+  if (showLoadingScreen) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="landing-container-Layout">
       {/* Navbar */}
@@ -78,7 +125,7 @@ function LandingPage() {
             alt="RenTahanan Logo"
             className="logo-Layout"
             onError={(e) => {
-              e.target.src = "https://via.placeholder.com/50x50/4A5568/FFFFFF?text=R";
+              e.target.src = "https://via.placeholder.com/50x50/1e40af/FFFFFF?text=R";
             }}
             title="RenTahanan - Your Home Rental Partner"
           />
@@ -112,7 +159,7 @@ function LandingPage() {
                 alt="RenTahanan Logo"
                 className="logo-Layout"
                 onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/50x50/4A5568/FFFFFF?text=R";
+                  e.target.src = "https://via.placeholder.com/50x50/1e40af/FFFFFF?text=R";
                 }}
                 title="RenTahanan Logo"
               />
