@@ -1867,3 +1867,7 @@ body {
         gap: 10px;
     }
 }
+
+.header-Layout {
+    border-bottom: none !important;
+}
