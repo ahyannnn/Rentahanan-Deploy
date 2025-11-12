@@ -528,8 +528,8 @@ const OwnerContract = () => {
                                                     <span title={`Rental unit: ${contract.unit_name}`}>{contract.unit_name}</span>
                                                 </div>
                                                 <div className="Owner-Contract-detail-item">
-                                                    <DollarSign size={16} />
-                                                    <span title={`Monthly rent: ${parseFloat(contract.unit_price || 0).toLocaleString()}`}>{parseFloat(contract.unit_price || 0).toLocaleString()}/month</span>
+                                                    
+                                                    <span title={`Monthly rent: ${parseFloat(contract.unit_price || 0).toLocaleString()}`}>₱{parseFloat(contract.unit_price || 0).toLocaleString()}/month</span>
                                                 </div>
                                                 <div className="Owner-Contract-detail-item">
                                                     <Calendar size={16} />

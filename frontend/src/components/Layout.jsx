@@ -119,7 +119,7 @@ const Layout = () => {
     } else if (location.pathname === '/tenant' &&
       userRole === 'tenant' &&
       tenantStatus === 'Terminated') {
-      navigate('/tenant/support', { replace: true });
+      navigate('/tenant/payment', { replace: true }); // ✅ CHANGED: Redirect terminated tenants to payment history
     }
   }, [location.pathname, userRole, tenantStatus, navigate]);
 
@@ -547,7 +547,7 @@ const Layout = () => {
     ? notifications.slice(0, 10)
     : notifications.slice(0, 3);
 
-  // Updated tenant links by tenant status
+  // ✅ UPDATED: Terminated tenants can only see Payment History
   const tenantLinksByStatus = {
     Registered: [
       { name: "Browse Units", to: "/tenant/browse-units", icon: Building2 },
@@ -600,6 +600,9 @@ const Layout = () => {
 
   const pageTitle =
     links.find((link) => link.to === location.pathname)?.name || "Dashboard";
+
+  // ✅ ADDED: Check if user is terminated tenant
+  const isTerminatedTenant = userRole === "tenant" && tenantStatus === "Terminated";
 
   const ProfileModal = () => {
   if (!isProfileModalOpen || !userData) return null;
@@ -828,105 +831,108 @@ const Layout = () => {
         </button>
         <h3 title="Current page">{pageTitle}</h3>
         <div className="notifprofile-Layout">
-          <div className="notif-wrapper-Layout">
-            <button
-              className="notif-btn-Layout"
-              onClick={handleNotificationsToggle}
-              title={`View notifications (${unreadCount} unread)`}
-            >
-              <Bell size={20} color="white" />
-              {/* Number badge - ALWAYS SHOW IF THERE ARE NOTIFICATIONS */}
-              {unreadCount > 0 && (
-                <div className="notif-badge-Layout">{unreadCount}</div>
-              )}
-            </button>
+          {/* ✅ UPDATED: Hide notification icon for terminated tenants */}
+          {!isTerminatedTenant && (
+            <div className="notif-wrapper-Layout">
+              <button
+                className="notif-btn-Layout"
+                onClick={handleNotificationsToggle}
+                title={`View notifications (${unreadCount} unread)`}
+              >
+                <Bell size={20} color="white" />
+                {/* Number badge - ALWAYS SHOW IF THERE ARE NOTIFICATIONS */}
+                {unreadCount > 0 && (
+                  <div className="notif-badge-Layout">{unreadCount}</div>
+                )}
+              </button>
 
-            {showNotifications && (
-              <div className="notif-dropdown-Layout">
-                <h4 title="Your notifications">Notifications {unreadCount > 0 && `(${unreadCount})`}</h4>
-                {notificationsLoading ? (
-                  <div className="notif-loading-Layout">Loading notifications...</div>
-                ) : notifications.length === 0 ? (
-                  <div className="no-notifications-Layout">No notifications</div>
-                ) : (
-                  <>
-                    <div className={`notif-list-container-Layout ${showAllNotifications ? 'expanded-Layout' : ''}`}>
-                      {displayedNotifications.map((notif) => (
-                        <div
-                          key={notif.notificationid}
-                          className={`notif-card-Layout ${getNotificationTypeClass(notif)}`}
-                          onClick={() => handleNotificationCardClick(notif)}
-                          title="Click to view this notification"
-                        >
-                          <div className="notif-content-Layout">
-                            <h5 title="Notification title">{notif.title}</h5>
-                            <p title="Notification message">{notif.message}</p>
+              {showNotifications && (
+                <div className="notif-dropdown-Layout">
+                  <h4 title="Your notifications">Notifications {unreadCount > 0 && `(${unreadCount})`}</h4>
+                  {notificationsLoading ? (
+                    <div className="notif-loading-Layout">Loading notifications...</div>
+                  ) : notifications.length === 0 ? (
+                    <div className="no-notifications-Layout">No notifications</div>
+                  ) : (
+                    <>
+                      <div className={`notif-list-container-Layout ${showAllNotifications ? 'expanded-Layout' : ''}`}>
+                        {displayedNotifications.map((notif) => (
+                          <div
+                            key={notif.notificationid}
+                            className={`notif-card-Layout ${getNotificationTypeClass(notif)}`}
+                            onClick={() => handleNotificationCardClick(notif)}
+                            title="Click to view this notification"
+                          >
+                            <div className="notif-content-Layout">
+                              <h5 title="Notification title">{notif.title}</h5>
+                              <p title="Notification message">{notif.message}</p>
 
-                            {/* ✅ ADDED: Show notification target info */}
-                            <div className="notif-target-info-Layout">
-                              {getNotificationTargetInfo(notif)}
+                              {/* ✅ ADDED: Show notification target info */}
+                              <div className="notif-target-info-Layout">
+                                {getNotificationTargetInfo(notif)}
+                              </div>
+
+                              <span className="notif-time-Layout" title="Notification time">
+                                {formatNotificationTime(notif.creationdate)}
+                              </span>
                             </div>
 
-                            <span className="notif-time-Layout" title="Notification time">
-                              {formatNotificationTime(notif.creationdate)}
-                            </span>
-                          </div>
+                            {/* Three dots menu */}
+                            <div className="notif-menu-container-Layout">
+                              <button
+                                className="three-dots-btn-Layout"
+                                onClick={(e) => handleThreeDotsClick(notif.notificationid, e)}
+                                title="Notification options"
+                              >
+                                <MoreHorizontal size={16} />
+                              </button>
 
-                          {/* Three dots menu */}
-                          <div className="notif-menu-container-Layout">
-                            <button
-                              className="three-dots-btn-Layout"
-                              onClick={(e) => handleThreeDotsClick(notif.notificationid, e)}
-                              title="Notification options"
-                            >
-                              <MoreHorizontal size={16} />
-                            </button>
-
-                            {/* Dropdown menu */}
-                            {activeNotificationMenu === notif.notificationid && (
-                              <div className="notif-action-menu-Layout">
-                                <button
-                                  className="notif-menu-item-Layout view-menu-item-Layout"
-                                  onClick={(e) => handleViewNotification(notif, e)}
-                                  title="View this notification"
-                                >
-                                  <Eye size={14} />
-                                  View
-                                </button>
-
-                                {/* ✅ UPDATED: Conditionally show delete button */}
-                                {canDeleteNotification(notif) && (
+                              {/* Dropdown menu */}
+                              {activeNotificationMenu === notif.notificationid && (
+                                <div className="notif-action-menu-Layout">
                                   <button
-                                    className="notif-menu-item-Layout delete-menu-item-Layout"
-                                    onClick={(e) => handleDeleteNotification(notif, e)}
-                                    title="Delete this notification"
+                                    className="notif-menu-item-Layout view-menu-item-Layout"
+                                    onClick={(e) => handleViewNotification(notif, e)}
+                                    title="View this notification"
                                   >
-                                    <Trash2 size={14} />
-                                    Delete
+                                    <Eye size={14} />
+                                    View
                                   </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
 
-                    {/* Show View All button only if more than 3 notifications */}
-                    {notifications.length > 3 && (
-                      <button
-                        className="view-all-btn-Layout"
-                        onClick={handleViewAllNotifications}
-                        title={showAllNotifications ? "Show fewer notifications" : "View all notifications"}
-                      >
-                        {showAllNotifications ? 'Show Less' : `View All (${notifications.length})`}
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+                                  {/* ✅ UPDATED: Conditionally show delete button */}
+                                  {canDeleteNotification(notif) && (
+                                    <button
+                                      className="notif-menu-item-Layout delete-menu-item-Layout"
+                                      onClick={(e) => handleDeleteNotification(notif, e)}
+                                      title="Delete this notification"
+                                    >
+                                      <Trash2 size={14} />
+                                      Delete
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Show View All button only if more than 3 notifications */}
+                      {notifications.length > 3 && (
+                        <button
+                          className="view-all-btn-Layout"
+                          onClick={handleViewAllNotifications}
+                          title={showAllNotifications ? "Show fewer notifications" : "View all notifications"}
+                        >
+                          {showAllNotifications ? 'Show Less' : `View All (${notifications.length})`}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <button 
             className="profile-image-btn-Layout" 
