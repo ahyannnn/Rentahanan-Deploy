@@ -6,6 +6,7 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false); // ✅ ADDED: Loading state
 
     // Error states
     const [emailError, setEmailError] = useState("");
@@ -15,6 +16,46 @@ const Login = () => {
 
     // Use environment variable or fallback to production URL
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
+    // ✅ ADDED: Loading Screen Component - SAME STYLING AS LAYOUT
+    const LoadingScreen = () => (
+        <div className="loading-screen-overlay">
+            <div className="loading-screen-content">
+                {/* Logo */}
+                <div className="loading-logo-container">
+                    <img
+                        src="/logo.png"
+                        alt="RenTahanan Logo"
+                        className="loading-logo"
+                        onError={(e) => {
+                            e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
+                        }}
+                    />
+                </div>
+
+                {/* Loading Text */}
+                <div className="loading-text-container">
+                    <h2 className="loading-title">RenTahanan</h2>
+                    <p className="loading-subtitle">Signing you in...</p>
+                </div>
+
+               
+
+                {/* Loading Progress */}
+                <div className="loading-progress">
+                    <div className="loading-progress-bar">
+                        <div 
+                            className="loading-progress-fill"
+                            style={{ width: '70%' }}
+                        ></div>
+                    </div>
+                    <p className="loading-progress-text">
+                        Authenticating your account...
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -44,6 +85,8 @@ const Login = () => {
 
         if (!isValid) return;
 
+        setLoading(true); // ✅ START loading
+
         try {
             const response = await fetch(`${API_BASE}/api/login`, {
                 method: "POST",
@@ -64,11 +107,13 @@ const Login = () => {
                 } else {
                     setEmailError(data.message || "Login failed. Please check your credentials.");
                 }
+                setLoading(false); // ✅ STOP loading on error
                 return;
             }
 
             if (!data.user) {
                 setEmailError("Unexpected response. Please try again.");
+                setLoading(false); // ✅ STOP loading on error
                 return;
             }
 
@@ -104,22 +149,33 @@ const Login = () => {
                 localStorage.setItem("tenantid", tenantid);
             }
 
-            // ✅ Navigate based on role and status
-            if (role.toLowerCase() === "owner") {
-                navigate("/owner");
-            } else if (role.toLowerCase() === "tenant") {
-                navigate(
-                    application_status === "Registered" ? "/tenant/browse-units" : "/tenant"
-                );
-            } else {
-                navigate("/landing");
-            }
+            // ✅ Add small delay for smooth loading transition
+            setTimeout(() => {
+                setLoading(false);
+                
+                // ✅ Navigate based on role and status
+                if (role.toLowerCase() === "owner") {
+                    navigate("/owner");
+                } else if (role.toLowerCase() === "tenant") {
+                    navigate(
+                        application_status === "Registered" ? "/tenant/browse-units" : "/tenant"
+                    );
+                } else {
+                    navigate("/landing");
+                }
+            }, 500);
 
         } catch (error) {
             console.error("Login error:", error);
             setEmailError("Network error. Please check your connection.");
+            setLoading(false); // ✅ STOP loading on error
         }
     };
+
+    // ✅ SHOW LOADING SCREEN WHEN LOADING
+    if (loading) {
+        return <LoadingScreen />;
+    }
 
     return (
         <div className="auth-wrapper-Login">
@@ -221,8 +277,9 @@ const Login = () => {
                                 className="main-login-btn-Login" 
                                 type="submit"
                                 title="Sign in to your account"
+                                disabled={loading} // ✅ DISABLE BUTTON WHEN LOADING
                             >
-                                Login
+                                {loading ? "Signing In..." : "Login"}
                             </button>
 
                             <span 

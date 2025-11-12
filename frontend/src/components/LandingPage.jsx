@@ -66,7 +66,7 @@ function LandingPage() {
     };
   }, [API_BASE]);
 
-  // Loading Screen Component
+  // Loading Screen Component - SIMPLIFIED VERSION
   const LoadingScreen = () => (
     <div className="loading-screen-overlay">
       <div className="loading-screen-content">
@@ -90,17 +90,7 @@ function LandingPage() {
           </p>
         </div>
         
-        {/* Loading Animation */}
-        <div className="loading-animation">
-          <div className="loading-spinner"></div>
-          <div className="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-        
-        {/* Loading Progress */}
+        {/* Loading Progress Bar Only */}
         <div className="loading-progress">
           <div className="loading-progress-bar">
             <div 
@@ -240,7 +230,6 @@ function LandingPage() {
         )}
       </nav>
 
-      {/* Rest of your JSX remains the same */}
       {/* Hero Section */}
       <section className="hero-section-Layout">
         <div className="hero-overlay-Layout"></div>
