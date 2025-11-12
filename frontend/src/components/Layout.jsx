@@ -66,6 +66,41 @@ const Layout = () => {
     return `${API_BASE}/uploads/${folder}/${imagePath}`;
   };
 
+  // Loading Screen Component - SAME AS LANDING PAGE
+  const LoadingScreen = () => (
+    <div className="loading-screen-overlay">
+      <div className="loading-screen-content">
+        {/* Logo */}
+        <div className="loading-logo-container">
+          <img
+            src="/logo.png"
+            alt="RenTahanan Logo"
+            className="loading-logo"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
+            }}
+          />
+        </div>
+        
+        {/* Loading Text */}
+        <div className="loading-text-container">
+          <h2 className="loading-title">RenTahanan</h2>
+          <p className="loading-subtitle">Loading your dashboard...</p>
+        </div>
+        
+        {/* Loading Animation */}
+        <div className="loading-animation">
+          <div className="loading-spinner"></div>
+          <div className="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   useEffect(() => {
     // If current path is /tenant and user is Registered tenant, redirect to browse-units
     if (location.pathname === '/tenant' &&
@@ -531,21 +566,11 @@ const Layout = () => {
     { name: "Notifications", to: "/owner/notification", icon: Bell },
   ];
 
+  // ✅ UPDATED: Show loading screen while loading
   if (loading) {
-    return (
-      <div className="loading-logo-container">
-        <div className="loading-brand">
-          <img
-            src="/logo.png"
-            alt="RenTahanan Logo"
-            className="loading-logo"
-          />
-          <div className="loading-brand-text">RenTahanan</div>
-        </div>
-        <div className="loading-spinner"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
+
   if (!userData) {
     return (
       <div style={{ textAlign: "center", marginTop: "20vh", color: "#555" }}>
