@@ -1137,7 +1137,7 @@ html, body {
     }
 }
 
-/* Loading Screen Styles */
+/* Enhanced Loading Screen Styles */
 .loading-screen-overlay {
   position: fixed;
   top: 0;
@@ -1191,6 +1191,7 @@ html, body {
   font-size: 1.1rem;
   opacity: 0.9;
   color: #dbeafe;
+  min-height: 1.5rem;
 }
 
 .loading-animation {
@@ -1226,6 +1227,35 @@ html, body {
 
 .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
 .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+/* Loading Progress */
+.loading-progress {
+  width: 200px;
+  margin-top: 1rem;
+}
+
+.loading-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #60a5fa, #93c5fd);
+  border-radius: 2px;
+  transition: width 0.5s ease-in-out;
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+.loading-progress-text {
+  color: #dbeafe;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
 
 /* Animations */
 @keyframes fadeIn {
@@ -1272,6 +1302,15 @@ html, body {
   }
 }
 
+@keyframes progressPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Mobile Responsive for Loading Screen */
 @media (max-width: 768px) {
   .loading-screen-content {
@@ -1295,6 +1334,10 @@ html, body {
     width: 40px;
     height: 40px;
   }
+  
+  .loading-progress {
+    width: 180px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1313,5 +1356,9 @@ html, body {
   
   .loading-subtitle {
     font-size: 0.9rem;
+  }
+  
+  .loading-progress {
+    width: 160px;
   }
 }
