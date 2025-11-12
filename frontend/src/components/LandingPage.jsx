@@ -10,11 +10,14 @@ function LandingPage() {
   const [error, setError] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
+  const [dataFetched, setDataFetched] = useState(false);
 
   // Use environment variable or fallback to Render URL
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   useEffect(() => {
+    let isMounted = true;
+
     // Fetch houses from Render API
     fetch(`${API_BASE}/api/houses`)
       .then((res) => {
@@ -24,24 +27,43 @@ function LandingPage() {
         return res.json();
       })
       .then((data) => {
+        if (!isMounted) return;
+        
         // Filter only available properties
         const availableHouses = data.filter(house => 
           house.status && house.status.toLowerCase() === 'available'
         );
         setHouses(availableHouses);
         setLoading(false);
+        setDataFetched(true);
         
-        // Hide loading screen after a minimum time for better UX
+        // Hide loading screen only after data is fetched
         setTimeout(() => {
-          setShowLoadingScreen(false);
-        }, 2000);
+          if (isMounted) {
+            setShowLoadingScreen(false);
+          }
+        }, 1000); // Short delay for smooth transition
       })
       .catch((err) => {
+        if (!isMounted) return;
+        
         console.error("Error fetching houses:", err);
         setError("Failed to load properties. Please try again later.");
         setLoading(false);
-        setShowLoadingScreen(false);
+        setDataFetched(true);
+        
+        // Still hide loading screen even if there's error, but after data attempt
+        setTimeout(() => {
+          if (isMounted) {
+            setShowLoadingScreen(false);
+          }
+        }, 1000);
       });
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, [API_BASE]);
 
   // Loading Screen Component
@@ -63,7 +85,9 @@ function LandingPage() {
         {/* Loading Text */}
         <div className="loading-text-container">
           <h2 className="loading-title">RenTahanan</h2>
-          <p className="loading-subtitle">Finding your perfect home...</p>
+          <p className="loading-subtitle">
+            {dataFetched ? "Preparing your experience..." : "Finding your perfect home..."}
+          </p>
         </div>
         
         {/* Loading Animation */}
@@ -74,6 +98,19 @@ function LandingPage() {
             <span></span>
             <span></span>
           </div>
+        </div>
+        
+        {/* Loading Progress */}
+        <div className="loading-progress">
+          <div className="loading-progress-bar">
+            <div 
+              className="loading-progress-fill"
+              style={{ width: dataFetched ? '100%' : '70%' }}
+            ></div>
+          </div>
+          <p className="loading-progress-text">
+            {dataFetched ? 'Almost ready...' : 'Loading properties...'}
+          </p>
         </div>
       </div>
     </div>
@@ -100,7 +137,7 @@ function LandingPage() {
     setIsMobileMenuOpen(false);
   };
 
-  // Show loading screen while data is loading and for minimum time
+  // Show loading screen until data is fetched and ready
   if (showLoadingScreen) {
     return <LoadingScreen />;
   }
@@ -203,6 +240,7 @@ function LandingPage() {
         )}
       </nav>
 
+      {/* Rest of your JSX remains the same */}
       {/* Hero Section */}
       <section className="hero-section-Layout">
         <div className="hero-overlay-Layout"></div>
