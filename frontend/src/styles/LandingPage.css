@@ -1362,3 +1362,107 @@ html, body {
     width: 160px;
   }
 }
+
+/* --- Navbar --- */
+.navbar-Layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #061A53;
+    padding: 1rem 2rem;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Logo and Title Container - LEFT ALIGNED for Desktop */
+.nav-brand-container-Layout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Remove the centering and make it left aligned */
+    position: static;
+    left: auto;
+    transform: none;
+    margin-right: auto; /* Push other items to the right */
+}
+
+.logo-Layout {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+}
+
+.nav-brand-text-Layout {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+/* Desktop Navigation - Keep it on the right */
+.nav-links-Layout.desktop-nav-Layout {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto; /* Keep it on the right */
+}
+
+/* Mobile Menu Toggle - Keep it on the right */
+.mobile-menu-toggle-Layout {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    margin-left: auto; /* Push to right */
+}
+
+/* Mobile Brand Container - RIGHT ALIGNED for Mobile */
+.mobile-nav-brand-container-Layout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto; /* Push to right in mobile */
+}
+
+/* Media Queries for Mobile */
+@media (max-width: 768px) {
+    .navbar-Layout {
+        padding: 1rem 1.5rem;
+        justify-content: space-between;
+    }
+    
+    .mobile-menu-toggle-Layout {
+        display: block;
+        order: 2; /* Move to right side */
+    }
+    
+    /* Brand container moves to right in mobile */
+    .nav-brand-container-Layout {
+        order: 1; /* Keep it first but will be pushed left */
+        margin-right: 0;
+        margin-left: auto; /* Push to right */
+    }
+    
+    .nav-links-Layout.desktop-nav-Layout {
+        display: none;
+    }
+    
+    /* Mobile sidebar brand - keep it left in sidebar */
+    .mobile-nav-brand-container-Layout {
+        margin-left: 0; /* Reset for sidebar */
+    }
+}
+
+/* Small Mobile Phones */
+@media (max-width: 480px) {
+    .nav-brand-text-Layout {
+        font-size: 1.3rem;
+    }
+    
+    .logo-Layout {
+        height: 40px;
+    }
+}
