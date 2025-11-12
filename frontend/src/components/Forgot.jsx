@@ -167,6 +167,11 @@ const Forgot = () => {
 
     if (!password || !confirmPassword)
       return setError("Please fill both password fields.");
+    
+    // ✅ ADDED 8 CHARACTER VALIDATION
+    if (password.length < 8)
+      return setError("Password must be at least 8 characters long.");
+    
     if (password !== confirmPassword)
       return setError("Passwords do not match.");
 
@@ -357,11 +362,11 @@ const Forgot = () => {
                       <input
                         className="forgot-input-Forgot"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter new password"
+                        placeholder="Enter new password (min. 8 characters)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        title="Create a strong new password for your account"
+                        title="Create a strong new password with at least 8 characters for your account"
                       />
                       <button
                         type="button"
@@ -371,6 +376,19 @@ const Forgot = () => {
                       >
                         {showPassword ? "HIDE" : "SHOW"}
                       </button>
+                    </div>
+                    {/* ✅ ADDED PASSWORD LENGTH HINT */}
+                    <div className="password-hint-Forgot">
+                      {password.length > 0 && password.length < 8 && (
+                        <span className="password-warning-Forgot">
+                          Password must be at least 8 characters
+                        </span>
+                      )}
+                      {password.length >= 8 && (
+                        <span className="password-success-Forgot">
+                          ✓ Password meets length requirement
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -408,8 +426,8 @@ const Forgot = () => {
                   <button 
                     type="submit" 
                     className="forgot-btn-Forgot" 
-                    disabled={loading}
-                    title="Save your new password"
+                    disabled={loading || (password.length > 0 && password.length < 8)}
+                    title={password.length < 8 ? "Password must be at least 8 characters" : "Save your new password"}
                   >
                     {loading ? "Resetting..." : "Reset Password"}
                   </button>

@@ -21,7 +21,28 @@
     overflow: hidden;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
+.password-hint-Forgot {
+  margin-top: 5px;
+  font-size: 12px;
+  min-height: 18px;
+}
 
+.password-warning-Forgot {
+  color: #e74c3c;
+  font-weight: 500;
+}
+
+.password-success-Forgot {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+/* Disable button when password is invalid */
+.forgot-btn-Forgot:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 .forgot-left-Forgot {
     flex: 1;
     background: linear-gradient(135deg, #061a53, #0b3c91);
