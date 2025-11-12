@@ -6,6 +6,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [stepLoading, setStepLoading] = useState(false); // ✅ ADDED: Step loading state
   const [formData, setFormData] = useState({
     firstname: "",
     middlename: "",
@@ -30,6 +31,53 @@ const Register = () => {
 
   // ✅ ADD API BASE
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
+
+  // ✅ ADDED: Loading Screen Component - SAME STYLING AS OTHERS
+  const LoadingScreen = ({ stepNumber }) => {
+    const stepMessages = {
+      1: "Setting up your personal information...",
+      2: "Processing your contact details...", 
+      3: "Securing your account...",
+      4: "Creating your account..."
+    };
+
+    return (
+      <div className="loading-screen-overlay">
+        <div className="loading-screen-content">
+          {/* Logo */}
+          <div className="loading-logo-container">
+            <img
+              src="/logo.png"
+              alt="RenTahanan Logo"
+              className="loading-logo"
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
+              }}
+            />
+          </div>
+
+          {/* Loading Text */}
+          <div className="loading-text-container">
+            <h2 className="loading-title">RenTahanan</h2>
+            <p className="loading-subtitle">{stepMessages[stepNumber] || "Processing your registration.."}</p>
+          </div>     
+
+          {/* Loading Progress */}
+          <div className="loading-progress">
+            <div className="loading-progress-bar">
+              <div 
+                className="loading-progress-fill"
+                style={{ width: `${(stepNumber / 4) * 100}%` }}
+              ></div>
+            </div>
+            <p className="loading-progress-text">
+              Step {stepNumber} of 4 • {Math.round((stepNumber / 4) * 100)}% Complete
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // ✅ CHECK EMAIL AVAILABILITY FUNCTION
   const checkEmailExists = async (email) => {
@@ -293,11 +341,25 @@ const Register = () => {
     }
 
     if (isValid) {
-      setStep(step + 1);
+      setStepLoading(true); // ✅ START step loading
+      
+      // Simulate processing time for better UX
+      setTimeout(() => {
+        setStep(step + 1);
+        setStepLoading(false); // ✅ STOP step loading
+      }, 800);
     }
   };
 
-  const handlePrev = () => setStep(step - 1);
+  const handlePrev = () => {
+    setStepLoading(true); // ✅ START step loading
+    
+    // Simulate processing time for better UX
+    setTimeout(() => {
+      setStep(step - 1);
+      setStepLoading(false); // ✅ STOP step loading
+    }, 500);
+  };
 
   // Send welcome email after successful registration
   const sendWelcomeEmail = async (email, firstName) => {
@@ -312,7 +374,6 @@ const Register = () => {
       });
       
       if (res.ok) {
-       
         return true;
       } else {
         console.error("Failed to send welcome email");
@@ -331,7 +392,8 @@ const Register = () => {
       return;
     }
 
-    setIsLoading(true);
+    setStepLoading(true); // ✅ START final step loading
+    
     try {
       const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
@@ -343,17 +405,20 @@ const Register = () => {
         // Registration successful - send welcome email
         await sendWelcomeEmail(formData.email, formData.firstname);
         
-        // Directly show success message without verification
-        setStep(4);
+        // Add delay for smooth transition to success screen
+        setTimeout(() => {
+          setStep(4);
+          setStepLoading(false); // ✅ STOP loading
+        }, 1000);
       } else {
         const errorData = await res.json();
         setErrors({ general: errorData.message || "Registration failed. Please try again." });
+        setStepLoading(false); // ✅ STOP loading on error
       }
     } catch (error) {
       console.error("Registration error:", error);
       setErrors({ general: "Network error. Please check your connection and try again." });
-    } finally {
-      setIsLoading(false);
+      setStepLoading(false); // ✅ STOP loading on error
     }
   };
 
@@ -369,6 +434,11 @@ const Register = () => {
     }
     return false;
   };
+
+  // ✅ SHOW LOADING SCREEN WHEN STEP IS CHANGING
+  if (stepLoading) {
+    return <LoadingScreen stepNumber={step} />;
+  }
 
   // --- RENDER ---
   return (
@@ -663,7 +733,7 @@ const Register = () => {
                         type="button"
                         onClick={handlePrev}
                         className="btn-Register secondary-Register"
-                        disabled={isLoading || checkingEmail}
+                        disabled={isLoading || checkingEmail || stepLoading}
                         title="Go back to previous step"
                       >
                         Back
@@ -674,7 +744,7 @@ const Register = () => {
                         type="button" 
                         onClick={handleNext} 
                         className="btn-Register"
-                        disabled={isLoading || checkingEmail}
+                        disabled={isLoading || checkingEmail || stepLoading}
                         title="Continue to next step"
                       >
                         {isLoading ? "Checking..." : "Next"}
@@ -684,7 +754,7 @@ const Register = () => {
                       <button 
                         type="submit" 
                         className="btn-Register"
-                        disabled={isLoading || hasStepErrors()}
+                        disabled={isLoading || hasStepErrors() || stepLoading}
                         title={hasStepErrors() ? "Please fix errors before submitting" : "Create your RenTahanan account"}
                       >
                         {isLoading ? "Creating Account..." : "Create Account"}
