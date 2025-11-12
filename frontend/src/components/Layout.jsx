@@ -56,54 +56,50 @@ const Layout = () => {
   // ✅ ADD: Get image URL function for profile images
   const getImageUrl = (imagePath, folder = 'profile_images') => {
     if (!imagePath) return null;
-
+    
     // If it's already a full URL (Cloudinary), use it directly
     if (imagePath.startsWith('http')) {
       return imagePath;
     }
-
+    
     // Otherwise, construct the local path
     return `${API_BASE}/uploads/${folder}/${imagePath}`;
   };
 
-  // Loading Screen Component - SIMPLE VERSION
-  const LoadingScreen = () => {
-    const currentPage = links.find((link) => link.to === location.pathname)?.name || "Dashboard";
-
-    return (
-      <div className="loading-screen-overlay">
-        <div className="loading-screen-content">
-          {/* Logo */}
-          <div className="loading-logo-container">
-            <img
-              src="/logo.png"
-              alt="RenTahanan Logo"
-              className="loading-logo"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
-              }}
-            />
-          </div>
-
-          {/* Loading Text - DYNAMIC BASED ON CURRENT PAGE */}
-          <div className="loading-text-container">
-            <h2 className="loading-title">RenTahanan</h2>
-            <p className="loading-subtitle">Loading {currentPage}...</p>
-          </div>
-
-          {/* Loading Animation */}
-          <div className="loading-animation">
-            <div className="loading-spinner"></div>
-            <div className="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+  // Loading Screen Component - SAME AS LANDING PAGE
+  const LoadingScreen = () => (
+    <div className="loading-screen-overlay">
+      <div className="loading-screen-content">
+        {/* Logo */}
+        <div className="loading-logo-container">
+          <img
+            src="/logo.png"
+            alt="RenTahanan Logo"
+            className="loading-logo"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
+            }}
+          />
+        </div>
+        
+        {/* Loading Text */}
+        <div className="loading-text-container">
+          <h2 className="loading-title">RenTahanan</h2>
+          <p className="loading-subtitle">Loading your dashboard...</p>
+        </div>
+        
+        {/* Loading Animation */}
+        <div className="loading-animation">
+          <div className="loading-spinner"></div>
+          <div className="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   useEffect(() => {
     // If current path is /tenant and user is Registered tenant, redirect to browse-units
@@ -496,7 +492,7 @@ const Layout = () => {
     try {
       // Parse the database date as UTC
       const dbDate = new Date(dateString);
-
+      
       // If invalid date, return fallback
       if (isNaN(dbDate.getTime())) {
         return "Recently";
@@ -504,7 +500,7 @@ const Layout = () => {
 
       // Get current time in local timezone
       const now = new Date();
-
+      
       // Calculate difference in milliseconds
       const diffInMs = now - dbDate;
       const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
@@ -593,170 +589,170 @@ const Layout = () => {
     links.find((link) => link.to === location.pathname)?.name || "Dashboard";
 
   const ProfileModal = () => {
-    if (!isProfileModalOpen || !userData) return null;
+  if (!isProfileModalOpen || !userData) return null;
 
-    const formatDate = (dateString) => {
-      if (!dateString || dateString === "N/A") return "N/A";
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return "N/A";
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        });
-      } catch (error) {
-        return "N/A";
-      }
-    };
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === "N/A") return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "N/A";
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
+    } catch (error) {
+      return "N/A";
+    }
+  };
 
-    // ✅ UPDATED: Conditionally show status, edit button, and joined date
-    const showStatus = userRole !== "owner"; // Hide status for owners
-    const showEditButton = userRole === "owner" || (userRole === "tenant" && tenantStatus !== "Terminated"); // Show edit for owners, hide for terminated tenants
-    const showJoinedDate = userRole !== "owner"; // Hide joined date for owners
+  // ✅ UPDATED: Conditionally show status, edit button, and joined date
+  const showStatus = userRole !== "owner"; // Hide status for owners
+  const showEditButton = userRole === "owner" || (userRole === "tenant" && tenantStatus !== "Terminated"); // Show edit for owners, hide for terminated tenants
+  const showJoinedDate = userRole !== "owner"; // Hide joined date for owners
 
-    return (
-      <div className="modal-overlay-Layout" onClick={closeProfileModal}>
-        <div className="profile-modal-content-Layout" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-header-Layout">
-            <h2 title="View and manage your profile information">User Profile</h2>
-            <button
-              className="close-text-btn-Layout"
-              onClick={closeProfileModal}
-              title="Close profile modal"
-            >
-              <X size={16} /> Close
-            </button>
+  return (
+    <div className="modal-overlay-Layout" onClick={closeProfileModal}>
+      <div className="profile-modal-content-Layout" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header-Layout">
+          <h2 title="View and manage your profile information">User Profile</h2>
+          <button 
+            className="close-text-btn-Layout" 
+            onClick={closeProfileModal}
+            title="Close profile modal"
+          >
+            <X size={16} /> Close
+          </button>
+        </div>
+
+        <div className="modal-body-Layout">
+          <div className="current-pic-holder-Layout">
+            {profileImageError || !profilePictureUrl || profilePictureUrl === "/default-profile.png" ? (
+              <div className="profile-icon-fallback-Layout">
+                <User size={48} />
+              </div>
+            ) : (
+              <img
+                src={profilePictureUrl}
+                alt="Profile"
+                width="120"
+                height="120"
+                style={{ borderRadius: "50%", background: "#eee", objectFit: "cover" }}
+                onError={handleProfileImageError}
+                title="Your profile picture"
+              />
+            )}
+            {isEditing && (
+              <label 
+                className="upload-btn-icon-label-Layout"
+                title="Change profile picture"
+              >
+                <Camera size={18} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  style={{ display: "none" }}
+                />
+              </label>
+            )}
           </div>
 
-          <div className="modal-body-Layout">
-            <div className="current-pic-holder-Layout">
-              {profileImageError || !profilePictureUrl || profilePictureUrl === "/default-profile.png" ? (
-                <div className="profile-icon-fallback-Layout">
-                  <User size={48} />
-                </div>
-              ) : (
-                <img
-                  src={profilePictureUrl}
-                  alt="Profile"
-                  width="120"
-                  height="120"
-                  style={{ borderRadius: "50%", background: "#eee", objectFit: "cover" }}
-                  onError={handleProfileImageError}
-                  title="Your profile picture"
-                />
-              )}
-              {isEditing && (
-                <label
-                  className="upload-btn-icon-label-Layout"
-                  title="Change profile picture"
-                >
-                  <Camera size={18} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
-            </div>
-
-            <h3 className="user-full-name-Layout" title="Your full name">
-              {userData.firstname} {userData.middlename || ""} {userData.lastname}
-            </h3>
-            <p className="user-role-label-Layout" title="Your account role">
-              {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+          <h3 className="user-full-name-Layout" title="Your full name">
+            {userData.firstname} {userData.middlename || ""} {userData.lastname}
+          </h3>
+          <p className="user-role-label-Layout" title="Your account role">
+            {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+          </p>
+          
+          {/* ✅ CONDITIONAL: Only show status if user is not owner */}
+          {showStatus && (
+            <p className="user-status-label-Layout" title="Your current tenant status">
+              Status: <span className={`status-badge status-${tenantStatus?.toLowerCase()}`}>
+                {tenantStatus || "Registered"}
+              </span>
             </p>
+          )}
 
-            {/* ✅ CONDITIONAL: Only show status if user is not owner */}
-            {showStatus && (
-              <p className="user-status-label-Layout" title="Your current tenant status">
-                Status: <span className={`status-badge status-${tenantStatus?.toLowerCase()}`}>
-                  {tenantStatus || "Registered"}
-                </span>
-              </p>
-            )}
-
-            <div className="user-details-list-Layout">
-              <div className="detail-item-Layout">
-                <Mail size={18} className="detail-icon-Layout" title="Email address" />
-                {isEditing ? (
-                  <input
-                    type="email"
-                    name="email"
-                    value={userData.email || ""}
-                    onChange={handleInputChange}
-                    className="editable-input-Layout"
-                    title="Edit your email address"
-                  />
-                ) : (
-                  <span title="Your email address">{userData.email || "N/A"}</span>
-                )}
-              </div>
-
-              <div className="detail-item-Layout">
-                <Phone size={18} className="detail-icon-Layout" title="Phone number" />
-                {isEditing ? (
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={userData.phone || ""}
-                    onChange={handleInputChange}
-                    className="editable-input-Layout"
-                    title="Edit your phone number"
-                  />
-                ) : (
-                  <span title="Your phone number">{userData.phone || "N/A"}</span>
-                )}
-              </div>
-
-              {/* ✅ CONDITIONAL: Only show joined date if user is not owner */}
-              {showJoinedDate && (
-                <div className="detail-item-Layout detail-view-only-Layout">
-                  <Calendar size={18} className="detail-icon-Layout" title="Account creation date" />
-                  <span title="When you joined RenTahanan">Joined: {formatDate(userData.datecreated || "")}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="modal-actions-Layout">
+          <div className="user-details-list-Layout">
+            <div className="detail-item-Layout">
+              <Mail size={18} className="detail-icon-Layout" title="Email address" />
               {isEditing ? (
-                <>
-                  <button
-                    className="btn-save-Layout"
-                    onClick={handleSaveEdit}
-                    title="Save your profile changes"
-                  >
-                    <Save size={16} /> Save
-                  </button>
-                  <button
-                    className="btn-cancel-Layout"
-                    onClick={handleCancelEdit}
-                    title="Discard changes and cancel editing"
-                  >
-                    <RotateCcw size={16} /> Cancel
-                  </button>
-                </>
+                <input
+                  type="email"
+                  name="email"
+                  value={userData.email || ""}
+                  onChange={handleInputChange}
+                  className="editable-input-Layout"
+                  title="Edit your email address"
+                />
               ) : (
-                /* ✅ UPDATED: Show edit button for owners, hide only for terminated tenants */
-                showEditButton && (
-                  <button
-                    className="btn-edit-Layout"
-                    onClick={() => setIsEditing(true)}
-                    title="Edit your profile information"
-                  >
-                    <Edit size={16} /> Edit Profile
-                  </button>
-                )
+                <span title="Your email address">{userData.email || "N/A"}</span>
               )}
             </div>
+
+            <div className="detail-item-Layout">
+              <Phone size={18} className="detail-icon-Layout" title="Phone number" />
+              {isEditing ? (
+                <input
+                  type="tel"
+                  name="phone"
+                  value={userData.phone || ""}
+                  onChange={handleInputChange}
+                  className="editable-input-Layout"
+                  title="Edit your phone number"
+                />
+              ) : (
+                <span title="Your phone number">{userData.phone || "N/A"}</span>
+              )}
+            </div>
+
+            {/* ✅ CONDITIONAL: Only show joined date if user is not owner */}
+            {showJoinedDate && (
+              <div className="detail-item-Layout detail-view-only-Layout">
+                <Calendar size={18} className="detail-icon-Layout" title="Account creation date" />
+                <span title="When you joined RenTahanan">Joined: {formatDate(userData.datecreated || "")}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="modal-actions-Layout">
+            {isEditing ? (
+              <>
+                <button 
+                  className="btn-save-Layout" 
+                  onClick={handleSaveEdit}
+                  title="Save your profile changes"
+                >
+                  <Save size={16} /> Save
+                </button>
+                <button 
+                  className="btn-cancel-Layout" 
+                  onClick={handleCancelEdit}
+                  title="Discard changes and cancel editing"
+                >
+                  <RotateCcw size={16} /> Cancel
+                </button>
+              </>
+            ) : (
+              /* ✅ UPDATED: Show edit button for owners, hide only for terminated tenants */
+              showEditButton && (
+                <button 
+                  className="btn-edit-Layout" 
+                  onClick={() => setIsEditing(true)}
+                  title="Edit your profile information"
+                >
+                  <Edit size={16} /> Edit Profile
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   return (
     <div className="container-Layout">
@@ -783,8 +779,8 @@ const Layout = () => {
                 className={`linkholder-Layout ${location.pathname === link.to ? "active-Layout" : ""
                   }`}
               >
-                <Link
-                  to={link.to}
+                <Link 
+                  to={link.to} 
                   onClick={closeSidebar}
                   title={`Go to ${link.name}`}
                 >
@@ -796,8 +792,8 @@ const Layout = () => {
           })}
         </div>
 
-        <button
-          id="logout-Layout"
+        <button 
+          id="logout-Layout" 
           onClick={handleLogout}
           title="Sign out of your account"
         >
@@ -807,8 +803,8 @@ const Layout = () => {
 
       {/* HEADER */}
       <div className="header-Layout">
-        <button
-          className="menu-btn-Layout"
+        <button 
+          className="menu-btn-Layout" 
           onClick={toggleSidebar}
           title="Toggle navigation menu"
         >
@@ -916,8 +912,8 @@ const Layout = () => {
             )}
           </div>
 
-          <button
-            className="profile-image-btn-Layout"
+          <button 
+            className="profile-image-btn-Layout" 
             onClick={openProfileModal}
             title="View and edit your profile"
           >
