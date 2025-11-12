@@ -362,7 +362,7 @@ const Forgot = () => {
                       <input
                         className="forgot-input-Forgot"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter new password (min. 8 characters)"
+                        placeholder="Enter new password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
