@@ -6,7 +6,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
-  const [stepLoading, setStepLoading] = useState(false); // ✅ ADDED: Step loading state
+  const [pageLoading, setPageLoading] = useState(true); // ✅ CHANGED: Page loading instead of step loading
   const [formData, setFormData] = useState({
     firstname: "",
     middlename: "",
@@ -33,51 +33,51 @@ const Register = () => {
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
   // ✅ ADDED: Loading Screen Component - SAME STYLING AS OTHERS
-  const LoadingScreen = ({ stepNumber }) => {
-    const stepMessages = {
-      1: "Setting up your personal information...",
-      2: "Processing your contact details...", 
-      3: "Securing your account...",
-      4: "Creating your account..."
-    };
+  const LoadingScreen = () => (
+    <div className="loading-screen-overlay">
+      <div className="loading-screen-content">
+        {/* Logo */}
+        <div className="loading-logo-container">
+          <img
+            src="/logo.png"
+            alt="RenTahanan Logo"
+            className="loading-logo"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
+            }}
+          />
+        </div>
 
-    return (
-      <div className="loading-screen-overlay">
-        <div className="loading-screen-content">
-          {/* Logo */}
-          <div className="loading-logo-container">
-            <img
-              src="/logo.png"
-              alt="RenTahanan Logo"
-              className="loading-logo"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
-              }}
-            />
+        {/* Loading Text */}
+        <div className="loading-text-container">
+          <h2 className="loading-title">RenTahanan</h2>
+          <p className="loading-subtitle">Preparing registration form...</p>
+        </div>     
+
+        {/* Loading Progress */}
+        <div className="loading-progress">
+          <div className="loading-progress-bar">
+            <div 
+              className="loading-progress-fill"
+              style={{ width: '100%' }}
+            ></div>
           </div>
-
-          {/* Loading Text */}
-          <div className="loading-text-container">
-            <h2 className="loading-title">RenTahanan</h2>
-            <p className="loading-subtitle">{stepMessages[stepNumber] || "Processing your registration.."}</p>
-          </div>     
-
-          {/* Loading Progress */}
-          <div className="loading-progress">
-            <div className="loading-progress-bar">
-              <div 
-                className="loading-progress-fill"
-                style={{ width: `${(stepNumber / 4) * 100}%` }}
-              ></div>
-            </div>
-            <p className="loading-progress-text">
-              Step {stepNumber} of 4 • {Math.round((stepNumber / 4) * 100)}% Complete
-            </p>
-          </div>
+          <p className="loading-progress-text">
+            Loading registration wizard...
+          </p>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+
+  // ✅ ADDED: Show loading screen when page first loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 1000); // 1 second loading screen
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // ✅ CHECK EMAIL AVAILABILITY FUNCTION
   const checkEmailExists = async (email) => {
@@ -341,24 +341,12 @@ const Register = () => {
     }
 
     if (isValid) {
-      setStepLoading(true); // ✅ START step loading
-      
-      // Simulate processing time for better UX
-      setTimeout(() => {
-        setStep(step + 1);
-        setStepLoading(false); // ✅ STOP step loading
-      }, 800);
+      setStep(step + 1);
     }
   };
 
   const handlePrev = () => {
-    setStepLoading(true); // ✅ START step loading
-    
-    // Simulate processing time for better UX
-    setTimeout(() => {
-      setStep(step - 1);
-      setStepLoading(false); // ✅ STOP step loading
-    }, 500);
+    setStep(step - 1);
   };
 
   // Send welcome email after successful registration
@@ -392,7 +380,7 @@ const Register = () => {
       return;
     }
 
-    setStepLoading(true); // ✅ START final step loading
+    setIsLoading(true);
     
     try {
       const res = await fetch(`${API_BASE}/api/register`, {
@@ -405,20 +393,16 @@ const Register = () => {
         // Registration successful - send welcome email
         await sendWelcomeEmail(formData.email, formData.firstname);
         
-        // Add delay for smooth transition to success screen
-        setTimeout(() => {
-          setStep(4);
-          setStepLoading(false); // ✅ STOP loading
-        }, 1000);
+        setStep(4);
       } else {
         const errorData = await res.json();
         setErrors({ general: errorData.message || "Registration failed. Please try again." });
-        setStepLoading(false); // ✅ STOP loading on error
       }
     } catch (error) {
       console.error("Registration error:", error);
       setErrors({ general: "Network error. Please check your connection and try again." });
-      setStepLoading(false); // ✅ STOP loading on error
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -435,9 +419,9 @@ const Register = () => {
     return false;
   };
 
-  // ✅ SHOW LOADING SCREEN WHEN STEP IS CHANGING
-  if (stepLoading) {
-    return <LoadingScreen stepNumber={step} />;
+  // ✅ SHOW LOADING SCREEN WHEN PAGE IS LOADING
+  if (pageLoading) {
+    return <LoadingScreen />;
   }
 
   // --- RENDER ---
@@ -733,7 +717,7 @@ const Register = () => {
                         type="button"
                         onClick={handlePrev}
                         className="btn-Register secondary-Register"
-                        disabled={isLoading || checkingEmail || stepLoading}
+                        disabled={isLoading || checkingEmail}
                         title="Go back to previous step"
                       >
                         Back
@@ -744,7 +728,7 @@ const Register = () => {
                         type="button" 
                         onClick={handleNext} 
                         className="btn-Register"
-                        disabled={isLoading || checkingEmail || stepLoading}
+                        disabled={isLoading || checkingEmail}
                         title="Continue to next step"
                       >
                         {isLoading ? "Checking..." : "Next"}
@@ -754,7 +738,7 @@ const Register = () => {
                       <button 
                         type="submit" 
                         className="btn-Register"
-                        disabled={isLoading || hasStepErrors() || stepLoading}
+                        disabled={isLoading || hasStepErrors()}
                         title={hasStepErrors() ? "Please fix errors before submitting" : "Create your RenTahanan account"}
                       >
                         {isLoading ? "Creating Account..." : "Create Account"}
