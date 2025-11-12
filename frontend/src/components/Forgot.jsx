@@ -12,7 +12,7 @@ const Forgot = () => {
   const [error, setError] = useState(""); // inline error messages
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [stepLoading, setStepLoading] = useState(false); // ✅ ADDED: Step loading state
+  const [pageLoading, setPageLoading] = useState(true); // ✅ CHANGED: Page loading instead of step loading
 
   // ✅ ADD API BASE - Same as Login and Layout components
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
@@ -20,58 +20,51 @@ const Forgot = () => {
   const codeRefs = useRef([]);
 
   // ✅ ADDED: Loading Screen Component - SAME STYLING AS OTHERS
-  const LoadingScreen = ({ stepNumber }) => {
-    const stepMessages = {
-      1: "Sending verification code...",
-      2: "Verifying your code...", 
-      3: "Resetting your password...",
-      4: "Completing password reset..."
-    };
+  const LoadingScreen = () => (
+    <div className="loading-screen-overlay">
+      <div className="loading-screen-content">
+        {/* Logo */}
+        <div className="loading-logo-container">
+          <img
+            src="/logo.png"
+            alt="RenTahanan Logo"
+            className="loading-logo"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
+            }}
+          />
+        </div>
 
-    const stepTitles = {
-      1: "Email Verification",
-      2: "Code Verification",
-      3: "Password Reset",
-      4: "Success"
-    };
+        {/* Loading Text */}
+        <div className="loading-text-container">
+          <h2 className="loading-title">RenTahanan</h2>
+          <p className="loading-subtitle">Preparing password reset...</p>
+        </div>
 
-    return (
-      <div className="loading-screen-overlay">
-        <div className="loading-screen-content">
-          {/* Logo */}
-          <div className="loading-logo-container">
-            <img
-              src="/logo.png"
-              alt="RenTahanan Logo"
-              className="loading-logo"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/80x80/1e40af/FFFFFF?text=R";
-              }}
-            />
+        {/* Loading Progress */}
+        <div className="loading-progress">
+          <div className="loading-progress-bar">
+            <div 
+              className="loading-progress-fill"
+              style={{ width: '100%' }}
+            ></div>
           </div>
-
-          {/* Loading Text */}
-          <div className="loading-text-container">
-            <h2 className="loading-title">RenTahanan</h2>
-            <p className="loading-subtitle">{stepMessages[stepNumber] || "Processing your request.."}</p>
-          </div>
-
-          {/* Loading Progress */}
-          <div className="loading-progress">
-            <div className="loading-progress-bar">
-              <div 
-                className="loading-progress-fill"
-                style={{ width: `${(stepNumber / 4) * 100}%` }}
-              ></div>
-            </div>
-            <p className="loading-progress-text">
-              {stepTitles[stepNumber]} • {Math.round((stepNumber / 4) * 100)}% Complete
-            </p>
-          </div>
+          <p className="loading-progress-text">
+            Loading password reset wizard...
+          </p>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+
+  // ✅ ADDED: Show loading screen when page first loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 1000); // 1 second loading screen
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Auto-focus first empty code input when step 2 starts
   useEffect(() => {
@@ -92,7 +85,6 @@ const Forgot = () => {
 
     try {
       setLoading(true);
-      setStepLoading(true); // ✅ START loading
       
       // ✅ UPDATED API ENDPOINT
       const response = await fetch(`${API_BASE}/api/forgot/send`, {
@@ -105,19 +97,13 @@ const Forgot = () => {
       setLoading(false);
 
       if (response.ok) {
-        // Add delay for smooth transition
-        setTimeout(() => {
-          setStep(2);
-          setError("");
-          setStepLoading(false); // ✅ STOP loading
-        }, 800);
+        setStep(2);
+        setError("");
       } else {
         setError(data.message || "Email not registered.");
-        setStepLoading(false); // ✅ STOP loading on error
       }
     } catch (error) {
       setLoading(false);
-      setStepLoading(false); // ✅ STOP loading on error
       setError("Error connecting to the server.");
     }
   };
@@ -151,7 +137,6 @@ const Forgot = () => {
 
     try {
       setLoading(true);
-      setStepLoading(true); // ✅ START loading
       
       // ✅ UPDATED API ENDPOINT
       const response = await fetch(`${API_BASE}/api/forgot/verify`, {
@@ -164,19 +149,13 @@ const Forgot = () => {
       setLoading(false);
 
       if (response.ok) {
-        // Add delay for smooth transition
-        setTimeout(() => {
-          setStep(3);
-          setError("");
-          setStepLoading(false); // ✅ STOP loading
-        }, 800);
+        setStep(3);
+        setError("");
       } else {
         setError(data.message || "Invalid verification code.");
-        setStepLoading(false); // ✅ STOP loading on error
       }
     } catch (error) {
       setLoading(false);
-      setStepLoading(false); // ✅ STOP loading on error
       setError("Error connecting to the server.");
     }
   };
@@ -193,7 +172,6 @@ const Forgot = () => {
 
     try {
       setLoading(true);
-      setStepLoading(true); // ✅ START loading
       
       // ✅ UPDATED API ENDPOINT
       const response = await fetch(`${API_BASE}/api/forgot/reset`, {
@@ -210,31 +188,25 @@ const Forgot = () => {
       setLoading(false);
 
       if (response.ok) {
-        // Add delay for smooth transition to success
-        setTimeout(() => {
-          // Go to success step
-          setStep(4);
-          setEmail("");
-          setCode(Array(6).fill(""));
-          setPassword("");
-          setConfirmPassword("");
-          setError("");
-          setStepLoading(false); // ✅ STOP loading
-        }, 1000);
+        // Go to success step
+        setStep(4);
+        setEmail("");
+        setCode(Array(6).fill(""));
+        setPassword("");
+        setConfirmPassword("");
+        setError("");
       } else {
         setError(data.message || "Failed to reset password.");
-        setStepLoading(false); // ✅ STOP loading on error
       }
     } catch (error) {
       setLoading(false);
-      setStepLoading(false); // ✅ STOP loading on error
       setError("Error connecting to the server.");
     }
   };
 
-  // ✅ SHOW LOADING SCREEN WHEN STEP IS CHANGING
-  if (stepLoading) {
-    return <LoadingScreen stepNumber={step} />;
+  // ✅ SHOW LOADING SCREEN WHEN PAGE IS LOADING
+  if (pageLoading) {
+    return <LoadingScreen />;
   }
 
   return (
@@ -291,7 +263,7 @@ const Forgot = () => {
                   <button 
                     type="submit" 
                     className="forgot-btn-Forgot" 
-                    disabled={loading || stepLoading}
+                    disabled={loading}
                     title="Send verification code to your email"
                   >
                     {loading ? "Sending..." : "Send Code"}
@@ -337,7 +309,6 @@ const Forgot = () => {
                         onChange={(e) => handleCodeChange(e.target.value, index)}
                         className="code-input-Forgot"
                         title={`Verification code digit ${index + 1}`}
-                        disabled={stepLoading} // ✅ DISABLE INPUTS DURING LOADING
                       />
                     ))}
                   </div>
@@ -345,7 +316,7 @@ const Forgot = () => {
                   <button 
                     type="submit" 
                     className="forgot-btn-Forgot" 
-                    disabled={loading || stepLoading}
+                    disabled={loading}
                     title="Verify the code and proceed"
                   >
                     {loading ? "Verifying..." : "Verify Code"}
@@ -353,9 +324,9 @@ const Forgot = () => {
                   <div className="forgot-bottom-text-Forgot">
                     Didn't receive code?{" "}
                     <span 
-                      onClick={() => !stepLoading && handleForgot()} 
-                      className={`resend-link-Forgot ${stepLoading ? 'disabled-link-Forgot' : ''}`}
-                      title={stepLoading ? "Please wait..." : "Resend verification code"}
+                      onClick={() => !loading && handleForgot()} 
+                      className={`resend-link-Forgot ${loading ? 'disabled-link-Forgot' : ''}`}
+                      title={loading ? "Please wait..." : "Resend verification code"}
                     >
                       Resend it
                     </span>
@@ -391,14 +362,12 @@ const Forgot = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         title="Create a strong new password for your account"
-                        disabled={stepLoading} // ✅ DISABLE INPUTS DURING LOADING
                       />
                       <button
                         type="button"
                         className="toggle-password-Forgot"
-                        onClick={() => !stepLoading && setShowPassword(!showPassword)}
+                        onClick={() => setShowPassword(!showPassword)}
                         title={showPassword ? "Hide password text" : "Show password text"}
-                        disabled={stepLoading}
                       >
                         {showPassword ? "HIDE" : "SHOW"}
                       </button>
@@ -422,14 +391,12 @@ const Forgot = () => {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
                         title="Re-enter your new password exactly as above"
-                        disabled={stepLoading} // ✅ DISABLE INPUTS DURING LOADING
                       />
                       <button
                         type="button"
                         className="toggle-password-Forgot"
-                        onClick={() => !stepLoading && setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         title={showConfirmPassword ? "Hide password text" : "Show password text"}
-                        disabled={stepLoading}
                       >
                         {showConfirmPassword ? "HIDE" : "SHOW"}
                       </button>
@@ -441,7 +408,7 @@ const Forgot = () => {
                   <button 
                     type="submit" 
                     className="forgot-btn-Forgot" 
-                    disabled={loading || stepLoading}
+                    disabled={loading}
                     title="Save your new password"
                   >
                     {loading ? "Resetting..." : "Reset Password"}

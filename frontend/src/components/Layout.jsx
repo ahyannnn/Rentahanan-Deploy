@@ -85,7 +85,7 @@ const Layout = () => {
         {/* Loading Text */}
         <div className="loading-text-container">
           <h2 className="loading-title">RenTahanan</h2>
-          <p className="loading-subtitle">Loading your dashboard...</p>
+          <p className="loading-subtitle">Loading...</p>
         </div>
         
         {/* Loading Animation */}

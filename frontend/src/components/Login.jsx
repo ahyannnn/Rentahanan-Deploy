@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./../styles/Login.css";
 
@@ -6,7 +6,8 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false); // ✅ ADDED: Loading state
+    const [pageLoading, setPageLoading] = useState(true); // ✅ CHANGED: Page loading state
+    const [loginLoading, setLoginLoading] = useState(false); // ✅ ADDED: Separate login loading state
 
     // Error states
     const [emailError, setEmailError] = useState("");
@@ -36,26 +37,33 @@ const Login = () => {
                 {/* Loading Text */}
                 <div className="loading-text-container">
                     <h2 className="loading-title">RenTahanan</h2>
-                    <p className="loading-subtitle">Signing you in...</p>
+                    <p className="loading-subtitle">Preparing login page...</p>
                 </div>
-
-               
 
                 {/* Loading Progress */}
                 <div className="loading-progress">
                     <div className="loading-progress-bar">
                         <div 
                             className="loading-progress-fill"
-                            style={{ width: '70%' }}
+                            style={{ width: '100%' }}
                         ></div>
                     </div>
                     <p className="loading-progress-text">
-                        Authenticating your account..
+                        Loading login form...
                     </p>
                 </div>
             </div>
         </div>
     );
+
+    // ✅ ADDED: Show loading screen when page first loads
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setPageLoading(false);
+        }, 1000); // 1 second loading screen
+
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -85,7 +93,7 @@ const Login = () => {
 
         if (!isValid) return;
 
-        setLoading(true); // ✅ START loading
+        setLoginLoading(true); // ✅ START login loading
 
         try {
             const response = await fetch(`${API_BASE}/api/login`, {
@@ -107,13 +115,13 @@ const Login = () => {
                 } else {
                     setEmailError(data.message || "Login failed. Please check your credentials.");
                 }
-                setLoading(false); // ✅ STOP loading on error
+                setLoginLoading(false); // ✅ STOP login loading on error
                 return;
             }
 
             if (!data.user) {
                 setEmailError("Unexpected response. Please try again.");
-                setLoading(false); // ✅ STOP loading on error
+                setLoginLoading(false); // ✅ STOP login loading on error
                 return;
             }
 
@@ -149,31 +157,26 @@ const Login = () => {
                 localStorage.setItem("tenantid", tenantid);
             }
 
-            // ✅ Add small delay for smooth loading transition
-            setTimeout(() => {
-                setLoading(false);
-                
-                // ✅ Navigate based on role and status
-                if (role.toLowerCase() === "owner") {
-                    navigate("/owner");
-                } else if (role.toLowerCase() === "tenant") {
-                    navigate(
-                        application_status === "Registered" ? "/tenant/browse-units" : "/tenant"
-                    );
-                } else {
-                    navigate("/landing");
-                }
-            }, 500);
+            // ✅ Navigate based on role and status
+            if (role.toLowerCase() === "owner") {
+                navigate("/owner");
+            } else if (role.toLowerCase() === "tenant") {
+                navigate(
+                    application_status === "Registered" ? "/tenant/browse-units" : "/tenant"
+                );
+            } else {
+                navigate("/landing");
+            }
 
         } catch (error) {
             console.error("Login error:", error);
             setEmailError("Network error. Please check your connection.");
-            setLoading(false); // ✅ STOP loading on error
+            setLoginLoading(false); // ✅ STOP login loading on error
         }
     };
 
-    // ✅ SHOW LOADING SCREEN WHEN LOADING
-    if (loading) {
+    // ✅ SHOW LOADING SCREEN WHEN PAGE IS LOADING
+    if (pageLoading) {
         return <LoadingScreen />;
     }
 
@@ -277,9 +280,9 @@ const Login = () => {
                                 className="main-login-btn-Login" 
                                 type="submit"
                                 title="Sign in to your account"
-                                disabled={loading} // ✅ DISABLE BUTTON WHEN LOADING
+                                disabled={loginLoading} // ✅ DISABLE BUTTON WHEN LOGIN LOADING
                             >
-                                {loading ? "Signing In..." : "Login"}
+                                {loginLoading ? "Signing In..." : "Login"}
                             </button>
 
                             <span 
