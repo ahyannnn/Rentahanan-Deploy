@@ -384,10 +384,14 @@ const Layout = () => {
     setProfileImageError(false);
   };
 
-  const closeProfileModal = () => {
-    setIsProfileModalOpen(false);
-    setIsEditing(false);
-    setSelectedImageFile(null);
+  // ✅ FIXED: Close profile modal only when clicking on overlay background
+  const closeProfileModal = (e) => {
+    // Only close if clicking directly on overlay, not modal content
+    if (!e || e.target === e.currentTarget) {
+      setIsProfileModalOpen(false);
+      setIsEditing(false);
+      setSelectedImageFile(null);
+    }
   };
 
   const handleLogout = () => {
@@ -614,7 +618,7 @@ const Layout = () => {
           <h2 title="View and manage your profile information">User Profile</h2>
           <button 
             className="close-text-btn-Layout" 
-            onClick={closeProfileModal}
+            onClick={() => closeProfileModal()}
             title="Close profile modal"
           >
             <X size={16} /> Close
