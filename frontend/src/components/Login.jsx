@@ -50,7 +50,7 @@ const Login = () => {
                         ></div>
                     </div>
                     <p className="loading-progress-text">
-                        Authenticating your account...
+                        Authenticating your account..
                     </p>
                 </div>
             </div>

@@ -91,11 +91,6 @@ const Layout = () => {
         {/* Loading Animation */}
         <div className="loading-animation">
           <div className="loading-spinner"></div>
-          <div className="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
         </div>
       </div>
     </div>

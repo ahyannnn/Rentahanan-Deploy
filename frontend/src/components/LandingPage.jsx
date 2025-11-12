@@ -99,7 +99,7 @@ function LandingPage() {
             ></div>
           </div>
           <p className="loading-progress-text">
-            {dataFetched ? 'Almost ready...' : 'Loading properties...'}
+            {dataFetched ? 'Almost ready...' : 'Loading properties....'}
           </p>
         </div>
       </div>

@@ -53,7 +53,7 @@ const Forgot = () => {
           {/* Loading Text */}
           <div className="loading-text-container">
             <h2 className="loading-title">RenTahanan</h2>
-            <p className="loading-subtitle">{stepMessages[stepNumber] || "Processing your request..."}</p>
+            <p className="loading-subtitle">{stepMessages[stepNumber] || "Processing your request.."}</p>
           </div>
 
           {/* Loading Progress */}

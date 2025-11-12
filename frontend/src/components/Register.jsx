@@ -59,7 +59,7 @@ const Register = () => {
           {/* Loading Text */}
           <div className="loading-text-container">
             <h2 className="loading-title">RenTahanan</h2>
-            <p className="loading-subtitle">{stepMessages[stepNumber] || "Processing your registration..."}</p>
+            <p className="loading-subtitle">{stepMessages[stepNumber] || "Processing your registration.."}</p>
           </div>     
 
           {/* Loading Progress */}
