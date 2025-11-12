@@ -162,7 +162,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        // In your React component, update the monthly income display:
+        
         <div className="stat-card-Owner-Dashboard" title="Total monthly rental income">
           <div className="stat-icon-container-Owner-Dashboard stat-icon-gold-Owner-Dashboard">
             <Wallet className="stat-icon-Owner-Dashboard" size={28} />
