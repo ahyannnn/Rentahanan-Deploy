@@ -24,12 +24,12 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-         const response = await fetch(`${API_BASE}/api/owner/dashboard`);
-        
+        const response = await fetch(`${API_BASE}/api/owner/dashboard`);
+
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard data');
         }
-        
+
         const data = await response.json();
         setDashboardData(data);
       } catch (err) {
@@ -57,7 +57,7 @@ const Dashboard = () => {
   const propertyStatusCount = propertiesData.reduce((acc, property) => {
     // Use original_status directly from your data
     const status = property.original_status;
-    
+
     if (status) {
       // Count each status directly
       acc[status] = (acc[status] || 0) + 1;
@@ -65,7 +65,7 @@ const Dashboard = () => {
     return acc;
   }, {});
 
-  
+
 
   const propertyStatusData = Object.entries(propertyStatusCount).map(([status, count]) => ({
     status,
@@ -80,7 +80,7 @@ const Dashboard = () => {
   }));
 
   // Calculate occupancy rate
-  const occupancyRate = totalProperties > 0 ? 
+  const occupancyRate = totalProperties > 0 ?
     Math.round(((totalProperties - vacantProperties) / totalProperties) * 100) : 0;
 
   if (loading) {
@@ -117,7 +117,7 @@ const Dashboard = () => {
           <h1 className="dashboard-title-Owner-Dashboard">Dashboard Overview</h1>
           <p className="dashboard-subtitle-Owner-Dashboard">Welcome back! Here's what's happening today.</p>
         </div>
-        
+
       </div>
 
       {/* ==== STATS CARDS ==== */}
@@ -162,13 +162,14 @@ const Dashboard = () => {
           </div>
         </div>
 
+        // In your React component, update the monthly income display:
         <div className="stat-card-Owner-Dashboard" title="Total monthly rental income">
           <div className="stat-icon-container-Owner-Dashboard stat-icon-gold-Owner-Dashboard">
             <Wallet className="stat-icon-Owner-Dashboard" size={28} />
           </div>
           <div className="stat-info-Owner-Dashboard">
             <p className="stat-label-Owner-Dashboard">Monthly Income</p>
-            <h2 className="stat-value-Owner-Dashboard">{monthlyIncome.toLocaleString('en-PH')}</h2>
+            <h2 className="stat-value-Owner-Dashboard">₱{monthlyIncome.toLocaleString('en-PH')}</h2>
             <div className="stat-trend-Owner-Dashboard stat-trend-up-Owner-Dashboard">
               <TrendingUp className="trend-icon-Owner-Dashboard" size={16} />
               <span className="trend-text-Owner-Dashboard">This month's revenue</span>
@@ -195,12 +196,12 @@ const Dashboard = () => {
                   {revenueData.map((item, index) => {
                     const maxRevenue = Math.max(...revenueData.map(r => r.revenue));
                     const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
-                    
+
                     return (
                       <div key={index} className="bar-chart-item-Owner-Dashboard">
                         <div className="bar-wrapper-Owner-Dashboard">
-                          <div 
-                            className="bar-fill-Owner-Dashboard" 
+                          <div
+                            className="bar-fill-Owner-Dashboard"
                             style={{ height: `${height}%` }}
                             data-amount={`${item.revenue.toLocaleString('en-PH')}`}
                             title={`${item.month}: ${item.revenue.toLocaleString('en-PH')}`}
@@ -244,17 +245,17 @@ const Dashboard = () => {
                   <svg width="160" height="160" viewBox="0 0 160 160" className="donut-svg-Owner-Dashboard">
                     {/* Background circle */}
                     <circle cx="80" cy="80" r="70" fill="none" stroke="#f3f4f6" strokeWidth="20" />
-                    
+
                     {/* Segments */}
                     {propertyStatusData.map((item, index, array) => {
                       const percentage = (item.count / totalProperties) * 100;
                       const circumference = 2 * Math.PI * 70;
                       const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-                      const previousPercentages = array.slice(0, index).reduce((sum, prevItem) => 
+                      const previousPercentages = array.slice(0, index).reduce((sum, prevItem) =>
                         sum + (prevItem.count / totalProperties) * 100, 0
                       );
                       const strokeDashoffset = -((previousPercentages / 100) * circumference);
-                      
+
                       return (
                         <circle
                           key={index}
@@ -274,19 +275,19 @@ const Dashboard = () => {
                       );
                     })}
                   </svg>
-                  
+
                   {/* Center label */}
                   <div className="donut-center-Owner-Dashboard">
                     <div className="donut-total-Owner-Dashboard">{totalProperties}</div>
                     <div className="donut-label-Owner-Dashboard">Total Properties</div>
                   </div>
                 </div>
-                
+
                 <div className="donut-legend-Owner-Dashboard">
                   {propertyStatusData.map((item, index) => (
                     <div key={index} className="legend-item-Owner-Dashboard" title={`${item.status}: ${item.count} units (${item.percentage}%)`}>
-                      <div 
-                        className="legend-color-Owner-Dashboard" 
+                      <div
+                        className="legend-color-Owner-Dashboard"
                         style={{ backgroundColor: getStatusColor(item.status) }}
                       ></div>
                       <div className="legend-info-Owner-Dashboard">

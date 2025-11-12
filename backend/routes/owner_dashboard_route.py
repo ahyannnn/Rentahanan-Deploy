@@ -90,7 +90,7 @@ def get_owner_dashboard():
                 "original_status": house.status
             })
 
-        # Get recent transactions for this owner's properties
+        # FIXED: Get recent transactions with proper Bill join
         transactions = (
             db.session.query(
                 Transaction.transactionid,
@@ -106,6 +106,9 @@ def get_owner_dashboard():
             )
             .join(Bill, Transaction.billid == Bill.billid)
             .join(Tenant, Transaction.tenantid == Tenant.tenantid)
+            .join(User, Tenant.userid == User.userid)
+            .join(Contract, Contract.tenantid == Tenant.tenantid)
+            .join(Unit, Unit.unitid == Contract.unitid)
             .order_by(Transaction.paymentdate.desc())
             .limit(10)
             .all()
@@ -176,54 +179,71 @@ def get_owner_dashboard():
         pending_applications_count = len(applicants_data)
         vacant_properties = total_properties - active_tenants_count
 
-        # Calculate financial data
+        # FIXED: Calculate current month revenue - use direct database query
         today = datetime.now()
         current_month = today.strftime('%Y-%m')
-        current_month_revenue = 0
-        if transactions_data:
-            current_month_transactions = [t for t in transactions_data 
-                                        if t['payment_date'] and 
-                                        t['payment_date'].startswith(current_month) and
-                                        t['bill_type'] == 'Rent']  # Only count rent bills
-            current_month_revenue = sum(t['amount_paid'] for t in current_month_transactions)
+        
+        # Query transactions for current month directly from database
+        current_month_transactions = (
+            db.session.query(Transaction)
+            .join(Bill, Transaction.billid == Bill.billid)
+            .join(Tenant, Transaction.tenantid == Tenant.tenantid)
+            .join(Contract, Contract.tenantid == Tenant.tenantid)
+            .join(Unit, Unit.unitid == Contract.unitid)
+            .filter(
+                db.func.strftime('%Y-%m', Transaction.paymentdate) == current_month,
+                Bill.billtype == 'Rent'  # Only count rent payments
+            )
+            .all()
+        )
+        
+        current_month_revenue = sum(float(t.amountpaid) for t in current_month_transactions if t.amountpaid)
 
-        # Calculate YTD revenue - ONLY FROM RENT BILLS
+        # FIXED: Calculate YTD revenue - use direct database query
         current_year = today.strftime('%Y')
-        ytd_revenue = 0
-        if transactions_data:
-            ytd_transactions = [t for t in transactions_data 
-                               if t['payment_date'] and 
-                               t['payment_date'].startswith(current_year) and
-                               t['bill_type'] == 'Rent']  # Only count rent bills
-            ytd_revenue = sum(t['amount_paid'] for t in ytd_transactions)
+        ytd_transactions = (
+            db.session.query(Transaction)
+            .join(Bill, Transaction.billid == Bill.billid)
+            .join(Tenant, Transaction.tenantid == Tenant.tenantid)
+            .join(Contract, Contract.tenantid == Tenant.tenantid)
+            .join(Unit, Unit.unitid == Contract.unitid)
+            .filter(
+                db.func.strftime('%Y', Transaction.paymentdate) == current_year,
+                Bill.billtype == 'Rent'  # Only count rent payments
+            )
+            .all()
+        )
+        
+        ytd_revenue = sum(float(t.amountpaid) for t in ytd_transactions if t.amountpaid)
 
-        # Get financial data for chart (last 6 months)
+        # FIXED: Get financial data for chart (last 6 months) - use direct database queries
         financial_data = []
-        for i in range(6):
+        for i in range(5, -1, -1):  # Last 6 months in correct order
             month_date = today - timedelta(days=30*i)
             month_key = month_date.strftime('%Y-%m')
             month_name = month_date.strftime('%b')
             
-            monthly_revenue = 0
-            if transactions_data:
-                month_transactions = [t for t in transactions_data 
-                                    if t['payment_date'] and t['payment_date'].startswith(month_key)]
-                monthly_revenue = sum(t['amount_paid'] for t in month_transactions)
-
-            # Calculate bar height (dynamic scaling)
-            max_revenue = max([data.get('value', 0) for data in financial_data] + [monthly_revenue]) if financial_data else monthly_revenue
-            max_revenue = max(max_revenue, 1)  # Avoid division by zero
-            height_ratio = monthly_revenue / max_revenue
-            height = f"{50 + (height_ratio * 70)}px"
+            # Query monthly revenue directly from database
+            monthly_transactions = (
+                db.session.query(Transaction)
+                .join(Bill, Transaction.billid == Bill.billid)
+                .join(Tenant, Transaction.tenantid == Tenant.tenantid)
+                .join(Contract, Contract.tenantid == Tenant.tenantid)
+                .join(Unit, Unit.unitid == Contract.unitid)
+                .filter(
+                    db.func.strftime('%Y-%m', Transaction.paymentdate) == month_key,
+                    Bill.billtype == 'Rent'  # Only count rent payments
+                )
+                .all()
+            )
             
+            monthly_revenue = sum(float(t.amountpaid) for t in monthly_transactions if t.amountpaid)
+
             financial_data.append({
                 "month": month_name,
                 "amount": f"₱{monthly_revenue:,.0f}",
-                "height": height,
                 "value": monthly_revenue
             })
-
-        financial_data.reverse()
 
         # Calculate average monthly revenue (last 6 months)
         recent_months_revenue = [data['value'] for data in financial_data]

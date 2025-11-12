@@ -81,6 +81,7 @@ def get_bills():
             .join(Contract, Contract.tenantid == Tenant.tenantid)
             .join(Unit, Unit.unitid == Contract.unitid)
             .filter(Bill.issuedate >= first_day, Bill.issuedate <= last_day)
+            .order_by(Bill.issuedate.desc())  # Added this line for descending order
             .all()
         )
 
