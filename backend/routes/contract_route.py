@@ -572,7 +572,7 @@ def sign_contract():
         
         # ✅ Position for tenant signature - CENTERED and at proper height
         # Calculate position to center the signature horizontally
-        signature_x = (signed_image.width - sig_image.width) // 2  # Center horizontally
+        signature_x = 100  # Center horizontally
         signature_y = signed_image.height - 200  # Position from bottom
         
         # Paste signature onto contract image
