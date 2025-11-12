@@ -53,6 +53,20 @@ const Layout = () => {
   // ✅ Use the same API base as Login component
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://rentahanan.onrender.com";
 
+  // ✅ ADD: Overlay component for mobile sidebar
+  const Overlay = () => {
+    if (!sidebarOpen) return null;
+    
+    return (
+      <div 
+        className="overlay-Layout show-Layout" 
+        id="overlay-Layout"
+        onClick={closeSidebar}
+        title="Close navigation menu"
+      />
+    );
+  };
+
   // ✅ ADD: Get image URL function for profile images
   const getImageUrl = (imagePath, folder = 'profile_images') => {
     if (!imagePath) return null;
@@ -755,6 +769,9 @@ const Layout = () => {
 
   return (
     <div className="container-Layout">
+      {/* ✅ ADDED: Overlay for mobile sidebar */}
+      <Overlay />
+
       {/* SIDEBAR */}
       <div className={`sidebar-Layout ${sidebarOpen ? "show-Layout" : ""}`} id="sidebar-Layout">
         <div className="logotitle-Layout">
