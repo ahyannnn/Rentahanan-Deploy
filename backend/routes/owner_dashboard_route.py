@@ -8,6 +8,7 @@ from models.transaction_model import Transaction
 from models.applications_model import Application
 from extensions import db
 from models.tenants_model import Tenant
+from sqlalchemy import extract, func
 
 owner_dashboard_bp = Blueprint('owner_dashboard_bp', __name__)
 
@@ -179,11 +180,12 @@ def get_owner_dashboard():
         pending_applications_count = len(applicants_data)
         vacant_properties = total_properties - active_tenants_count
 
-        # FIXED: Calculate current month revenue - use direct database query
+        # FIXED: Calculate current month revenue - MySQL compatible
         today = datetime.now()
-        current_month = today.strftime('%Y-%m')
+        current_year = today.year
+        current_month = today.month
         
-        # Query transactions for current month directly from database
+        # Query transactions for current month directly from database (MySQL compatible)
         current_month_transactions = (
             db.session.query(Transaction)
             .join(Bill, Transaction.billid == Bill.billid)
@@ -191,7 +193,8 @@ def get_owner_dashboard():
             .join(Contract, Contract.tenantid == Tenant.tenantid)
             .join(Unit, Unit.unitid == Contract.unitid)
             .filter(
-                db.func.strftime('%Y-%m', Transaction.paymentdate) == current_month,
+                extract('year', Transaction.paymentdate) == current_year,
+                extract('month', Transaction.paymentdate) == current_month,
                 Bill.billtype == 'Rent'  # Only count rent payments
             )
             .all()
@@ -199,8 +202,7 @@ def get_owner_dashboard():
         
         current_month_revenue = sum(float(t.amountpaid) for t in current_month_transactions if t.amountpaid)
 
-        # FIXED: Calculate YTD revenue - use direct database query
-        current_year = today.strftime('%Y')
+        # FIXED: Calculate YTD revenue - MySQL compatible
         ytd_transactions = (
             db.session.query(Transaction)
             .join(Bill, Transaction.billid == Bill.billid)
@@ -208,7 +210,7 @@ def get_owner_dashboard():
             .join(Contract, Contract.tenantid == Tenant.tenantid)
             .join(Unit, Unit.unitid == Contract.unitid)
             .filter(
-                db.func.strftime('%Y', Transaction.paymentdate) == current_year,
+                extract('year', Transaction.paymentdate) == current_year,
                 Bill.billtype == 'Rent'  # Only count rent payments
             )
             .all()
@@ -216,14 +218,15 @@ def get_owner_dashboard():
         
         ytd_revenue = sum(float(t.amountpaid) for t in ytd_transactions if t.amountpaid)
 
-        # FIXED: Get financial data for chart (last 6 months) - use direct database queries
+        # FIXED: Get financial data for chart (last 6 months) - MySQL compatible
         financial_data = []
         for i in range(5, -1, -1):  # Last 6 months in correct order
             month_date = today - timedelta(days=30*i)
-            month_key = month_date.strftime('%Y-%m')
+            month_year = month_date.year
+            month_month = month_date.month
             month_name = month_date.strftime('%b')
             
-            # Query monthly revenue directly from database
+            # Query monthly revenue directly from database (MySQL compatible)
             monthly_transactions = (
                 db.session.query(Transaction)
                 .join(Bill, Transaction.billid == Bill.billid)
@@ -231,7 +234,8 @@ def get_owner_dashboard():
                 .join(Contract, Contract.tenantid == Tenant.tenantid)
                 .join(Unit, Unit.unitid == Contract.unitid)
                 .filter(
-                    db.func.strftime('%Y-%m', Transaction.paymentdate) == month_key,
+                    extract('year', Transaction.paymentdate) == month_year,
+                    extract('month', Transaction.paymentdate) == month_month,
                     Bill.billtype == 'Rent'  # Only count rent payments
                 )
                 .all()
